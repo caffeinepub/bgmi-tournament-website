@@ -66,6 +66,7 @@ export interface Tournament {
   'entryFee' : bigint,
   'roomId' : [] | [string],
   'filledSlots' : bigint,
+  'youtubeUrl' : [] | [string],
   'dateTime' : Time,
   'matchRules' : string,
   'prizePool' : bigint,
@@ -135,6 +136,7 @@ export interface _SERVICE {
   >,
   '_caffeineStorageUpdateGatewayPrincipals' : ActorMethod<[], undefined>,
   '_initializeAccessControlWithSecret' : ActorMethod<[string], undefined>,
+  'addAdminPrincipal' : ActorMethod<[Principal], boolean>,
   'addCoins' : ActorMethod<[string, bigint], undefined>,
   'addPrizeCoins' : ActorMethod<[string, bigint], undefined>,
   'approvePaymentProof' : ActorMethod<[string], undefined>,
@@ -145,14 +147,23 @@ export interface _SERVICE {
     string
   >,
   'createTournament' : ActorMethod<
-    [string, Time, bigint, bigint, string, bigint, string, string],
+    [
+      string,
+      Time,
+      bigint,
+      bigint,
+      string,
+      bigint,
+      string,
+      string,
+      [] | [string],
+    ],
     string
   >,
   'deductCoins' : ActorMethod<[string, bigint], undefined>,
   'distributePrizeCoins' : ActorMethod<[string, string, bigint], undefined>,
   'findUnusedSlots' : ActorMethod<[], Array<Tournament>>,
   'generateOtp' : ActorMethod<[], string>,
-  'getAdminPrincipal' : ActorMethod<[], [] | [Principal]>,
   'getAllPaymentProofs' : ActorMethod<[], Array<PaymentProof>>,
   'getAllPlayers' : ActorMethod<[], Array<Player>>,
   'getAllSupportTicketsSorted' : ActorMethod<[], Array<SupportTicket>>,
@@ -181,12 +192,12 @@ export interface _SERVICE {
   'isAdminPrincipal' : ActorMethod<[Principal], boolean>,
   'isCallerAdmin' : ActorMethod<[], boolean>,
   'markWithdrawalRequestProcessed' : ActorMethod<[string], undefined>,
-  'registerAdminPrincipal' : ActorMethod<[Principal], boolean>,
   'registerForTournament' : ActorMethod<[string, string, ExternalBlob], string>,
   'registerForTournamentWithCoins' : ActorMethod<[string, string], string>,
   'registerPlayer' : ActorMethod<[string, string, string], string>,
   'rejectPaymentProof' : ActorMethod<[string], undefined>,
   'rejectWithdrawalRequest' : ActorMethod<[string], undefined>,
+  'removeAdminPrincipal' : ActorMethod<[Principal], boolean>,
   'replyToSupportTicket' : ActorMethod<[string, string], undefined>,
   'saveCallerUserProfile' : ActorMethod<[UserProfile], undefined>,
   'searchSupportTicketsByPlayerName' : ActorMethod<
@@ -208,6 +219,7 @@ export interface _SERVICE {
     undefined
   >,
   'updateTournamentStatus' : ActorMethod<[string, TournamentStatus], undefined>,
+  'updateTournamentYouTubeUrl' : ActorMethod<[string, string], undefined>,
   'verifyOtp' : ActorMethod<[string], boolean>,
 }
 export declare const idlService: IDL.ServiceClass;

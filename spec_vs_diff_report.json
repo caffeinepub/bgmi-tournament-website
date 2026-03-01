@@ -1,15 +1,33 @@
 {
   "kind": "spec_vs_diff_report",
   "version": "1.0",
-  "generatedAt": "2026-03-01T21:35:41.154Z",
-  "summary": "Both REQ-1 (RegisterPage Step 2 fix) and REQ-2 (LoginPage fix) appear to be implemented in the diff. LoginPage.tsx replaces the AuthMethodButtons component with a single 'Connect with Internet Identity' button that calls iiLogin() directly. RegisterPage.tsx resets authLoading and globalError on entering the 'authenticate' step via a useEffect, and uses iiLogin() directly. All major acceptance criteria appear satisfied based on the visible code.",
-  "missing_requirements": [],
+  "generatedAt": "2026-03-01T22:25:20.448Z",
+  "summary": "The diff implements most of the requested requirements. Backend changes add youtubeUrl, roomId, roomPassword fields to the Tournament type, a migration file is added, and frontend hooks/admin dashboard are updated. However, REQ-8 (Player Dashboard DashboardPage.tsx updates) is not evidenced in the diff, and there are questions about whether REQ-6's admin-authenticated actor usage is fully implemented.",
+  "missing_requirements": [
+    {
+      "id": "REQ-8",
+      "requirement": "Update the Player Dashboard (DashboardPage.tsx) Tournaments section to display Room ID and Room Password for tournaments the player has registered for. Also display the YouTube stream URL (as a clickable link) for each tournament if set by admin.",
+      "reason": "No changes to DashboardPage.tsx are mentioned in the diff summary. The diff shows only AdminDashboardPage.tsx, useQueries.ts, backend/main.mo, backend/migration.mo, and project_state.json/frontend-file-summaries.txt were modified or added. DashboardPage.tsx is not listed among modified files.",
+      "evidence": []
+    },
+    {
+      "id": "REQ-6",
+      "requirement": "Update the Admin Dashboard page to use the correct admin-authenticated actor for all data queries and mutations. Fix the useQueries hooks used in the admin context to pass the admin actor instead of a user actor.",
+      "reason": "The diff shows AdminDashboardPage.tsx is modified and useQueries.ts is updated, but the visible hook code in useQueries.ts still uses the generic useActor() hook rather than a dedicated admin actor. There is no evidence of an admin-specific actor hook or that admin queries use a different authenticated actor from the user actor.",
+      "evidence": [
+        "frontend/src/hooks/useQueries.ts",
+        "frontend/src/pages/AdminDashboardPage.tsx"
+      ]
+    }
+  ],
   "hallucinated_features": [],
-  "confidence": 0.82,
+  "confidence": 0.72,
   "changed_files": [
+    "backend/main.mo",
+    "backend/migration.mo",
     "frontend-file-summaries.txt",
-    "frontend/src/pages/LoginPage.tsx",
-    "frontend/src/pages/RegisterPage.tsx",
+    "frontend/src/hooks/useQueries.ts",
+    "frontend/src/pages/AdminDashboardPage.tsx",
     "project_state.json"
   ]
 }

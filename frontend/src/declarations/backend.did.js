@@ -44,6 +44,7 @@ export const Tournament = IDL.Record({
   'entryFee' : IDL.Nat,
   'roomId' : IDL.Opt(IDL.Text),
   'filledSlots' : IDL.Nat,
+  'youtubeUrl' : IDL.Opt(IDL.Text),
   'dateTime' : Time,
   'matchRules' : IDL.Text,
   'prizePool' : IDL.Nat,
@@ -157,6 +158,7 @@ export const idlService = IDL.Service({
     ),
   '_caffeineStorageUpdateGatewayPrincipals' : IDL.Func([], [], []),
   '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
+  'addAdminPrincipal' : IDL.Func([IDL.Principal], [IDL.Bool], []),
   'addCoins' : IDL.Func([IDL.Text, IDL.Nat], [], []),
   'addPrizeCoins' : IDL.Func([IDL.Text, IDL.Nat], [], []),
   'approvePaymentProof' : IDL.Func([IDL.Text], [], []),
@@ -168,7 +170,17 @@ export const idlService = IDL.Service({
       [],
     ),
   'createTournament' : IDL.Func(
-      [IDL.Text, Time, IDL.Nat, IDL.Nat, IDL.Text, IDL.Nat, IDL.Text, IDL.Text],
+      [
+        IDL.Text,
+        Time,
+        IDL.Nat,
+        IDL.Nat,
+        IDL.Text,
+        IDL.Nat,
+        IDL.Text,
+        IDL.Text,
+        IDL.Opt(IDL.Text),
+      ],
       [IDL.Text],
       [],
     ),
@@ -176,7 +188,6 @@ export const idlService = IDL.Service({
   'distributePrizeCoins' : IDL.Func([IDL.Text, IDL.Text, IDL.Nat], [], []),
   'findUnusedSlots' : IDL.Func([], [IDL.Vec(Tournament)], ['query']),
   'generateOtp' : IDL.Func([], [IDL.Text], []),
-  'getAdminPrincipal' : IDL.Func([], [IDL.Opt(IDL.Principal)], ['query']),
   'getAllPaymentProofs' : IDL.Func([], [IDL.Vec(PaymentProof)], ['query']),
   'getAllPlayers' : IDL.Func([], [IDL.Vec(Player)], ['query']),
   'getAllSupportTicketsSorted' : IDL.Func(
@@ -238,7 +249,6 @@ export const idlService = IDL.Service({
   'isAdminPrincipal' : IDL.Func([IDL.Principal], [IDL.Bool], ['query']),
   'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
   'markWithdrawalRequestProcessed' : IDL.Func([IDL.Text], [], []),
-  'registerAdminPrincipal' : IDL.Func([IDL.Principal], [IDL.Bool], []),
   'registerForTournament' : IDL.Func(
       [IDL.Text, IDL.Text, ExternalBlob],
       [IDL.Text],
@@ -252,6 +262,7 @@ export const idlService = IDL.Service({
   'registerPlayer' : IDL.Func([IDL.Text, IDL.Text, IDL.Text], [IDL.Text], []),
   'rejectPaymentProof' : IDL.Func([IDL.Text], [], []),
   'rejectWithdrawalRequest' : IDL.Func([IDL.Text], [], []),
+  'removeAdminPrincipal' : IDL.Func([IDL.Principal], [IDL.Bool], []),
   'replyToSupportTicket' : IDL.Func([IDL.Text, IDL.Text], [], []),
   'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
   'searchSupportTicketsByPlayerName' : IDL.Func(
@@ -280,6 +291,7 @@ export const idlService = IDL.Service({
       [],
     ),
   'updateTournamentStatus' : IDL.Func([IDL.Text, TournamentStatus], [], []),
+  'updateTournamentYouTubeUrl' : IDL.Func([IDL.Text, IDL.Text], [], []),
   'verifyOtp' : IDL.Func([IDL.Text], [IDL.Bool], []),
 });
 
@@ -322,6 +334,7 @@ export const idlFactory = ({ IDL }) => {
     'entryFee' : IDL.Nat,
     'roomId' : IDL.Opt(IDL.Text),
     'filledSlots' : IDL.Nat,
+    'youtubeUrl' : IDL.Opt(IDL.Text),
     'dateTime' : Time,
     'matchRules' : IDL.Text,
     'prizePool' : IDL.Nat,
@@ -435,6 +448,7 @@ export const idlFactory = ({ IDL }) => {
       ),
     '_caffeineStorageUpdateGatewayPrincipals' : IDL.Func([], [], []),
     '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
+    'addAdminPrincipal' : IDL.Func([IDL.Principal], [IDL.Bool], []),
     'addCoins' : IDL.Func([IDL.Text, IDL.Nat], [], []),
     'addPrizeCoins' : IDL.Func([IDL.Text, IDL.Nat], [], []),
     'approvePaymentProof' : IDL.Func([IDL.Text], [], []),
@@ -455,6 +469,7 @@ export const idlFactory = ({ IDL }) => {
           IDL.Nat,
           IDL.Text,
           IDL.Text,
+          IDL.Opt(IDL.Text),
         ],
         [IDL.Text],
         [],
@@ -463,7 +478,6 @@ export const idlFactory = ({ IDL }) => {
     'distributePrizeCoins' : IDL.Func([IDL.Text, IDL.Text, IDL.Nat], [], []),
     'findUnusedSlots' : IDL.Func([], [IDL.Vec(Tournament)], ['query']),
     'generateOtp' : IDL.Func([], [IDL.Text], []),
-    'getAdminPrincipal' : IDL.Func([], [IDL.Opt(IDL.Principal)], ['query']),
     'getAllPaymentProofs' : IDL.Func([], [IDL.Vec(PaymentProof)], ['query']),
     'getAllPlayers' : IDL.Func([], [IDL.Vec(Player)], ['query']),
     'getAllSupportTicketsSorted' : IDL.Func(
@@ -529,7 +543,6 @@ export const idlFactory = ({ IDL }) => {
     'isAdminPrincipal' : IDL.Func([IDL.Principal], [IDL.Bool], ['query']),
     'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
     'markWithdrawalRequestProcessed' : IDL.Func([IDL.Text], [], []),
-    'registerAdminPrincipal' : IDL.Func([IDL.Principal], [IDL.Bool], []),
     'registerForTournament' : IDL.Func(
         [IDL.Text, IDL.Text, ExternalBlob],
         [IDL.Text],
@@ -543,6 +556,7 @@ export const idlFactory = ({ IDL }) => {
     'registerPlayer' : IDL.Func([IDL.Text, IDL.Text, IDL.Text], [IDL.Text], []),
     'rejectPaymentProof' : IDL.Func([IDL.Text], [], []),
     'rejectWithdrawalRequest' : IDL.Func([IDL.Text], [], []),
+    'removeAdminPrincipal' : IDL.Func([IDL.Principal], [IDL.Bool], []),
     'replyToSupportTicket' : IDL.Func([IDL.Text, IDL.Text], [], []),
     'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
     'searchSupportTicketsByPlayerName' : IDL.Func(
@@ -575,6 +589,7 @@ export const idlFactory = ({ IDL }) => {
         [],
       ),
     'updateTournamentStatus' : IDL.Func([IDL.Text, TournamentStatus], [], []),
+    'updateTournamentYouTubeUrl' : IDL.Func([IDL.Text, IDL.Text], [], []),
     'verifyOtp' : IDL.Func([IDL.Text], [IDL.Bool], []),
   });
 };

@@ -1,46 +1,107 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-03-01T21:35:41.156Z",
+  "generatedAt": "2026-03-01T22:25:20.451Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
   },
   "requirements": {
-    "total": 2,
+    "total": 9,
     "implemented": 2,
     "items": [
       {
         "id": "REQ-1",
-        "summary": "On RegisterPage Step 2 ('Authenticate' step), remove the current custom authentication buttons and the stuck 'Connecting...' state. Replace with a single 'Connect with Internet Identity' button that directly calls the `login()` function from `useInternetIdentity` hook without any custom method selection logic. Clear any stuck loading state on mount so the button is always clickable when the user arrives at Step 2. Remove the 'Authentication cancelled or failed. Please try again.' error that persists from a previous failed attempt.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/pages/RegisterPage.tsx"
-        ],
-        "matchedFiles": [
-          "frontend/src/pages/RegisterPage.tsx"
-        ]
+        "summary": "Fix the backend admin authorization check so that the authenticated admin principal (the one used to log into the admin panel) is recognized as an authorized admin for all privileged operations. The 'Unauthorized: Only admins can create tournaments' error must be eliminated. The backend's admin principal list must be seeded or dynamically updated so the admin's Internet Identity principal is always authorized.",
+        "status": "unknown",
+        "plannedFiles": [],
+        "matchedFiles": []
       },
       {
         "id": "REQ-2",
-        "summary": "On LoginPage, remove the AuthMethodButtons component (Google, Apple, Microsoft, Passkey separate buttons) and the 'CHOOSE METHOD' UI. Replace with a single 'Connect with Internet Identity' button that directly calls the `login()` function from `useInternetIdentity` hook. The button must be fully clickable and functional — no disabled or non-interactive state on initial render.",
+        "summary": "Fix the backend support tickets storage and retrieval so that tickets submitted by any player (via the user/player panel) are stored in the shared canister state and returned by the admin query for all support tickets. Admin panel Support Tickets section must display all tickets submitted by all users.",
+        "status": "unknown",
+        "plannedFiles": [],
+        "matchedFiles": []
+      },
+      {
+        "id": "REQ-3",
+        "summary": "Fix the backend player/user registration storage so that all registered players are stored in canister state and returned by the admin query. Admin panel Players and Registrations sections must display all registered users and their tournament registrations.",
+        "status": "unknown",
+        "plannedFiles": [],
+        "matchedFiles": []
+      },
+      {
+        "id": "REQ-4",
+        "summary": "Add room details fields (Room ID and Room Password) to the tournament data model in the backend. Admin must be able to set/update the Room ID and Room Password for a tournament. These values must be returned in tournament query results so the user/player panel can display them.",
+        "status": "unknown",
+        "plannedFiles": [],
+        "matchedFiles": []
+      },
+      {
+        "id": "REQ-5",
+        "summary": "Add a YouTube URL field to the tournament data model in the backend. Admin must be able to set/update a YouTube stream URL for any tournament. This value must be returned in tournament query results so the user/player panel can display it.",
+        "status": "unknown",
+        "plannedFiles": [],
+        "matchedFiles": []
+      },
+      {
+        "id": "REQ-6",
+        "summary": "Update the Admin Dashboard page (AdminDashboardPage.tsx) to use the correct admin-authenticated actor for all data queries and mutations (tournaments, registrations, players, payment proofs, withdrawals, support tickets). Ensure all admin sections call backend queries that return full platform-wide data, not per-user filtered data. Fix the useQueries hooks used in the admin context to pass the admin actor instead of a user actor.",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/pages/LoginPage.tsx"
+          "frontend/src/pages/AdminDashboardPage.tsx",
+          "frontend/src/hooks/useQueries.ts"
         ],
         "matchedFiles": [
-          "frontend/src/pages/LoginPage.tsx"
+          "frontend/src/pages/AdminDashboardPage.tsx",
+          "frontend/src/hooks/useQueries.ts"
         ]
+      },
+      {
+        "id": "REQ-7",
+        "summary": "Update the Admin Dashboard tournament management UI to include fields for Room ID, Room Password, and YouTube URL when creating or editing a tournament. When admin saves these values, the mutation must call the backend update function. Display the current Room ID, Room Password, and YouTube URL in the tournament detail/edit view.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/pages/AdminDashboardPage.tsx",
+          "frontend/src/hooks/useQueries.ts"
+        ],
+        "matchedFiles": [
+          "frontend/src/pages/AdminDashboardPage.tsx",
+          "frontend/src/hooks/useQueries.ts"
+        ]
+      },
+      {
+        "id": "REQ-8",
+        "summary": "Update the Player Dashboard (DashboardPage.tsx) Tournaments section to display Room ID and Room Password for tournaments the player has registered for. Also display the YouTube stream URL (as a clickable link) for each tournament if set by admin.",
+        "status": "missing",
+        "plannedFiles": [
+          "frontend/src/pages/DashboardPage.tsx"
+        ],
+        "matchedFiles": []
+      },
+      {
+        "id": "REQ-9",
+        "summary": "Add a migration file (backend/migration.mo) to safely upgrade the existing canister state to include the new tournament fields (roomId, roomPassword, youtubeUrl) without losing existing tournament, player, registration, or support ticket data.",
+        "status": "unknown",
+        "plannedFiles": [],
+        "matchedFiles": []
       }
     ]
   },
   "changedFiles": [
+    "backend/main.mo",
+    "backend/migration.mo",
     "build-request.json",
     "feature_evidence.json",
     "frontend-file-summaries.txt",
     "frontend-implementation-plan.json",
-    "frontend/src/pages/LoginPage.tsx",
-    "frontend/src/pages/RegisterPage.tsx",
+    "frontend/src/backend.d.ts",
+    "frontend/src/backend.ts",
+    "frontend/src/declarations/backend.did.d.ts",
+    "frontend/src/declarations/backend.did.js",
+    "frontend/src/hooks/useQueries.ts",
+    "frontend/src/pages/AdminDashboardPage.tsx",
     "project_state.json",
     "scratch/component-selection.json",
     "spec.md",

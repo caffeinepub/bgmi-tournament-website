@@ -57,6 +57,7 @@ export interface Tournament {
     entryFee: bigint;
     roomId?: string;
     filledSlots: bigint;
+    youtubeUrl?: string;
     dateTime: Time;
     matchRules: string;
     prizePool: bigint;
@@ -120,18 +121,18 @@ export enum WithdrawalStatus {
     processed = "processed"
 }
 export interface backendInterface {
+    addAdminPrincipal(p: Principal): Promise<boolean>;
     addCoins(userId: string, amount: bigint): Promise<void>;
     addPrizeCoins(userId: string, amount: bigint): Promise<void>;
     approvePaymentProof(proofId: string): Promise<void>;
     assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
     closeSupportTicket(ticketId: string): Promise<void>;
     createSupportTicket(playerName: string, subject: string, description: string, screenshotBlob: ExternalBlob | null): Promise<string>;
-    createTournament(name: string, dateTime: Time, entryFee: bigint, prizePool: bigint, map: string, totalSlots: bigint, upiId: string, matchRules: string): Promise<string>;
+    createTournament(name: string, dateTime: Time, entryFee: bigint, prizePool: bigint, map: string, totalSlots: bigint, upiId: string, matchRules: string, youtubeUrl: string | null): Promise<string>;
     deductCoins(userId: string, amount: bigint): Promise<void>;
     distributePrizeCoins(tournamentId: string, winnerUserId: string, prizeAmount: bigint): Promise<void>;
     findUnusedSlots(): Promise<Array<Tournament>>;
     generateOtp(): Promise<string>;
-    getAdminPrincipal(): Promise<Principal | null>;
     getAllPaymentProofs(): Promise<Array<PaymentProof>>;
     getAllPlayers(): Promise<Array<Player>>;
     getAllSupportTicketsSorted(): Promise<Array<SupportTicket>>;
@@ -157,12 +158,12 @@ export interface backendInterface {
     isAdminPrincipal(p: Principal): Promise<boolean>;
     isCallerAdmin(): Promise<boolean>;
     markWithdrawalRequestProcessed(requestId: string): Promise<void>;
-    registerAdminPrincipal(p: Principal): Promise<boolean>;
     registerForTournament(tournamentId: string, playerId: string, paymentScreenshotBlob: ExternalBlob): Promise<string>;
     registerForTournamentWithCoins(tournamentId: string, playerId: string): Promise<string>;
     registerPlayer(mobile: string, bgmiPlayerId: string, displayName: string): Promise<string>;
     rejectPaymentProof(proofId: string): Promise<void>;
     rejectWithdrawalRequest(requestId: string): Promise<void>;
+    removeAdminPrincipal(p: Principal): Promise<boolean>;
     replyToSupportTicket(ticketId: string, reply: string): Promise<void>;
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
     searchSupportTicketsByPlayerName(name: string): Promise<Array<SupportTicket>>;
@@ -175,5 +176,6 @@ export interface backendInterface {
     updateTournamentQrCode(tournamentId: string, qrCodeBlob: ExternalBlob): Promise<void>;
     updateTournamentRoomDetails(tournamentId: string, roomId: string, roomPassword: string): Promise<void>;
     updateTournamentStatus(tournamentId: string, status: TournamentStatus): Promise<void>;
+    updateTournamentYouTubeUrl(tournamentId: string, youtubeUrl: string): Promise<void>;
     verifyOtp(otp: string): Promise<boolean>;
 }

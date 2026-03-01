@@ -1,25 +1,25 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useActor } from "./useActor";
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useActor } from './useActor';
 import type {
   Tournament,
   TournamentRegistration,
   Player,
+  PaymentProof,
+  WithdrawalRequest,
   SupportTicket,
   SocialLinks,
   TermsAndConditions,
-  UserProfile,
   VerifiedUserProfile,
-  PaymentProof,
-  WithdrawalRequest,
-  TournamentStatus,
-} from "../backend";
+  UserProfile,
+} from '../backend';
+import { TournamentStatus } from '../backend';
 
 // ─── Tournaments ────────────────────────────────────────────────────────────
 
 export function useGetAllTournaments() {
   const { actor, isFetching } = useActor();
   return useQuery<Tournament[]>({
-    queryKey: ["tournaments"],
+    queryKey: ['tournaments'],
     queryFn: async () => {
       if (!actor) return [];
       return actor.getAllTournaments();
@@ -31,7 +31,7 @@ export function useGetAllTournaments() {
 export function useGetTournamentById(id: string) {
   const { actor, isFetching } = useActor();
   return useQuery<Tournament | null>({
-    queryKey: ["tournament", id],
+    queryKey: ['tournament', id],
     queryFn: async () => {
       if (!actor) return null;
       return actor.getTournamentById(id);
@@ -53,8 +53,9 @@ export function useCreateTournament() {
       totalSlots: bigint;
       upiId: string;
       matchRules: string;
+      youtubeUrl: string | null;
     }) => {
-      if (!actor) throw new Error("Actor not available");
+      if (!actor) throw new Error('Actor not available');
       return actor.createTournament(
         params.name,
         params.dateTime,
@@ -63,11 +64,12 @@ export function useCreateTournament() {
         params.map,
         params.totalSlots,
         params.upiId,
-        params.matchRules
+        params.matchRules,
+        params.youtubeUrl,
       );
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["tournaments"] });
+      queryClient.invalidateQueries({ queryKey: ['tournaments'] });
     },
   });
 }
@@ -76,15 +78,12 @@ export function useUpdateTournamentStatus() {
   const { actor } = useActor();
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (params: {
-      tournamentId: string;
-      status: TournamentStatus;
-    }) => {
-      if (!actor) throw new Error("Actor not available");
+    mutationFn: async (params: { tournamentId: string; status: TournamentStatus }) => {
+      if (!actor) throw new Error('Actor not available');
       return actor.updateTournamentStatus(params.tournamentId, params.status);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["tournaments"] });
+      queryClient.invalidateQueries({ queryKey: ['tournaments'] });
     },
   });
 }
@@ -93,20 +92,26 @@ export function useUpdateTournamentRoomDetails() {
   const { actor } = useActor();
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (params: {
-      tournamentId: string;
-      roomId: string;
-      roomPassword: string;
-    }) => {
-      if (!actor) throw new Error("Actor not available");
-      return actor.updateTournamentRoomDetails(
-        params.tournamentId,
-        params.roomId,
-        params.roomPassword
-      );
+    mutationFn: async (params: { tournamentId: string; roomId: string; roomPassword: string }) => {
+      if (!actor) throw new Error('Actor not available');
+      return actor.updateTournamentRoomDetails(params.tournamentId, params.roomId, params.roomPassword);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["tournaments"] });
+      queryClient.invalidateQueries({ queryKey: ['tournaments'] });
+    },
+  });
+}
+
+export function useUpdateTournamentYouTubeUrl() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (params: { tournamentId: string; youtubeUrl: string }) => {
+      if (!actor) throw new Error('Actor not available');
+      return actor.updateTournamentYouTubeUrl(params.tournamentId, params.youtubeUrl);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['tournaments'] });
     },
   });
 }
@@ -115,30 +120,36 @@ export function useUpdateTournamentQrCode() {
   const { actor } = useActor();
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (params: {
-      tournamentId: string;
-      qrCodeBlob: import("../backend").ExternalBlob;
-    }) => {
-      if (!actor) throw new Error("Actor not available");
-      return actor.updateTournamentQrCode(
-        params.tournamentId,
-        params.qrCodeBlob
-      );
+    mutationFn: async (params: { tournamentId: string; qrCodeBlob: any }) => {
+      if (!actor) throw new Error('Actor not available');
+      return actor.updateTournamentQrCode(params.tournamentId, params.qrCodeBlob);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["tournaments"] });
+      queryClient.invalidateQueries({ queryKey: ['tournaments'] });
     },
   });
 }
 
 // ─── Registrations ──────────────────────────────────────────────────────────
 
+export function useGetMyRegistrations() {
+  const { actor, isFetching } = useActor();
+  return useQuery<TournamentRegistration[]>({
+    queryKey: ['myRegistrations'],
+    queryFn: async () => {
+      if (!actor) return [];
+      return actor.getMyRegistrations();
+    },
+    enabled: !!actor && !isFetching,
+  });
+}
+
 export function useGetRegistrationsForTournament(tournamentId: string) {
   const { actor, isFetching } = useActor();
   return useQuery<TournamentRegistration[]>({
-    queryKey: ["registrations", tournamentId],
+    queryKey: ['registrations', tournamentId],
     queryFn: async () => {
-      if (!actor) return [];
+      if (!actor || !tournamentId) return [];
       return actor.getRegistrationsForTournament(tournamentId);
     },
     enabled: !!actor && !isFetching && !!tournamentId,
@@ -148,58 +159,33 @@ export function useGetRegistrationsForTournament(tournamentId: string) {
 export function useGetAllRegistrations() {
   const { actor, isFetching } = useActor();
   return useQuery<TournamentRegistration[]>({
-    queryKey: ["allRegistrations"],
+    queryKey: ['allRegistrations'],
     queryFn: async () => {
       if (!actor) return [];
-      try {
-        const tournaments = await actor.getAllTournaments();
-        const allRegs: TournamentRegistration[] = [];
-        for (const t of tournaments) {
-          const regs = await actor.getRegistrationsForTournament(t.id);
-          allRegs.push(...regs);
-        }
-        return allRegs;
-      } catch {
-        return [];
+      const tournaments = await actor.getAllTournaments();
+      const allRegs: TournamentRegistration[] = [];
+      for (const t of tournaments) {
+        const regs = await actor.getRegistrationsForTournament(t.id);
+        allRegs.push(...regs);
       }
+      return allRegs;
     },
     enabled: !!actor && !isFetching,
   });
 }
 
-export function useGetMyRegistrations() {
-  const { actor, isFetching } = useActor();
-  return useQuery<TournamentRegistration[]>({
-    queryKey: ["myRegistrations"],
-    queryFn: async () => {
-      if (!actor) return [];
-      return actor.getMyRegistrations();
-    },
-    enabled: !!actor && !isFetching,
-  });
-}
-
-// Registration status values as plain strings matching the backend enum values
-type RegistrationStatusString = "pending" | "approved" | "rejected";
-
-export function useUpdateRegistrationStatus() {
+export function useRegisterForTournament() {
   const { actor } = useActor();
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (params: {
-      registrationId: string;
-      status: RegistrationStatusString;
-    }) => {
-      if (!actor) throw new Error("Actor not available");
-      // The backend accepts the enum value; cast via unknown to satisfy TS
-      return actor.updateRegistrationStatus(
-        params.registrationId,
-        params.status as unknown as import("../backend").backendInterface extends { updateRegistrationStatus: (id: string, s: infer S) => unknown } ? S : never
-      );
+    mutationFn: async (params: { tournamentId: string; playerId: string; paymentScreenshotBlob: any }) => {
+      if (!actor) throw new Error('Actor not available');
+      return actor.registerForTournament(params.tournamentId, params.playerId, params.paymentScreenshotBlob);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["registrations"] });
-      queryClient.invalidateQueries({ queryKey: ["allRegistrations"] });
+      queryClient.invalidateQueries({ queryKey: ['myRegistrations'] });
+      queryClient.invalidateQueries({ queryKey: ['tournaments'] });
+      queryClient.invalidateQueries({ queryKey: ['allRegistrations'] });
     },
   });
 }
@@ -209,17 +195,31 @@ export function useRegisterForTournamentWithCoins() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (params: { tournamentId: string; playerId: string }) => {
-      if (!actor) throw new Error("Actor not available");
-      return actor.registerForTournamentWithCoins(
-        params.tournamentId,
-        params.playerId
-      );
+      if (!actor) throw new Error('Actor not available');
+      return actor.registerForTournamentWithCoins(params.tournamentId, params.playerId);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["registrations"] });
-      queryClient.invalidateQueries({ queryKey: ["myRegistrations"] });
-      queryClient.invalidateQueries({ queryKey: ["tournaments"] });
-      queryClient.invalidateQueries({ queryKey: ["walletBalance"] });
+      queryClient.invalidateQueries({ queryKey: ['myRegistrations'] });
+      queryClient.invalidateQueries({ queryKey: ['tournaments'] });
+      queryClient.invalidateQueries({ queryKey: ['walletBalance'] });
+      queryClient.invalidateQueries({ queryKey: ['allRegistrations'] });
+    },
+  });
+}
+
+export function useUpdateRegistrationStatus() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+  type RegistrationStatusStr = 'pending' | 'approved' | 'rejected';
+  return useMutation({
+    mutationFn: async (params: { registrationId: string; status: RegistrationStatusStr }) => {
+      if (!actor) throw new Error('Actor not available');
+      const statusVal = { [params.status]: null } as any;
+      return actor.updateRegistrationStatus(params.registrationId, statusVal);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['registrations'] });
+      queryClient.invalidateQueries({ queryKey: ['allRegistrations'] });
     },
   });
 }
@@ -229,22 +229,10 @@ export function useRegisterForTournamentWithCoins() {
 export function useGetAllPlayers() {
   const { actor, isFetching } = useActor();
   return useQuery<Player[]>({
-    queryKey: ["players"],
+    queryKey: ['players'],
     queryFn: async () => {
       if (!actor) return [];
       return actor.getAllPlayers();
-    },
-    enabled: !!actor && !isFetching,
-  });
-}
-
-export function useGetAllVerifiedUsers() {
-  const { actor, isFetching } = useActor();
-  return useQuery<VerifiedUserProfile[]>({
-    queryKey: ["verifiedUsers"],
-    queryFn: async () => {
-      if (!actor) return [];
-      return actor.getAllVerifiedUsers();
     },
     enabled: !!actor && !isFetching,
   });
@@ -254,33 +242,375 @@ export function useRegisterPlayer() {
   const { actor } = useActor();
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (params: {
-      mobile: string;
-      bgmiPlayerId: string;
-      displayName: string;
-    }) => {
-      if (!actor) throw new Error("Actor not available");
-      return actor.registerPlayer(
-        params.mobile,
-        params.bgmiPlayerId,
-        params.displayName
-      );
+    mutationFn: async (params: { mobile: string; bgmiPlayerId: string; displayName: string }) => {
+      if (!actor) throw new Error('Actor not available');
+      return actor.registerPlayer(params.mobile, params.bgmiPlayerId, params.displayName);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["players"] });
-      queryClient.invalidateQueries({ queryKey: ["verifiedUsers"] });
+      queryClient.invalidateQueries({ queryKey: ['players'] });
+      queryClient.invalidateQueries({ queryKey: ['myUserId'] });
+      queryClient.invalidateQueries({ queryKey: ['currentUserProfile'] });
     },
   });
 }
 
-// ─── User Profile ────────────────────────────────────────────────────────────
+export function useGetAllVerifiedUsers() {
+  const { actor, isFetching } = useActor();
+  return useQuery<VerifiedUserProfile[]>({
+    queryKey: ['verifiedUsers'],
+    queryFn: async () => {
+      if (!actor) return [];
+      return actor.getAllVerifiedUsers();
+    },
+    enabled: !!actor && !isFetching,
+  });
+}
+
+// ─── Wallet ──────────────────────────────────────────────────────────────────
+
+export function useGetWalletBalance(userId: string | null) {
+  const { actor, isFetching } = useActor();
+  return useQuery<bigint>({
+    queryKey: ['walletBalance', userId],
+    queryFn: async () => {
+      if (!actor || !userId) return BigInt(0);
+      return actor.getUserWalletBalance(userId);
+    },
+    enabled: !!actor && !isFetching && !!userId,
+  });
+}
+
+export function useAddCoins() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (params: { userId: string; amount: bigint }) => {
+      if (!actor) throw new Error('Actor not available');
+      return actor.addCoins(params.userId, params.amount);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['walletBalance'] });
+      queryClient.invalidateQueries({ queryKey: ['verifiedUsers'] });
+    },
+  });
+}
+
+export function useDeductCoins() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (params: { userId: string; amount: bigint }) => {
+      if (!actor) throw new Error('Actor not available');
+      return actor.deductCoins(params.userId, params.amount);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['walletBalance'] });
+      queryClient.invalidateQueries({ queryKey: ['verifiedUsers'] });
+    },
+  });
+}
+
+export function useDistributePrizeCoins() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (params: { tournamentId: string; winnerUserId: string; prizeAmount: bigint }) => {
+      if (!actor) throw new Error('Actor not available');
+      return actor.distributePrizeCoins(params.tournamentId, params.winnerUserId, params.prizeAmount);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['walletBalance'] });
+      queryClient.invalidateQueries({ queryKey: ['verifiedUsers'] });
+    },
+  });
+}
+
+// ─── Payment Proofs ──────────────────────────────────────────────────────────
+
+export function useGetAllPaymentProofs() {
+  const { actor, isFetching } = useActor();
+  return useQuery<PaymentProof[]>({
+    queryKey: ['paymentProofs'],
+    queryFn: async () => {
+      if (!actor) return [];
+      return actor.getAllPaymentProofs();
+    },
+    enabled: !!actor && !isFetching,
+  });
+}
+
+export function useGetMyPaymentProofs(userId: string | null) {
+  const { actor, isFetching } = useActor();
+  return useQuery<PaymentProof[]>({
+    queryKey: ['myPaymentProofs', userId],
+    queryFn: async () => {
+      if (!actor || !userId) return [];
+      return actor.getMyPaymentProofs(userId);
+    },
+    enabled: !!actor && !isFetching && !!userId,
+  });
+}
+
+export function useSubmitPaymentProof() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (params: { userId: string; amount: bigint; imageBase64: string; transactionRef: string }) => {
+      if (!actor) throw new Error('Actor not available');
+      return actor.submitPaymentProof(params.userId, params.amount, params.imageBase64, params.transactionRef);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['myPaymentProofs'] });
+      queryClient.invalidateQueries({ queryKey: ['paymentProofs'] });
+    },
+  });
+}
+
+export function useApprovePaymentProof() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (proofId: string) => {
+      if (!actor) throw new Error('Actor not available');
+      return actor.approvePaymentProof(proofId);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['paymentProofs'] });
+      queryClient.invalidateQueries({ queryKey: ['walletBalance'] });
+      queryClient.invalidateQueries({ queryKey: ['verifiedUsers'] });
+    },
+  });
+}
+
+export function useRejectPaymentProof() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (proofId: string) => {
+      if (!actor) throw new Error('Actor not available');
+      return actor.rejectPaymentProof(proofId);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['paymentProofs'] });
+    },
+  });
+}
+
+// ─── Withdrawals ─────────────────────────────────────────────────────────────
+
+export function useGetAllWithdrawalRequests() {
+  const { actor, isFetching } = useActor();
+  return useQuery<WithdrawalRequest[]>({
+    queryKey: ['withdrawalRequests'],
+    queryFn: async () => {
+      if (!actor) return [];
+      return actor.getAllWithdrawalRequests();
+    },
+    enabled: !!actor && !isFetching,
+  });
+}
+
+export function useGetMyWithdrawalRequests(userId: string | null) {
+  const { actor, isFetching } = useActor();
+  return useQuery<WithdrawalRequest[]>({
+    queryKey: ['myWithdrawalRequests', userId],
+    queryFn: async () => {
+      if (!actor || !userId) return [];
+      return actor.getMyWithdrawalRequests(userId);
+    },
+    enabled: !!actor && !isFetching && !!userId,
+  });
+}
+
+export function useSubmitWithdrawalRequest() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (params: { userId: string; amount: bigint; upiId: string }) => {
+      if (!actor) throw new Error('Actor not available');
+      return actor.submitWithdrawalRequest(params.userId, params.amount, params.upiId);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['myWithdrawalRequests'] });
+      queryClient.invalidateQueries({ queryKey: ['walletBalance'] });
+      queryClient.invalidateQueries({ queryKey: ['withdrawalRequests'] });
+    },
+  });
+}
+
+export function useMarkWithdrawalProcessed() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (requestId: string) => {
+      if (!actor) throw new Error('Actor not available');
+      return actor.markWithdrawalRequestProcessed(requestId);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['withdrawalRequests'] });
+    },
+  });
+}
+
+export function useRejectWithdrawalRequest() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (requestId: string) => {
+      if (!actor) throw new Error('Actor not available');
+      return actor.rejectWithdrawalRequest(requestId);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['withdrawalRequests'] });
+      queryClient.invalidateQueries({ queryKey: ['walletBalance'] });
+    },
+  });
+}
+
+// ─── Support Tickets ─────────────────────────────────────────────────────────
+
+export function useGetAllSupportTickets() {
+  const { actor, isFetching } = useActor();
+  return useQuery<SupportTicket[]>({
+    queryKey: ['supportTickets'],
+    queryFn: async () => {
+      if (!actor) return [];
+      return actor.getAllSupportTicketsSorted();
+    },
+    enabled: !!actor && !isFetching,
+  });
+}
+
+export function useGetMySupportTickets() {
+  const { actor, isFetching } = useActor();
+  return useQuery<SupportTicket[]>({
+    queryKey: ['mySupportTickets'],
+    queryFn: async () => {
+      if (!actor) return [];
+      return actor.getMySupportTickets();
+    },
+    enabled: !!actor && !isFetching,
+  });
+}
+
+export function useCreateSupportTicket() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (params: {
+      playerName: string;
+      subject: string;
+      description: string;
+      screenshotBlob?: any | null;
+    }) => {
+      if (!actor) throw new Error('Actor not available');
+      return actor.createSupportTicket(
+        params.playerName,
+        params.subject,
+        params.description,
+        params.screenshotBlob ?? null,
+      );
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['mySupportTickets'] });
+      queryClient.invalidateQueries({ queryKey: ['supportTickets'] });
+    },
+  });
+}
+
+export function useReplyToSupportTicket() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (params: { ticketId: string; reply: string }) => {
+      if (!actor) throw new Error('Actor not available');
+      return actor.replyToSupportTicket(params.ticketId, params.reply);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['supportTickets'] });
+      queryClient.invalidateQueries({ queryKey: ['mySupportTickets'] });
+    },
+  });
+}
+
+export function useCloseSupportTicket() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (ticketId: string) => {
+      if (!actor) throw new Error('Actor not available');
+      return actor.closeSupportTicket(ticketId);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['supportTickets'] });
+    },
+  });
+}
+
+// ─── Social Links ─────────────────────────────────────────────────────────────
+
+export function useGetSocialLinks() {
+  const { actor, isFetching } = useActor();
+  return useQuery<SocialLinks>({
+    queryKey: ['socialLinks'],
+    queryFn: async () => {
+      if (!actor) return { youtube: '', instagram: '', telegram: '' };
+      return actor.getSocialLinks();
+    },
+    enabled: !!actor && !isFetching,
+  });
+}
+
+export function useUpdateSocialLinks() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (params: { youtube: string; instagram: string; telegram: string }) => {
+      if (!actor) throw new Error('Actor not available');
+      return actor.updateSocialLinks(params.youtube, params.instagram, params.telegram);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['socialLinks'] });
+    },
+  });
+}
+
+// ─── Terms & Conditions ───────────────────────────────────────────────────────
+
+export function useGetTermsAndConditions() {
+  const { actor, isFetching } = useActor();
+  return useQuery<TermsAndConditions>({
+    queryKey: ['termsAndConditions'],
+    queryFn: async () => {
+      if (!actor) return { content: '' };
+      return actor.getTermsAndConditions();
+    },
+    enabled: !!actor && !isFetching,
+  });
+}
+
+export function useUpdateTermsAndConditions() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (content: string) => {
+      if (!actor) throw new Error('Actor not available');
+      return actor.updateTermsAndConditions(content);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['termsAndConditions'] });
+    },
+  });
+}
+
+// ─── User Profile ─────────────────────────────────────────────────────────────
 
 export function useGetCallerUserProfile() {
   const { actor, isFetching: actorFetching } = useActor();
   const query = useQuery<UserProfile | null>({
-    queryKey: ["currentUserProfile"],
+    queryKey: ['currentUserProfile'],
     queryFn: async () => {
-      if (!actor) throw new Error("Actor not available");
+      if (!actor) throw new Error('Actor not available');
       return actor.getCallerUserProfile();
     },
     enabled: !!actor && !actorFetching,
@@ -298,376 +628,23 @@ export function useSaveCallerUserProfile() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (profile: UserProfile) => {
-      if (!actor) throw new Error("Actor not available");
+      if (!actor) throw new Error('Actor not available');
       return actor.saveCallerUserProfile(profile);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["currentUserProfile"] });
+      queryClient.invalidateQueries({ queryKey: ['currentUserProfile'] });
     },
   });
 }
 
-// ─── User ID ─────────────────────────────────────────────────────────────────
-
 export function useGetMyUserId() {
   const { actor, isFetching } = useActor();
   return useQuery<string | null>({
-    queryKey: ["myUserId"],
+    queryKey: ['myUserId'],
     queryFn: async () => {
       if (!actor) return null;
       return actor.getMyUserId();
     },
     enabled: !!actor && !isFetching,
-  });
-}
-
-// ─── Wallet ──────────────────────────────────────────────────────────────────
-
-export function useGetWalletBalance(userId: string | null) {
-  const { actor, isFetching } = useActor();
-  return useQuery<bigint>({
-    queryKey: ["walletBalance", userId],
-    queryFn: async () => {
-      if (!actor || !userId) return BigInt(0);
-      return actor.getUserWalletBalance(userId);
-    },
-    enabled: !!actor && !isFetching && !!userId,
-  });
-}
-
-// ─── Payment Proofs ──────────────────────────────────────────────────────────
-
-export function useGetAllPaymentProofs() {
-  const { actor, isFetching } = useActor();
-  return useQuery<PaymentProof[]>({
-    queryKey: ["allPaymentProofs"],
-    queryFn: async () => {
-      if (!actor) return [];
-      return actor.getAllPaymentProofs();
-    },
-    enabled: !!actor && !isFetching,
-  });
-}
-
-export function useGetMyPaymentProofs(userId: string | null) {
-  const { actor, isFetching } = useActor();
-  return useQuery<PaymentProof[]>({
-    queryKey: ["myPaymentProofs", userId],
-    queryFn: async () => {
-      if (!actor || !userId) return [];
-      return actor.getMyPaymentProofs(userId);
-    },
-    enabled: !!actor && !isFetching && !!userId,
-  });
-}
-
-export function useSubmitPaymentProof() {
-  const { actor } = useActor();
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async (params: {
-      userId: string;
-      amount: bigint;
-      imageBase64: string;
-      transactionRef: string;
-    }) => {
-      if (!actor) throw new Error("Actor not available");
-      return actor.submitPaymentProof(
-        params.userId,
-        params.amount,
-        params.imageBase64,
-        params.transactionRef
-      );
-    },
-    onSuccess: (_data, variables) => {
-      queryClient.invalidateQueries({
-        queryKey: ["myPaymentProofs", variables.userId],
-      });
-      queryClient.invalidateQueries({ queryKey: ["allPaymentProofs"] });
-      queryClient.invalidateQueries({
-        queryKey: ["walletBalance", variables.userId],
-      });
-    },
-  });
-}
-
-export function useApprovePaymentProof() {
-  const { actor } = useActor();
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async (proofId: string) => {
-      if (!actor) throw new Error("Actor not available");
-      return actor.approvePaymentProof(proofId);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["allPaymentProofs"] });
-      queryClient.invalidateQueries({ queryKey: ["verifiedUsers"] });
-      queryClient.invalidateQueries({ queryKey: ["walletBalance"] });
-    },
-  });
-}
-
-export function useRejectPaymentProof() {
-  const { actor } = useActor();
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async (proofId: string) => {
-      if (!actor) throw new Error("Actor not available");
-      return actor.rejectPaymentProof(proofId);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["allPaymentProofs"] });
-    },
-  });
-}
-
-// ─── Withdrawal Requests ─────────────────────────────────────────────────────
-
-export function useGetAllWithdrawalRequests() {
-  const { actor, isFetching } = useActor();
-  return useQuery<WithdrawalRequest[]>({
-    queryKey: ["allWithdrawalRequests"],
-    queryFn: async () => {
-      if (!actor) return [];
-      return actor.getAllWithdrawalRequests();
-    },
-    enabled: !!actor && !isFetching,
-  });
-}
-
-export function useGetMyWithdrawalRequests(userId: string | null) {
-  const { actor, isFetching } = useActor();
-  return useQuery<WithdrawalRequest[]>({
-    queryKey: ["myWithdrawalRequests", userId],
-    queryFn: async () => {
-      if (!actor || !userId) return [];
-      return actor.getMyWithdrawalRequests(userId);
-    },
-    enabled: !!actor && !isFetching && !!userId,
-  });
-}
-
-export function useSubmitWithdrawalRequest() {
-  const { actor } = useActor();
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async (params: {
-      userId: string;
-      amount: bigint;
-      upiId: string;
-    }) => {
-      if (!actor) throw new Error("Actor not available");
-      return actor.submitWithdrawalRequest(
-        params.userId,
-        params.amount,
-        params.upiId
-      );
-    },
-    onSuccess: (_data, variables) => {
-      queryClient.invalidateQueries({
-        queryKey: ["myWithdrawalRequests", variables.userId],
-      });
-      queryClient.invalidateQueries({ queryKey: ["allWithdrawalRequests"] });
-      queryClient.invalidateQueries({
-        queryKey: ["walletBalance", variables.userId],
-      });
-    },
-  });
-}
-
-export function useMarkWithdrawalProcessed() {
-  const { actor } = useActor();
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async (requestId: string) => {
-      if (!actor) throw new Error("Actor not available");
-      return actor.markWithdrawalRequestProcessed(requestId);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["allWithdrawalRequests"] });
-    },
-  });
-}
-
-export function useRejectWithdrawalRequest() {
-  const { actor } = useActor();
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async (requestId: string) => {
-      if (!actor) throw new Error("Actor not available");
-      return actor.rejectWithdrawalRequest(requestId);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["allWithdrawalRequests"] });
-      queryClient.invalidateQueries({ queryKey: ["verifiedUsers"] });
-      queryClient.invalidateQueries({ queryKey: ["walletBalance"] });
-    },
-  });
-}
-
-// ─── Support Tickets ─────────────────────────────────────────────────────────
-
-export function useGetAllSupportTickets() {
-  const { actor, isFetching } = useActor();
-  return useQuery<SupportTicket[]>({
-    queryKey: ["supportTickets"],
-    queryFn: async () => {
-      if (!actor) return [];
-      return actor.getAllSupportTicketsSorted();
-    },
-    enabled: !!actor && !isFetching,
-  });
-}
-
-export function useGetMySupportTickets() {
-  const { actor, isFetching } = useActor();
-  return useQuery<SupportTicket[]>({
-    queryKey: ["mySupportTickets"],
-    queryFn: async () => {
-      if (!actor) return [];
-      return actor.getMySupportTickets();
-    },
-    enabled: !!actor && !isFetching,
-  });
-}
-
-export function useCreateSupportTicket() {
-  const { actor } = useActor();
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async (params: {
-      playerName: string;
-      subject: string;
-      description: string;
-    }) => {
-      if (!actor) throw new Error("Actor not available");
-      return actor.createSupportTicket(
-        params.playerName,
-        params.subject,
-        params.description,
-        null
-      );
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["mySupportTickets"] });
-      queryClient.invalidateQueries({ queryKey: ["supportTickets"] });
-    },
-  });
-}
-
-export function useReplyToSupportTicket() {
-  const { actor } = useActor();
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async (params: { ticketId: string; reply: string }) => {
-      if (!actor) throw new Error("Actor not available");
-      return actor.replyToSupportTicket(params.ticketId, params.reply);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["supportTickets"] });
-    },
-  });
-}
-
-export function useCloseSupportTicket() {
-  const { actor } = useActor();
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async (ticketId: string) => {
-      if (!actor) throw new Error("Actor not available");
-      return actor.closeSupportTicket(ticketId);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["supportTickets"] });
-    },
-  });
-}
-
-// ─── Social Links ────────────────────────────────────────────────────────────
-
-export function useGetSocialLinks() {
-  const { actor, isFetching } = useActor();
-  return useQuery<SocialLinks>({
-    queryKey: ["socialLinks"],
-    queryFn: async () => {
-      if (!actor) return { youtube: "", instagram: "", telegram: "" };
-      return actor.getSocialLinks();
-    },
-    enabled: !!actor && !isFetching,
-  });
-}
-
-export function useUpdateSocialLinks() {
-  const { actor } = useActor();
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async (params: {
-      youtube: string;
-      instagram: string;
-      telegram: string;
-    }) => {
-      if (!actor) throw new Error("Actor not available");
-      return actor.updateSocialLinks(
-        params.youtube,
-        params.instagram,
-        params.telegram
-      );
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["socialLinks"] });
-    },
-  });
-}
-
-// ─── Terms & Conditions ──────────────────────────────────────────────────────
-
-export function useGetTermsAndConditions() {
-  const { actor, isFetching } = useActor();
-  return useQuery<TermsAndConditions>({
-    queryKey: ["termsAndConditions"],
-    queryFn: async () => {
-      if (!actor) return { content: "" };
-      return actor.getTermsAndConditions();
-    },
-    enabled: !!actor && !isFetching,
-  });
-}
-
-export function useUpdateTermsAndConditions() {
-  const { actor } = useActor();
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async (content: string) => {
-      if (!actor) throw new Error("Actor not available");
-      return actor.updateTermsAndConditions(content);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["termsAndConditions"] });
-    },
-  });
-}
-
-// ─── Prize Distribution ──────────────────────────────────────────────────────
-
-export function useDistributePrizeCoins() {
-  const { actor } = useActor();
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async (params: {
-      tournamentId: string;
-      winnerUserId: string;
-      prizeAmount: bigint;
-    }) => {
-      if (!actor) throw new Error("Actor not available");
-      return actor.distributePrizeCoins(
-        params.tournamentId,
-        params.winnerUserId,
-        params.prizeAmount
-      );
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["verifiedUsers"] });
-      queryClient.invalidateQueries({ queryKey: ["walletBalance"] });
-    },
   });
 }

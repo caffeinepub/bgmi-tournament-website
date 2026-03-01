@@ -1,41 +1,66 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Fix authentication flow: replace broken custom auth buttons with Internet Identity default popup",
+  "title": "Fix Admin Authorization & Full Bidirectional Data Sync (Admin ↔ User Panel)",
   "requirements": [
     {
-      "id": "REQ-1",
-      "summary": "Replace RegisterPage Step 2 custom authentication buttons with a single Internet Identity button",
+      "id": "REQ-6",
+      "summary": "Fix Admin Dashboard to use admin-authenticated actor for all data queries",
       "acceptanceCriteria": [
-        "Step 2 shows a single 'Connect with Internet Identity' button (not Google/Apple/Microsoft/Passkey separate buttons)",
-        "Button is always enabled and clickable when Step 2 is rendered — no stuck 'Connecting...' state on load",
-        "Clicking the button triggers the Internet Identity native popup directly via the useInternetIdentity login() function",
-        "No stale error message ('Authentication cancelled or failed') is shown when arriving at Step 2",
-        "If authentication fails or is cancelled, an error message is shown but the button resets to clickable state immediately"
+        "Admin Tournaments section loads and displays all tournaments",
+        "Admin Registrations section loads and displays all tournament registrations",
+        "Admin Players section loads and displays all registered players",
+        "Admin Payment Proofs section loads and displays all submitted payment proofs",
+        "Admin Withdrawals section loads and displays all withdrawal requests",
+        "Admin Support Tickets section loads and displays all support tickets from all users"
       ],
       "file_operations": [
         {
-          "path": "frontend/src/pages/RegisterPage.tsx",
+          "path": "frontend/src/pages/AdminDashboardPage.tsx",
           "operation": "modify",
-          "description": "Remove the AuthMethodButtons component and its import from Step 2 ('Authenticate' step). Replace with a single button labeled 'Connect with Internet Identity' that directly calls the login() function from the useInternetIdentity hook. Clear any stuck loading state (authLoading, authError) when the component mounts or when Step 2 is entered, ensuring the button is always clickable. Remove the persistent 'Authentication cancelled or failed. Please try again.' error display. Handle authentication errors inline by showing them temporarily and resetting the button to a clickable state immediately after an error. Ensure that after successful authentication, the existing profile registration and redirect logic continues to work as before."
+          "description": "Update all data-fetching query hooks to use the admin-authenticated actor instead of user actor. Replace useQueries hooks that fetch tournaments, registrations, players, payment proofs, withdrawals, and support tickets to call the correct admin-level backend queries (getAllTournaments, getAllPlayers, getAllSupportTicketsSorted, getAllPaymentProofs, getAllWithdrawalRequests, getRegistrationsForTournament). Ensure all sections render the full platform-wide data, not per-user filtered data."
+        },
+        {
+          "path": "frontend/src/hooks/useQueries.ts",
+          "operation": "modify",
+          "description": "Review and update query hooks used by the admin panel to ensure they call the correct admin backend methods (getAllTournaments, getAllPlayers, getAllSupportTicketsSorted, getAllPaymentProofs, getAllWithdrawalRequests). Ensure these hooks accept and use the admin actor instance instead of a user actor. Verify the authorization component's usage instructions before implementing to ensure proper actor passing."
         }
       ]
     },
     {
-      "id": "REQ-2",
-      "summary": "Replace LoginPage custom authentication buttons with a single Internet Identity button",
+      "id": "REQ-7",
+      "summary": "Add Room ID, Room Password, and YouTube URL fields to admin tournament management UI",
       "acceptanceCriteria": [
-        "LoginPage shows a single 'Connect with Internet Identity' button replacing the Google/Apple/Microsoft/Passkey buttons",
-        "The button is immediately clickable on page load with no disabled or stuck state",
-        "Clicking the button opens Internet Identity's native popup directly",
-        "After successful authentication, the existing profile-fetch and redirect logic runs as before",
-        "The AuthMethodButtons component is no longer used on LoginPage"
+        "Tournament create/edit form in admin panel has Room ID, Room Password, and YouTube URL fields",
+        "Saving these fields persists them to the backend",
+        "Existing tournament edit view shows current values of Room ID, Room Password, and YouTube URL"
       ],
       "file_operations": [
         {
-          "path": "frontend/src/pages/LoginPage.tsx",
+          "path": "frontend/src/pages/AdminDashboardPage.tsx",
           "operation": "modify",
-          "description": "Remove the AuthMethodButtons component and its import. Remove the 'CHOOSE METHOD' UI section. Replace with a single button labeled 'Connect with Internet Identity' that directly calls the login() function from the useInternetIdentity hook. Ensure the button is fully clickable and functional on initial render with no disabled or non-interactive state. After successful authentication, preserve the existing logic that fetches the user profile via getCallerUserProfile() and redirects to the player dashboard. Handle authentication errors gracefully by displaying them to the user without leaving the button in a stuck state."
+          "description": "Update the tournament create/edit form UI to include input fields for Room ID (roomId), Room Password (roomPassword), and YouTube URL (youtubeUrl). When admin creates a tournament, call the backend createTournament with the youtubeUrl parameter. When admin edits an existing tournament, call the backend updateTournamentRoomDetails (for roomId and roomPassword) and updateTournamentYouTubeUrl (for youtubeUrl) mutations. Display the current Room ID, Room Password, and YouTube URL values in the tournament detail/edit view. Use the authorization component to ensure only admins can access these fields."
+        },
+        {
+          "path": "frontend/src/hooks/useQueries.ts",
+          "operation": "modify",
+          "description": "Add or update mutation hooks for updateTournamentRoomDetails and updateTournamentYouTubeUrl to support admin setting/updating these fields. Ensure the createTournament mutation accepts the youtubeUrl parameter. Verify the authorization component's usage instructions before implementing to ensure proper admin-only access."
+        }
+      ]
+    },
+    {
+      "id": "REQ-8",
+      "summary": "Display Room ID, Room Password, and YouTube URL in Player Dashboard tournaments section",
+      "acceptanceCriteria": [
+        "Player's registered tournaments show Room ID and Room Password when set by admin",
+        "YouTube URL appears as a clickable link/button in the tournament card for users",
+        "If Room ID/Password or YouTube URL is not set, the field is gracefully hidden or shows a placeholder"
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/pages/DashboardPage.tsx",
+          "operation": "modify",
+          "description": "Update the Tournaments section in the player dashboard to display Room ID (roomId), Room Password (roomPassword), and YouTube URL (youtubeUrl) for each tournament the player has registered for. Render the YouTube URL as a clickable link/button that opens in a new tab. If these fields are null or empty, hide them gracefully or show a placeholder message (e.g., 'Room details not yet available'). Use the backend interface Tournament type which includes roomId, roomPassword, and youtubeUrl as optional fields."
         }
       ]
     }

@@ -1,68 +1,194 @@
 {
   "kind": "build_request",
-  "title": "Fix authentication flow: replace broken custom auth buttons with Internet Identity default popup",
+  "title": "Fix Admin Authorization & Full Bidirectional Data Sync (Admin ↔ User Panel)",
   "projectName": "Raj Empire Esports",
   "priority": "high",
   "requirements": [
     {
       "id": "REQ-1",
-      "text": "On RegisterPage Step 2 ('Authenticate' step), remove the current custom authentication buttons and the stuck 'Connecting...' state. Replace with a single 'Connect with Internet Identity' button that directly calls the `login()` function from `useInternetIdentity` hook without any custom method selection logic. Clear any stuck loading state on mount so the button is always clickable when the user arrives at Step 2. Remove the 'Authentication cancelled or failed. Please try again.' error that persists from a previous failed attempt.",
-      "target": "frontend",
+      "text": "Fix the backend admin authorization check so that the authenticated admin principal (the one used to log into the admin panel) is recognized as an authorized admin for all privileged operations. The 'Unauthorized: Only admins can create tournaments' error must be eliminated. The backend's admin principal list must be seeded or dynamically updated so the admin's Internet Identity principal is always authorized.",
+      "target": "backend",
       "source": {
         "messageIds": [
-          "msg-1",
-          "msg-2",
-          "msg-3"
+          "msg-recent"
         ],
         "quotes": [
-          "Register Step 2 pe button 'Connecting...' stuck hai aur 'Authentication cancelled or failed' error aa raha hai",
-          "default popup kholen",
-          "Seedha Internet Identity ka default popup use karunga — ek single 'Connect with Internet Identity' button hoga"
+          "Unauthorized: Only admins can create tournaments"
         ]
       },
       "acceptanceCriteria": [
-        "Step 2 shows a single 'Connect with Internet Identity' button (not Google/Apple/Microsoft/Passkey separate buttons)",
-        "Button is always enabled and clickable when Step 2 is rendered — no stuck 'Connecting...' state on load",
-        "Clicking the button triggers the Internet Identity native popup directly via the useInternetIdentity login() function",
-        "No stale error message ('Authentication cancelled or failed') is shown when arriving at Step 2",
-        "If authentication fails or is cancelled, an error message is shown but the button resets to clickable state immediately"
+        "Admin can create a tournament without receiving any 'Unauthorized' error",
+        "Admin can update, delete, and manage tournaments without authorization errors",
+        "All other admin-only backend functions (manage players, manage tickets, etc.) work without authorization errors"
       ]
     },
     {
       "id": "REQ-2",
-      "text": "On LoginPage, remove the AuthMethodButtons component (Google, Apple, Microsoft, Passkey separate buttons) and the 'CHOOSE METHOD' UI. Replace with a single 'Connect with Internet Identity' button that directly calls the `login()` function from `useInternetIdentity` hook. The button must be fully clickable and functional — no disabled or non-interactive state on initial render.",
-      "target": "frontend",
+      "text": "Fix the backend support tickets storage and retrieval so that tickets submitted by any player (via the user/player panel) are stored in the shared canister state and returned by the admin query for all support tickets. Admin panel Support Tickets section must display all tickets submitted by all users.",
+      "target": "backend",
       "source": {
         "messageIds": [
-          "msg-1",
-          "msg-2",
-          "msg-3"
+          "msg-recent"
         ],
         "quotes": [
-          "Login page pe Google, Apple, Microsoft aur Passkey buttons click hi nahi ho rahe",
-          "default popup kholen",
-          "Dono jagah se custom authentication buttons hata dunga — Seedha Internet Identity ka default popup use karunga"
+          "Support Tickets (0 open)",
+          "No support tickets yet",
+          "sdddd"
         ]
       },
       "acceptanceCriteria": [
-        "LoginPage shows a single 'Connect with Internet Identity' button replacing the Google/Apple/Microsoft/Passkey buttons",
-        "The button is immediately clickable on page load with no disabled or stuck state",
-        "Clicking the button opens Internet Identity's native popup directly",
-        "After successful authentication, the existing profile-fetch and redirect logic runs as before",
-        "The AuthMethodButtons component is no longer used on LoginPage"
+        "Support ticket submitted by a player is retrievable by the admin query",
+        "Admin panel Support Tickets section shows all tickets from all users, not just 0",
+        "Ticket status (open/closed) and user ID are displayed correctly in the admin panel"
+      ]
+    },
+    {
+      "id": "REQ-3",
+      "text": "Fix the backend player/user registration storage so that all registered players are stored in canister state and returned by the admin query. Admin panel Players and Registrations sections must display all registered users and their tournament registrations.",
+      "target": "backend",
+      "source": {
+        "messageIds": [
+          "msg-recent"
+        ],
+        "quotes": [
+          "Registrations aur Players sections mein bhi yahi issue hai",
+          "sab page blank h"
+        ]
+      },
+      "acceptanceCriteria": [
+        "All registered players appear in the Admin panel Players section",
+        "All tournament registrations appear in the Admin panel Registrations section",
+        "Payment proofs submitted by users appear in the Admin panel Payment Proofs section",
+        "Withdrawal requests submitted by users appear in the Admin panel Withdrawals section"
+      ]
+    },
+    {
+      "id": "REQ-4",
+      "text": "Add room details fields (Room ID and Room Password) to the tournament data model in the backend. Admin must be able to set/update the Room ID and Room Password for a tournament. These values must be returned in tournament query results so the user/player panel can display them.",
+      "target": "backend",
+      "source": {
+        "messageIds": [
+          "msg-recent"
+        ],
+        "quotes": [
+          "room create se lekar youtube url sab theek karo",
+          "admin room create kare → User panel mein dikhe"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Tournament data type includes roomId and roomPassword optional fields",
+        "Admin can set/update roomId and roomPassword for any tournament",
+        "Room details are returned in tournament queries accessible to players"
+      ]
+    },
+    {
+      "id": "REQ-5",
+      "text": "Add a YouTube URL field to the tournament data model in the backend. Admin must be able to set/update a YouTube stream URL for any tournament. This value must be returned in tournament query results so the user/player panel can display it.",
+      "target": "backend",
+      "source": {
+        "messageIds": [
+          "msg-recent"
+        ],
+        "quotes": [
+          "youtube url sab theek karo",
+          "Admin set kare → User panel mein dikhe"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Tournament data type includes an optional youtubeUrl field",
+        "Admin can set/update youtubeUrl for any tournament",
+        "YouTube URL is returned in tournament queries accessible to players"
+      ]
+    },
+    {
+      "id": "REQ-6",
+      "text": "Update the Admin Dashboard page (AdminDashboardPage.tsx) to use the correct admin-authenticated actor for all data queries and mutations (tournaments, registrations, players, payment proofs, withdrawals, support tickets). Ensure all admin sections call backend queries that return full platform-wide data, not per-user filtered data. Fix the useQueries hooks used in the admin context to pass the admin actor instead of a user actor.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-recent"
+        ],
+        "quotes": [
+          "admin panel mein na to support ticket show ho raha na to registration mein koi user id show ho raha"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Admin Tournaments section loads and displays all tournaments",
+        "Admin Registrations section loads and displays all tournament registrations",
+        "Admin Players section loads and displays all registered players",
+        "Admin Payment Proofs section loads and displays all submitted payment proofs",
+        "Admin Withdrawals section loads and displays all withdrawal requests",
+        "Admin Support Tickets section loads and displays all support tickets from all users"
+      ]
+    },
+    {
+      "id": "REQ-7",
+      "text": "Update the Admin Dashboard tournament management UI to include fields for Room ID, Room Password, and YouTube URL when creating or editing a tournament. When admin saves these values, the mutation must call the backend update function. Display the current Room ID, Room Password, and YouTube URL in the tournament detail/edit view.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-recent"
+        ],
+        "quotes": [
+          "room create se lekar youtube url sab theek karo",
+          "admin kuch bhi banaye ya create kare to user panel me jaye"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Tournament create/edit form in admin panel has Room ID, Room Password, and YouTube URL fields",
+        "Saving these fields persists them to the backend",
+        "Existing tournament edit view shows current values of Room ID, Room Password, and YouTube URL"
+      ]
+    },
+    {
+      "id": "REQ-8",
+      "text": "Update the Player Dashboard (DashboardPage.tsx) Tournaments section to display Room ID and Room Password for tournaments the player has registered for. Also display the YouTube stream URL (as a clickable link) for each tournament if set by admin.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-recent"
+        ],
+        "quotes": [
+          "admin kuch bhi banaye ya create kare to user panel me jaye",
+          "room create se lekar youtube url sab theek karo"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Player's registered tournaments show Room ID and Room Password when set by admin",
+        "YouTube URL appears as a clickable link/button in the tournament card for users",
+        "If Room ID/Password or YouTube URL is not set, the field is gracefully hidden or shows a placeholder"
+      ]
+    },
+    {
+      "id": "REQ-9",
+      "text": "Add a migration file (backend/migration.mo) to safely upgrade the existing canister state to include the new tournament fields (roomId, roomPassword, youtubeUrl) without losing existing tournament, player, registration, or support ticket data.",
+      "target": "backend",
+      "source": {
+        "messageIds": [
+          "msg-recent"
+        ],
+        "quotes": [
+          "room create se lekar youtube url sab theek karo"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Canister upgrade does not lose any existing tournament, player, or registration data",
+        "Existing tournaments without room/YouTube fields default to null/empty values after migration",
+        "Migration compiles and applies cleanly"
       ]
     }
   ],
   "constraints": [
-    "Do not modify files under frontend/src/hooks/ (useInternetIdentity.ts, useActor.ts) — they are immutable",
-    "Use only the existing login() function from useInternetIdentity hook — do not introduce a new auth client",
-    "Do not change backend logic or data models"
+    "Do not change the admin login credential logic in AdminLoginPage.tsx",
+    "Do not modify any files listed in frontend.immutablePaths",
+    "All Motoko logic must remain in a single actor in backend/main.mo",
+    "Preserve all existing data types and backward compatibility in the backend"
   ],
   "nonGoals": [
-    "Adding new authentication providers beyond Internet Identity",
-    "Changing the overall page layout or visual theme",
-    "Modifying Step 1 or Step 3 of the registration flow",
-    "Any backend changes"
+    "Real-time WebSocket or push notification sync (polling via React Query is sufficient)",
+    "New UI theme or visual redesign",
+    "New user-facing features beyond room/YouTube display",
+    "Email or SMS notifications for admin/user actions"
   ],
   "imageRequirements": {
     "required": [],

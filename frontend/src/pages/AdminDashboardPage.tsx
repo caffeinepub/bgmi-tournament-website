@@ -10,12 +10,11 @@ import {
   LogOut,
   X,
   Menu,
-  Search,
   Check,
   XCircle,
   CreditCard,
   Wallet,
-  Gift,
+  Youtube,
 } from "lucide-react";
 import { useAdminAuth } from "../context/AdminAuthContext";
 import {
@@ -23,7 +22,8 @@ import {
   useCreateTournament,
   useUpdateTournamentStatus,
   useUpdateTournamentRoomDetails,
-  useGetRegistrationsForTournament,
+  useUpdateTournamentYouTubeUrl,
+  useGetAllRegistrations,
   useUpdateRegistrationStatus,
   useGetAllVerifiedUsers,
   useGetAllSupportTickets,
@@ -41,7 +41,7 @@ import {
   useRejectWithdrawalRequest,
   useDistributePrizeCoins,
 } from "../hooks/useQueries";
-import type { TournamentStatus } from "../backend";
+import { TournamentStatus } from "../backend";
 
 const NAV_ITEMS = [
   { key: "tournaments", label: "Tournaments", icon: Trophy },
@@ -159,6 +159,7 @@ function TournamentsTab() {
   const createTournament = useCreateTournament();
   const updateStatus = useUpdateTournamentStatus();
   const updateRoom = useUpdateTournamentRoomDetails();
+  const updateYouTube = useUpdateTournamentYouTubeUrl();
   const distributePrize = useDistributePrizeCoins();
 
   const [showForm, setShowForm] = useState(false);
@@ -171,10 +172,12 @@ function TournamentsTab() {
     totalSlots: "100",
     upiId: "",
     matchRules: "",
+    youtubeUrl: "",
   });
   const [roomForms, setRoomForms] = useState<
     Record<string, { roomId: string; roomPassword: string }>
   >({});
+  const [youtubeForms, setYoutubeForms] = useState<Record<string, string>>({});
   const [prizeForm, setPrizeForm] = useState<
     Record<string, { winnerUserId: string; prizeAmount: string }>
   >({});
@@ -195,6 +198,7 @@ function TournamentsTab() {
         totalSlots: BigInt(form.totalSlots || "100"),
         upiId: form.upiId,
         matchRules: form.matchRules,
+        youtubeUrl: form.youtubeUrl.trim() || null,
       });
       setShowForm(false);
       setForm({
@@ -206,6 +210,7 @@ function TournamentsTab() {
         totalSlots: "100",
         upiId: "",
         matchRules: "",
+        youtubeUrl: "",
       });
     } catch (err: unknown) {
       setFormError(
@@ -326,6 +331,20 @@ function TournamentsTab() {
           </div>
           <div className="col-span-2">
             <label className="text-xs text-gray-400 mb-1 block">
+              YouTube URL (optional)
+            </label>
+            <input
+              type="url"
+              placeholder="https://youtube.com/watch?v=..."
+              className="w-full bg-[#222] border border-white/10 rounded-lg px-3 py-2 text-sm text-white"
+              value={form.youtubeUrl}
+              onChange={(e) =>
+                setForm({ ...form, youtubeUrl: e.target.value })
+              }
+            />
+          </div>
+          <div className="col-span-2">
+            <label className="text-xs text-gray-400 mb-1 block">
               Match Rules
             </label>
             <textarea
@@ -386,6 +405,7 @@ function TournamentsTab() {
                   {t.status as string}
                 </span>
               </div>
+
               <div className="grid grid-cols-4 gap-3 text-sm mb-4">
                 <div className="bg-[#222] rounded-lg p-2 text-center">
                   <div className="text-brand-orange font-bold">
@@ -412,6 +432,21 @@ function TournamentsTab() {
                   <div className="text-xs text-gray-400">Room ID</div>
                 </div>
               </div>
+
+              {/* Current YouTube URL display */}
+              {t.youtubeUrl && (
+                <div className="flex items-center gap-2 mb-3 bg-red-900/20 border border-red-500/20 rounded-lg px-3 py-2">
+                  <Youtube size={14} className="text-red-400 flex-shrink-0" />
+                  <a
+                    href={t.youtubeUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs text-red-400 hover:text-red-300 truncate"
+                  >
+                    {t.youtubeUrl}
+                  </a>
+                </div>
+              )}
 
               {/* Status update */}
               <div className="flex flex-wrap gap-2 mb-3">
@@ -440,7 +475,7 @@ function TournamentsTab() {
               {/* Room details */}
               <div className="flex gap-2 mb-3">
                 <input
-                  placeholder="Room ID"
+                  placeholder={t.roomId ? `Current: ${t.roomId}` : "Room ID"}
                   className="flex-1 bg-[#222] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
                   value={roomForms[t.id]?.roomId ?? ""}
                   onChange={(e) =>
@@ -454,7 +489,7 @@ function TournamentsTab() {
                   }
                 />
                 <input
-                  placeholder="Room Password"
+                  placeholder={t.roomPassword ? `Current: ${t.roomPassword}` : "Room Password"}
                   className="flex-1 bg-[#222] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
                   value={roomForms[t.id]?.roomPassword ?? ""}
                   onChange={(e) =>
@@ -475,9 +510,38 @@ function TournamentsTab() {
                       roomPassword: roomForms[t.id]?.roomPassword ?? "",
                     })
                   }
-                  className="px-3 py-1.5 bg-brand-orange text-white rounded-lg text-xs hover:bg-orange-600"
+                  disabled={updateRoom.isPending}
+                  className="px-3 py-1.5 bg-brand-orange text-white rounded-lg text-xs hover:bg-orange-600 disabled:opacity-50"
                 >
                   Set Room
+                </button>
+              </div>
+
+              {/* YouTube URL update */}
+              <div className="flex gap-2 mb-3">
+                <input
+                  placeholder="YouTube URL (e.g. https://youtube.com/watch?v=...)"
+                  className="flex-1 bg-[#222] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
+                  value={youtubeForms[t.id] ?? ""}
+                  onChange={(e) =>
+                    setYoutubeForms((prev) => ({
+                      ...prev,
+                      [t.id]: e.target.value,
+                    }))
+                  }
+                />
+                <button
+                  onClick={() =>
+                    updateYouTube.mutate({
+                      tournamentId: t.id,
+                      youtubeUrl: youtubeForms[t.id] ?? "",
+                    })
+                  }
+                  disabled={updateYouTube.isPending}
+                  className="px-3 py-1.5 bg-red-600 text-white rounded-lg text-xs hover:bg-red-700 flex items-center gap-1 disabled:opacity-50"
+                >
+                  <Youtube size={12} />
+                  Set URL
                 </button>
               </div>
 
@@ -498,8 +562,8 @@ function TournamentsTab() {
                   }
                 />
                 <input
+                  placeholder="Prize Amount"
                   type="number"
-                  placeholder="Prize Coins"
                   className="w-28 bg-[#222] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
                   value={prizeForm[t.id]?.prizeAmount ?? ""}
                   onChange={(e) =>
@@ -517,15 +581,13 @@ function TournamentsTab() {
                     distributePrize.mutate({
                       tournamentId: t.id,
                       winnerUserId: prizeForm[t.id]?.winnerUserId ?? "",
-                      prizeAmount: BigInt(
-                        prizeForm[t.id]?.prizeAmount || "0"
-                      ),
+                      prizeAmount: BigInt(prizeForm[t.id]?.prizeAmount || "0"),
                     })
                   }
-                  className="flex items-center gap-1 px-3 py-1.5 bg-purple-600 text-white rounded-lg text-xs hover:bg-purple-700"
+                  disabled={distributePrize.isPending}
+                  className="px-3 py-1.5 bg-green-600 text-white rounded-lg text-xs hover:bg-green-700 disabled:opacity-50"
                 >
-                  <Gift size={12} />
-                  Prize
+                  Give Prize
                 </button>
               </div>
             </div>
@@ -539,101 +601,78 @@ function TournamentsTab() {
 // ─── Registrations Tab ───────────────────────────────────────────────────────
 
 function RegistrationsTab() {
-  const { data: tournaments = [] } = useGetAllTournaments();
-  const [selectedTournamentId, setSelectedTournamentId] = useState("");
-  const { data: registrations = [], isLoading } =
-    useGetRegistrationsForTournament(selectedTournamentId);
+  const { data: registrations = [], isLoading } = useGetAllRegistrations();
   const updateStatus = useUpdateRegistrationStatus();
 
   return (
     <div className="space-y-6">
       <h2 className="text-xl font-bold font-orbitron text-brand-orange">
-        Registrations
+        Registrations ({registrations.length})
       </h2>
-      <div>
-        <label className="text-xs text-gray-400 mb-1 block">
-          Select Tournament
-        </label>
-        <select
-          className="bg-[#1a1a1a] border border-white/10 rounded-lg px-3 py-2 text-sm text-white w-full max-w-sm"
-          value={selectedTournamentId}
-          onChange={(e) => setSelectedTournamentId(e.target.value)}
-        >
-          <option value="">-- Select --</option>
-          {tournaments.map((t) => (
-            <option key={t.id} value={t.id}>
-              {t.name}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      {!selectedTournamentId ? (
-        <div className="text-center text-gray-500 py-12">
-          Select a tournament to view registrations
-        </div>
-      ) : isLoading ? (
-        <div className="text-center text-gray-400 py-12">Loading...</div>
+      {isLoading ? (
+        <div className="text-center text-gray-400 py-12">Loading registrations...</div>
       ) : registrations.length === 0 ? (
-        <div className="text-center text-gray-500 py-12">
-          No registrations yet
-        </div>
+        <div className="text-center text-gray-500 py-12">No registrations yet</div>
       ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-white/10 text-gray-400 text-xs">
-                <th className="text-left py-2 px-3">Registration ID</th>
-                <th className="text-left py-2 px-3">Player ID</th>
-                <th className="text-left py-2 px-3">Status</th>
-                <th className="text-left py-2 px-3">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {registrations.map((r) => (
-                <tr
-                  key={r.registrationId}
-                  className="border-b border-white/5 hover:bg-white/5"
+        <div className="space-y-3">
+          {registrations.map((r) => (
+            <div
+              key={r.registrationId}
+              className="bg-[#1a1a1a] rounded-xl p-4 border border-white/10 flex items-center justify-between gap-4"
+            >
+              <div className="flex-1 min-w-0">
+                <div className="text-sm font-semibold text-white truncate">
+                  {r.registrationId}
+                </div>
+                <div className="text-xs text-gray-400 mt-0.5">
+                  Player: <span className="text-brand-orange">{r.playerId}</span>
+                  {" · "}
+                  Tournament: <span className="text-gray-300 truncate">{r.tournamentId.slice(0, 30)}...</span>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 flex-shrink-0">
+                <span
+                  className={`text-xs px-2 py-1 rounded-full font-semibold ${
+                    (r.status as string) === "approved"
+                      ? "bg-green-500/20 text-green-400"
+                      : (r.status as string) === "rejected"
+                        ? "bg-red-500/20 text-red-400"
+                        : "bg-yellow-500/20 text-yellow-400"
+                  }`}
                 >
-                  <td className="py-2 px-3 text-xs text-gray-300 font-mono">
-                    {r.registrationId}
-                  </td>
-                  <td className="py-2 px-3 font-mono text-brand-orange">
-                    {r.playerId}
-                  </td>
-                  <td className="py-2 px-3">
-                    <StatusBadge status={r.status as string} />
-                  </td>
-                  <td className="py-2 px-3">
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() =>
-                          updateStatus.mutate({
-                            registrationId: r.registrationId,
-                            status: "approved",
-                          })
-                        }
-                        className="text-xs px-2 py-1 bg-green-600/20 text-green-400 rounded hover:bg-green-600/40"
-                      >
-                        Approve
-                      </button>
-                      <button
-                        onClick={() =>
-                          updateStatus.mutate({
-                            registrationId: r.registrationId,
-                            status: "rejected",
-                          })
-                        }
-                        className="text-xs px-2 py-1 bg-red-600/20 text-red-400 rounded hover:bg-red-600/40"
-                      >
-                        Reject
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                  {r.status as string}
+                </span>
+                {(r.status as string) === "pending" && (
+                  <>
+                    <button
+                      onClick={() =>
+                        updateStatus.mutate({
+                          registrationId: r.registrationId,
+                          status: "approved",
+                        })
+                      }
+                      disabled={updateStatus.isPending}
+                      className="p-1.5 bg-green-600/20 text-green-400 rounded-lg hover:bg-green-600/40 transition-colors disabled:opacity-50"
+                    >
+                      <Check size={14} />
+                    </button>
+                    <button
+                      onClick={() =>
+                        updateStatus.mutate({
+                          registrationId: r.registrationId,
+                          status: "rejected",
+                        })
+                      }
+                      disabled={updateStatus.isPending}
+                      className="p-1.5 bg-red-600/20 text-red-400 rounded-lg hover:bg-red-600/40 transition-colors disabled:opacity-50"
+                    >
+                      <XCircle size={14} />
+                    </button>
+                  </>
+                )}
+              </div>
+            </div>
+          ))}
         </div>
       )}
     </div>
@@ -643,450 +682,56 @@ function RegistrationsTab() {
 // ─── Players Tab ─────────────────────────────────────────────────────────────
 
 function PlayersTab() {
-  const { data: verifiedUsers = [], isLoading } = useGetAllVerifiedUsers();
+  const { data: players = [], isLoading } = useGetAllVerifiedUsers();
   const [search, setSearch] = useState("");
 
-  const filtered = verifiedUsers.filter((u) => {
-    const q = search.toLowerCase();
-    return (
-      u.displayName.toLowerCase().includes(q) ||
-      u.bgmiPlayerId.toLowerCase().includes(q) ||
-      u.id.toLowerCase().includes(q) ||
-      u.mobile.includes(q)
-    );
-  });
+  const filtered = players.filter(
+    (p) =>
+      p.displayName.toLowerCase().includes(search.toLowerCase()) ||
+      p.id.toLowerCase().includes(search.toLowerCase()) ||
+      p.bgmiPlayerId.toLowerCase().includes(search.toLowerCase())
+  );
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-4">
         <h2 className="text-xl font-bold font-orbitron text-brand-orange">
-          Players ({verifiedUsers.length})
+          Players ({players.length})
         </h2>
-      </div>
-
-      <div className="relative max-w-sm">
-        <Search
-          size={14}
-          className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-        />
         <input
-          placeholder="Search by name, BGMI ID, User ID..."
-          className="w-full bg-[#1a1a1a] border border-white/10 rounded-lg pl-9 pr-3 py-2 text-sm text-white placeholder-gray-500"
+          placeholder="Search by name, ID, BGMI ID..."
+          className="flex-1 max-w-xs bg-[#222] border border-white/10 rounded-lg px-3 py-2 text-sm text-white"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
       </div>
-
       {isLoading ? (
-        <div className="text-center text-gray-400 py-12">
-          Loading players...
-        </div>
+        <div className="text-center text-gray-400 py-12">Loading players...</div>
       ) : filtered.length === 0 ? (
-        <div className="text-center text-gray-500 py-12">
-          {verifiedUsers.length === 0
-            ? "No players registered yet"
-            : "No players match your search"}
-        </div>
-      ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-white/10 text-gray-400 text-xs">
-                <th className="text-left py-2 px-3">User ID</th>
-                <th className="text-left py-2 px-3">Name</th>
-                <th className="text-left py-2 px-3">BGMI ID</th>
-                <th className="text-left py-2 px-3">Mobile</th>
-                <th className="text-left py-2 px-3">Coins</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map((u) => (
-                <tr
-                  key={u.id}
-                  className="border-b border-white/5 hover:bg-white/5"
-                >
-                  <td className="py-2 px-3 font-mono text-brand-orange font-bold">
-                    {u.id}
-                  </td>
-                  <td className="py-2 px-3 text-white">{u.displayName}</td>
-                  <td className="py-2 px-3 text-gray-300">{u.bgmiPlayerId}</td>
-                  <td className="py-2 px-3 text-gray-300">{u.mobile}</td>
-                  <td className="py-2 px-3">
-                    <span className="text-yellow-400 font-bold">
-                      🪙 {u.coinWallet.toString()}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-    </div>
-  );
-}
-
-// ─── Payment Proofs Tab ──────────────────────────────────────────────────────
-
-function PaymentProofsTab() {
-  const { data: proofs = [], isLoading } = useGetAllPaymentProofs();
-  const approve = useApprovePaymentProof();
-  const reject = useRejectPaymentProof();
-  const [viewImage, setViewImage] = useState<string | null>(null);
-
-  const sorted = [...proofs].sort(
-    (a, b) => Number(b.timestamp) - Number(a.timestamp)
-  );
-
-  return (
-    <div className="space-y-6">
-      <h2 className="text-xl font-bold font-orbitron text-brand-orange">
-        Payment Proofs ({proofs.filter((p) => (p.status as string) === "pending").length}{" "}
-        pending)
-      </h2>
-
-      {viewImage && (
-        <div
-          className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4"
-          onClick={() => setViewImage(null)}
-        >
-          <div className="relative max-w-lg w-full">
-            <img
-              src={viewImage}
-              alt="Payment proof"
-              className="w-full rounded-xl"
-            />
-            <button
-              className="absolute top-2 right-2 bg-black/60 text-white rounded-full p-1"
-              onClick={() => setViewImage(null)}
-            >
-              <X size={16} />
-            </button>
-          </div>
-        </div>
-      )}
-
-      {isLoading ? (
-        <div className="text-center text-gray-400 py-12">Loading...</div>
-      ) : sorted.length === 0 ? (
-        <div className="text-center text-gray-500 py-12">
-          No payment proofs submitted yet
-        </div>
+        <div className="text-center text-gray-500 py-12">No players found</div>
       ) : (
         <div className="space-y-3">
-          {sorted.map((p) => {
-            const imgSrc = p.imageBase64
-              ? p.imageBase64.startsWith("data:")
-                ? p.imageBase64
-                : `data:image/jpeg;base64,${p.imageBase64}`
-              : null;
-            return (
-              <div
-                key={p.proofId}
-                className="bg-[#1a1a1a] rounded-xl p-4 border border-white/10 flex items-center gap-4"
-              >
-                {imgSrc && (
-                  <button
-                    onClick={() => setViewImage(imgSrc)}
-                    className="flex-shrink-0"
-                  >
-                    <img
-                      src={imgSrc}
-                      alt="proof"
-                      className="w-16 h-16 object-cover rounded-lg border border-white/10 hover:opacity-80 transition-opacity"
-                    />
-                  </button>
-                )}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="font-mono text-brand-orange font-bold text-sm">
-                      {p.userId}
-                    </span>
-                    <StatusBadge status={p.status as string} />
-                  </div>
-                  <div className="text-white font-bold">
-                    ₹{p.amount.toString()} → 🪙 {p.amount.toString()} Coins
-                  </div>
-                  <div className="text-xs text-gray-400">
-                    Ref: {p.transactionRef}
-                  </div>
-                  <div className="text-xs text-gray-500">
-                    {formatDate(p.timestamp)}
-                  </div>
-                </div>
-                {(p.status as string) === "pending" && (
-                  <div className="flex flex-col gap-2">
-                    <button
-                      onClick={() => approve.mutate(p.proofId)}
-                      disabled={approve.isPending}
-                      className="flex items-center gap-1 px-3 py-1.5 bg-green-600/20 text-green-400 rounded-lg text-xs hover:bg-green-600/40 disabled:opacity-50"
-                    >
-                      <Check size={12} />
-                      Approve
-                    </button>
-                    <button
-                      onClick={() => reject.mutate(p.proofId)}
-                      disabled={reject.isPending}
-                      className="flex items-center gap-1 px-3 py-1.5 bg-red-600/20 text-red-400 rounded-lg text-xs hover:bg-red-600/40 disabled:opacity-50"
-                    >
-                      <XCircle size={12} />
-                      Reject
-                    </button>
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      )}
-    </div>
-  );
-}
-
-// ─── Withdrawals Tab ─────────────────────────────────────────────────────────
-
-function WithdrawalsTab() {
-  const { data: requests = [], isLoading } = useGetAllWithdrawalRequests();
-  const markProcessed = useMarkWithdrawalProcessed();
-  const rejectReq = useRejectWithdrawalRequest();
-
-  const sorted = [...requests].sort(
-    (a, b) => Number(b.timestamp) - Number(a.timestamp)
-  );
-
-  return (
-    <div className="space-y-6">
-      <h2 className="text-xl font-bold font-orbitron text-brand-orange">
-        Withdrawal Requests (
-        {requests.filter((r) => (r.status as string) === "pending").length}{" "}
-        pending)
-      </h2>
-
-      {isLoading ? (
-        <div className="text-center text-gray-400 py-12">Loading...</div>
-      ) : sorted.length === 0 ? (
-        <div className="text-center text-gray-500 py-12">
-          No withdrawal requests yet
-        </div>
-      ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-white/10 text-gray-400 text-xs">
-                <th className="text-left py-2 px-3">User ID</th>
-                <th className="text-left py-2 px-3">UPI ID</th>
-                <th className="text-left py-2 px-3">Amount (Coins)</th>
-                <th className="text-left py-2 px-3">Date</th>
-                <th className="text-left py-2 px-3">Status</th>
-                <th className="text-left py-2 px-3">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {sorted.map((r) => (
-                <tr
-                  key={r.requestId}
-                  className="border-b border-white/5 hover:bg-white/5"
-                >
-                  <td className="py-2 px-3 font-mono text-brand-orange font-bold">
-                    {r.userId}
-                  </td>
-                  <td className="py-2 px-3 text-white">{r.upiId}</td>
-                  <td className="py-2 px-3 text-yellow-400 font-bold">
-                    🪙 {r.amount.toString()}
-                  </td>
-                  <td className="py-2 px-3 text-xs text-gray-400">
-                    {formatDate(r.timestamp)}
-                  </td>
-                  <td className="py-2 px-3">
-                    <StatusBadge status={r.status as string} />
-                  </td>
-                  <td className="py-2 px-3">
-                    {(r.status as string) === "pending" && (
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => markProcessed.mutate(r.requestId)}
-                          disabled={markProcessed.isPending}
-                          className="flex items-center gap-1 text-xs px-2 py-1 bg-green-600/20 text-green-400 rounded hover:bg-green-600/40 disabled:opacity-50"
-                        >
-                          <Check size={10} />
-                          Processed
-                        </button>
-                        <button
-                          onClick={() => rejectReq.mutate(r.requestId)}
-                          disabled={rejectReq.isPending}
-                          className="flex items-center gap-1 text-xs px-2 py-1 bg-red-600/20 text-red-400 rounded hover:bg-red-600/40 disabled:opacity-50"
-                        >
-                          <XCircle size={10} />
-                          Reject
-                        </button>
-                      </div>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-    </div>
-  );
-}
-
-// ─── Terms Tab ───────────────────────────────────────────────────────────────
-
-function TermsTab() {
-  const { data: terms } = useGetTermsAndConditions();
-  const updateTerms = useUpdateTermsAndConditions();
-  const [content, setContent] = useState("");
-  const [editing, setEditing] = useState(false);
-
-  React.useEffect(() => {
-    if (terms) setContent(terms.content);
-  }, [terms]);
-
-  return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-xl font-bold font-orbitron text-brand-orange">
-          Terms & Conditions
-        </h2>
-        <button
-          onClick={() => setEditing(!editing)}
-          className="px-4 py-2 bg-brand-orange text-white rounded-lg text-sm font-semibold hover:bg-orange-600"
-        >
-          {editing ? "Cancel" : "Edit"}
-        </button>
-      </div>
-      {editing ? (
-        <div className="space-y-3">
-          <textarea
-            className="w-full bg-[#1a1a1a] border border-white/10 rounded-xl px-4 py-3 text-sm text-white h-64 resize-none"
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-          />
-          <button
-            onClick={async () => {
-              await updateTerms.mutateAsync(content);
-              setEditing(false);
-            }}
-            disabled={updateTerms.isPending}
-            className="px-5 py-2 bg-brand-orange text-white rounded-lg text-sm font-semibold hover:bg-orange-600 disabled:opacity-50"
-          >
-            {updateTerms.isPending ? "Saving..." : "Save"}
-          </button>
-        </div>
-      ) : (
-        <div className="bg-[#1a1a1a] rounded-xl p-5 border border-white/10 text-sm text-gray-300 whitespace-pre-wrap min-h-32">
-          {content || "No terms set yet."}
-        </div>
-      )}
-    </div>
-  );
-}
-
-// ─── Support Tab ─────────────────────────────────────────────────────────────
-
-function SupportTab() {
-  const { data: tickets = [], isLoading } = useGetAllSupportTickets();
-  const reply = useReplyToSupportTicket();
-  const close = useCloseSupportTicket();
-  const [replyTexts, setReplyTexts] = useState<Record<string, string>>({});
-  const [expandedId, setExpandedId] = useState<string | null>(null);
-
-  const statusColors: Record<string, string> = {
-    open: "bg-blue-500/20 text-blue-400",
-    replied: "bg-green-500/20 text-green-400",
-    closed: "bg-gray-500/20 text-gray-400",
-  };
-
-  return (
-    <div className="space-y-6">
-      <h2 className="text-xl font-bold font-orbitron text-brand-orange">
-        Support Tickets (
-        {tickets.filter((t) => (t.status as string) === "open").length} open)
-      </h2>
-
-      {isLoading ? (
-        <div className="text-center text-gray-400 py-12">Loading...</div>
-      ) : tickets.length === 0 ? (
-        <div className="text-center text-gray-500 py-12">
-          No support tickets yet
-        </div>
-      ) : (
-        <div className="space-y-3">
-          {tickets.map((t) => (
+          {filtered.map((p) => (
             <div
-              key={t.ticketId}
-              className="bg-[#1a1a1a] rounded-xl border border-white/10 overflow-hidden"
+              key={p.id}
+              className="bg-[#1a1a1a] rounded-xl p-4 border border-white/10 flex items-center justify-between"
             >
-              <button
-                className="w-full flex items-center justify-between p-4 text-left hover:bg-white/5"
-                onClick={() =>
-                  setExpandedId(
-                    expandedId === t.ticketId ? null : t.ticketId
-                  )
-                }
-              >
-                <div>
-                  <div className="font-semibold text-white">{t.subject}</div>
-                  <div className="text-xs text-gray-400">
-                    {t.playerName} · {formatDate(t.createdAt)}
-                  </div>
+              <div>
+                <div className="font-semibold text-white">{p.displayName}</div>
+                <div className="text-xs text-gray-400 mt-0.5">
+                  ID: <span className="text-brand-orange font-mono">{p.id}</span>
+                  {" · "}
+                  BGMI: <span className="text-gray-300">{p.bgmiPlayerId}</span>
+                  {" · "}
+                  Mobile: <span className="text-gray-300">{p.mobile}</span>
                 </div>
-                <span
-                  className={`text-xs px-2 py-1 rounded-full font-semibold ${statusColors[t.status as string] || ""}`}
-                >
-                  {t.status as string}
-                </span>
-              </button>
-
-              {expandedId === t.ticketId && (
-                <div className="px-4 pb-4 space-y-3 border-t border-white/10 pt-3">
-                  <p className="text-sm text-gray-300">{t.description}</p>
-                  {t.adminReply && (
-                    <div className="bg-green-900/20 border border-green-500/20 rounded-lg p-3">
-                      <div className="text-xs text-green-400 font-semibold mb-1">
-                        Admin Reply
-                      </div>
-                      <p className="text-sm text-gray-300">{t.adminReply}</p>
-                    </div>
-                  )}
-                  {(t.status as string) !== "closed" && (
-                    <div className="flex gap-2">
-                      <input
-                        placeholder="Type reply..."
-                        className="flex-1 bg-[#222] border border-white/10 rounded-lg px-3 py-2 text-sm text-white"
-                        value={replyTexts[t.ticketId] ?? ""}
-                        onChange={(e) =>
-                          setReplyTexts((prev) => ({
-                            ...prev,
-                            [t.ticketId]: e.target.value,
-                          }))
-                        }
-                      />
-                      <button
-                        onClick={() =>
-                          reply.mutate({
-                            ticketId: t.ticketId,
-                            reply: replyTexts[t.ticketId] ?? "",
-                          })
-                        }
-                        disabled={reply.isPending}
-                        className="px-3 py-2 bg-brand-orange text-white rounded-lg text-sm hover:bg-orange-600 disabled:opacity-50"
-                      >
-                        Reply
-                      </button>
-                      <button
-                        onClick={() => close.mutate(t.ticketId)}
-                        disabled={close.isPending}
-                        className="px-3 py-2 bg-gray-600/30 text-gray-300 rounded-lg text-sm hover:bg-gray-600/50 disabled:opacity-50"
-                      >
-                        Close
-                      </button>
-                    </div>
-                  )}
+              </div>
+              <div className="text-right">
+                <div className="text-yellow-400 font-bold text-sm">
+                  🪙 {p.coinWallet.toString()}
                 </div>
-              )}
+                <div className="text-xs text-gray-500">Coins</div>
+              </div>
             </div>
           ))}
         </div>
@@ -1095,72 +740,362 @@ function SupportTab() {
   );
 }
 
-// ─── Social Tab ──────────────────────────────────────────────────────────────
+// ─── Payment Proofs Tab ───────────────────────────────────────────────────────
 
-function SocialTab() {
-  const { data: links } = useGetSocialLinks();
-  const updateLinks = useUpdateSocialLinks();
-  const [form, setForm] = useState({
-    youtube: "",
-    instagram: "",
-    telegram: "",
-  });
-
-  React.useEffect(() => {
-    if (links) setForm(links);
-  }, [links]);
+function PaymentProofsTab() {
+  const { data: proofs = [], isLoading } = useGetAllPaymentProofs();
+  const approve = useApprovePaymentProof();
+  const reject = useRejectPaymentProof();
 
   return (
     <div className="space-y-6">
       <h2 className="text-xl font-bold font-orbitron text-brand-orange">
+        Payment Proofs ({proofs.length})
+      </h2>
+      {isLoading ? (
+        <div className="text-center text-gray-400 py-12">Loading payment proofs...</div>
+      ) : proofs.length === 0 ? (
+        <div className="text-center text-gray-500 py-12">No payment proofs yet</div>
+      ) : (
+        <div className="space-y-3">
+          {[...proofs]
+            .sort((a, b) => Number(b.timestamp) - Number(a.timestamp))
+            .map((proof) => (
+              <div
+                key={proof.proofId}
+                className="bg-[#1a1a1a] rounded-xl p-4 border border-white/10"
+              >
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-sm font-semibold text-white">
+                        {proof.userId}
+                      </span>
+                      <span
+                        className={`text-xs px-2 py-0.5 rounded-full font-semibold ${
+                          (proof.status as string) === "approved"
+                            ? "bg-green-500/20 text-green-400"
+                            : (proof.status as string) === "rejected"
+                              ? "bg-red-500/20 text-red-400"
+                              : "bg-yellow-500/20 text-yellow-400"
+                        }`}
+                      >
+                        {proof.status as string}
+                      </span>
+                    </div>
+                    <div className="text-xs text-gray-400">
+                      Amount: <span className="text-brand-orange font-bold">₹{proof.amount.toString()}</span>
+                      {" · "}
+                      Ref: <span className="text-gray-300">{proof.transactionRef || "—"}</span>
+                      {" · "}
+                      {formatDate(proof.timestamp)}
+                    </div>
+                    {proof.imageBase64 && (
+                      <img
+                        src={proof.imageBase64}
+                        alt="Payment proof"
+                        className="mt-2 max-h-32 rounded-lg border border-white/10 object-contain"
+                      />
+                    )}
+                  </div>
+                  {(proof.status as string) === "pending" && (
+                    <div className="flex gap-2 flex-shrink-0">
+                      <button
+                        onClick={() => approve.mutate(proof.proofId)}
+                        disabled={approve.isPending}
+                        className="px-3 py-1.5 bg-green-600/20 text-green-400 rounded-lg text-xs hover:bg-green-600/40 transition-colors disabled:opacity-50 flex items-center gap-1"
+                      >
+                        <Check size={12} />
+                        Approve
+                      </button>
+                      <button
+                        onClick={() => reject.mutate(proof.proofId)}
+                        disabled={reject.isPending}
+                        className="px-3 py-1.5 bg-red-600/20 text-red-400 rounded-lg text-xs hover:bg-red-600/40 transition-colors disabled:opacity-50 flex items-center gap-1"
+                      >
+                        <XCircle size={12} />
+                        Reject
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Withdrawals Tab ──────────────────────────────────────────────────────────
+
+function WithdrawalsTab() {
+  const { data: requests = [], isLoading } = useGetAllWithdrawalRequests();
+  const markProcessed = useMarkWithdrawalProcessed();
+  const rejectRequest = useRejectWithdrawalRequest();
+
+  return (
+    <div className="space-y-6">
+      <h2 className="text-xl font-bold font-orbitron text-brand-orange">
+        Withdrawal Requests ({requests.length})
+      </h2>
+      {isLoading ? (
+        <div className="text-center text-gray-400 py-12">Loading withdrawal requests...</div>
+      ) : requests.length === 0 ? (
+        <div className="text-center text-gray-500 py-12">No withdrawal requests yet</div>
+      ) : (
+        <div className="space-y-3">
+          {[...requests]
+            .sort((a, b) => Number(b.timestamp) - Number(a.timestamp))
+            .map((req) => (
+              <div
+                key={req.requestId}
+                className="bg-[#1a1a1a] rounded-xl p-4 border border-white/10 flex items-center justify-between gap-4"
+              >
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-sm font-semibold text-white">
+                      {req.userId}
+                    </span>
+                    <span
+                      className={`text-xs px-2 py-0.5 rounded-full font-semibold ${
+                        (req.status as string) === "processed"
+                          ? "bg-green-500/20 text-green-400"
+                          : (req.status as string) === "rejected"
+                            ? "bg-red-500/20 text-red-400"
+                            : "bg-yellow-500/20 text-yellow-400"
+                      }`}
+                    >
+                      {req.status as string}
+                    </span>
+                  </div>
+                  <div className="text-xs text-gray-400">
+                    Amount: <span className="text-brand-orange font-bold">🪙 {req.amount.toString()} Coins</span>
+                    {" · "}
+                    UPI: <span className="text-gray-300">{req.upiId}</span>
+                    {" · "}
+                    {formatDate(req.timestamp)}
+                  </div>
+                </div>
+                {(req.status as string) === "pending" && (
+                  <div className="flex gap-2 flex-shrink-0">
+                    <button
+                      onClick={() => markProcessed.mutate(req.requestId)}
+                      disabled={markProcessed.isPending}
+                      className="px-3 py-1.5 bg-green-600/20 text-green-400 rounded-lg text-xs hover:bg-green-600/40 transition-colors disabled:opacity-50 flex items-center gap-1"
+                    >
+                      <Check size={12} />
+                      Processed
+                    </button>
+                    <button
+                      onClick={() => rejectRequest.mutate(req.requestId)}
+                      disabled={rejectRequest.isPending}
+                      className="px-3 py-1.5 bg-red-600/20 text-red-400 rounded-lg text-xs hover:bg-red-600/40 transition-colors disabled:opacity-50 flex items-center gap-1"
+                    >
+                      <XCircle size={12} />
+                      Reject
+                    </button>
+                  </div>
+                )}
+              </div>
+            ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Terms Tab ────────────────────────────────────────────────────────────────
+
+function TermsTab() {
+  const { data: terms } = useGetTermsAndConditions();
+  const updateTerms = useUpdateTermsAndConditions();
+  const [content, setContent] = useState("");
+  const [saved, setSaved] = useState(false);
+
+  React.useEffect(() => {
+    if (terms?.content) setContent(terms.content);
+  }, [terms?.content]);
+
+  const handleSave = async () => {
+    try {
+      await updateTerms.mutateAsync(content);
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    } catch {
+      // ignore
+    }
+  };
+
+  return (
+    <div className="space-y-6 max-w-3xl">
+      <h2 className="text-xl font-bold font-orbitron text-brand-orange">
+        Terms & Conditions
+      </h2>
+      <textarea
+        className="w-full bg-[#1a1a1a] border border-white/10 rounded-xl px-4 py-3 text-sm text-white h-80 resize-none"
+        value={content}
+        onChange={(e) => setContent(e.target.value)}
+        placeholder="Enter terms and conditions..."
+      />
+      <button
+        onClick={handleSave}
+        disabled={updateTerms.isPending}
+        className="px-6 py-2 bg-brand-orange text-white rounded-lg text-sm font-semibold hover:bg-orange-600 disabled:opacity-50"
+      >
+        {updateTerms.isPending ? "Saving..." : saved ? "Saved!" : "Save"}
+      </button>
+    </div>
+  );
+}
+
+// ─── Support Tab ──────────────────────────────────────────────────────────────
+
+function SupportTab() {
+  const { data: tickets = [], isLoading } = useGetAllSupportTickets();
+  const replyMutation = useReplyToSupportTicket();
+  const closeMutation = useCloseSupportTicket();
+  const [replyForms, setReplyForms] = useState<Record<string, string>>({});
+
+  const openCount = tickets.filter((t) => (t.status as string) !== "closed").length;
+
+  return (
+    <div className="space-y-6">
+      <h2 className="text-xl font-bold font-orbitron text-brand-orange">
+        Support Tickets ({openCount} open)
+      </h2>
+      {isLoading ? (
+        <div className="text-center text-gray-400 py-12">Loading support tickets...</div>
+      ) : tickets.length === 0 ? (
+        <div className="text-center text-gray-500 py-12">No support tickets yet</div>
+      ) : (
+        <div className="space-y-4">
+          {[...tickets]
+            .sort((a, b) => Number(b.createdAt) - Number(a.createdAt))
+            .map((ticket) => (
+              <div
+                key={ticket.ticketId}
+                className="bg-[#1a1a1a] rounded-xl p-5 border border-white/10"
+              >
+                <div className="flex items-start justify-between mb-3">
+                  <div>
+                    <div className="font-semibold text-white">{ticket.subject}</div>
+                    <div className="text-xs text-gray-400 mt-0.5">
+                      From: <span className="text-brand-orange">{ticket.playerName}</span>
+                      {" · "}
+                      {formatDate(ticket.createdAt)}
+                    </div>
+                  </div>
+                  <span
+                    className={`text-xs px-2 py-1 rounded-full font-semibold flex-shrink-0 ${
+                      (ticket.status as string) === "open"
+                        ? "bg-blue-500/20 text-blue-400"
+                        : (ticket.status as string) === "replied"
+                          ? "bg-yellow-500/20 text-yellow-400"
+                          : "bg-gray-500/20 text-gray-400"
+                    }`}
+                  >
+                    {ticket.status as string}
+                  </span>
+                </div>
+                <p className="text-sm text-gray-300 mb-3">{ticket.description}</p>
+                {ticket.adminReply && (
+                  <div className="bg-brand-orange/10 border border-brand-orange/20 rounded-lg p-3 mb-3">
+                    <div className="text-xs text-brand-orange font-semibold mb-1">Admin Reply:</div>
+                    <p className="text-sm text-gray-300">{ticket.adminReply}</p>
+                  </div>
+                )}
+                {(ticket.status as string) !== "closed" && (
+                  <div className="flex gap-2">
+                    <input
+                      placeholder="Type a reply..."
+                      className="flex-1 bg-[#222] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
+                      value={replyForms[ticket.ticketId] ?? ""}
+                      onChange={(e) =>
+                        setReplyForms((prev) => ({
+                          ...prev,
+                          [ticket.ticketId]: e.target.value,
+                        }))
+                      }
+                    />
+                    <button
+                      onClick={() =>
+                        replyMutation.mutate({
+                          ticketId: ticket.ticketId,
+                          reply: replyForms[ticket.ticketId] ?? "",
+                        })
+                      }
+                      disabled={replyMutation.isPending}
+                      className="px-3 py-1.5 bg-brand-orange text-white rounded-lg text-xs hover:bg-orange-600 disabled:opacity-50"
+                    >
+                      Reply
+                    </button>
+                    <button
+                      onClick={() => closeMutation.mutate(ticket.ticketId)}
+                      disabled={closeMutation.isPending}
+                      className="px-3 py-1.5 bg-gray-600 text-white rounded-lg text-xs hover:bg-gray-700 disabled:opacity-50"
+                    >
+                      Close
+                    </button>
+                  </div>
+                )}
+              </div>
+            ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Social Tab ───────────────────────────────────────────────────────────────
+
+function SocialTab() {
+  const { data: links } = useGetSocialLinks();
+  const updateLinks = useUpdateSocialLinks();
+  const [form, setForm] = useState({ youtube: "", instagram: "", telegram: "" });
+  const [saved, setSaved] = useState(false);
+
+  React.useEffect(() => {
+    if (links) setForm({ youtube: links.youtube, instagram: links.instagram, telegram: links.telegram });
+  }, [links]);
+
+  const handleSave = async () => {
+    try {
+      await updateLinks.mutateAsync(form);
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    } catch {
+      // ignore
+    }
+  };
+
+  return (
+    <div className="space-y-6 max-w-lg">
+      <h2 className="text-xl font-bold font-orbitron text-brand-orange">
         Social Links
       </h2>
-      <div className="bg-[#1a1a1a] rounded-xl p-5 border border-white/10 space-y-4 max-w-md">
+      <div className="space-y-4">
         {(["youtube", "instagram", "telegram"] as const).map((key) => (
           <div key={key}>
             <label className="text-xs text-gray-400 mb-1 block capitalize">
               {key}
             </label>
             <input
-              className="w-full bg-[#222] border border-white/10 rounded-lg px-3 py-2 text-sm text-white"
+              className="w-full bg-[#1a1a1a] border border-white/10 rounded-lg px-3 py-2 text-sm text-white"
               value={form[key]}
               onChange={(e) => setForm({ ...form, [key]: e.target.value })}
               placeholder={`https://${key}.com/...`}
             />
           </div>
         ))}
-        <button
-          onClick={() => updateLinks.mutate(form)}
-          disabled={updateLinks.isPending}
-          className="px-5 py-2 bg-brand-orange text-white rounded-lg text-sm font-semibold hover:bg-orange-600 disabled:opacity-50"
-        >
-          {updateLinks.isPending ? "Saving..." : "Save Links"}
-        </button>
       </div>
+      <button
+        onClick={handleSave}
+        disabled={updateLinks.isPending}
+        className="px-6 py-2 bg-brand-orange text-white rounded-lg text-sm font-semibold hover:bg-orange-600 disabled:opacity-50"
+      >
+        {updateLinks.isPending ? "Saving..." : saved ? "Saved!" : "Save Links"}
+      </button>
     </div>
-  );
-}
-
-// ─── Shared ──────────────────────────────────────────────────────────────────
-
-function StatusBadge({ status }: { status: string }) {
-  const colors: Record<string, string> = {
-    pending: "bg-yellow-500/20 text-yellow-400",
-    approved: "bg-green-500/20 text-green-400",
-    rejected: "bg-red-500/20 text-red-400",
-    open: "bg-blue-500/20 text-blue-400",
-    replied: "bg-green-500/20 text-green-400",
-    closed: "bg-gray-500/20 text-gray-400",
-    upcoming: "bg-blue-500/20 text-blue-400",
-    ongoing: "bg-green-500/20 text-green-400",
-    completed: "bg-purple-500/20 text-purple-400",
-    processed: "bg-green-500/20 text-green-400",
-  };
-  return (
-    <span
-      className={`text-xs px-2 py-0.5 rounded-full font-semibold ${colors[status] || "bg-gray-500/20 text-gray-400"}`}
-    >
-      {status}
-    </span>
   );
 }

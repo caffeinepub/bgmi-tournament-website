@@ -10,9 +10,9 @@ import Storage "blob-storage/Storage";
 import MixinStorage "blob-storage/Mixin";
 import MixinAuthorization "authorization/MixinAuthorization";
 import AccessControl "authorization/access-control";
+import Migration "migration";
 
-
-
+(with migration = Migration.run)
 actor {
   include MixinStorage();
 
@@ -85,6 +85,7 @@ actor {
     qrCodeBlob : ?Storage.ExternalBlob;
     roomId : ?Text;
     roomPassword : ?Text;
+    youtubeUrl : ?Text;
     matchRules : Text;
     status : TournamentStatus;
   };
@@ -160,7 +161,7 @@ actor {
     telegram = "";
   };
 
-  var adminPrincipal : ?Principal = null;
+  let adminPrincipals = Map.empty<Principal, Bool>();
 
   // Helper: verify that the caller owns the given userId
   func callerOwnsUserId(caller : Principal, userId : Text) : Bool {
@@ -170,26 +171,26 @@ actor {
     };
   };
 
-  public shared ({ caller }) func registerAdminPrincipal(p : Principal) : async Bool {
+  public shared ({ caller }) func addAdminPrincipal(p : Principal) : async Bool {
     if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
-      Runtime.trap("Unauthorized: Only admin can register an admin principal");
+      Runtime.trap("Unauthorized: Only admin can add admin principals");
     };
-    if (adminPrincipal == null) {
-      adminPrincipal := ?p;
-      true;
-    } else {
-      false;
-    };
+    adminPrincipals.add(p, true);
+    true;
   };
 
-  public query func getAdminPrincipal() : async ?Principal {
-    adminPrincipal;
+  public shared ({ caller }) func removeAdminPrincipal(p : Principal) : async Bool {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admin can remove admin principals");
+    };
+    adminPrincipals.remove(p);
+    true;
   };
 
-  public query func isAdminPrincipal(p : Principal) : async Bool {
-    switch (adminPrincipal) {
+  public query ({ caller }) func isAdminPrincipal(p : Principal) : async Bool {
+    switch (adminPrincipals.get(p)) {
       case (null) { false };
-      case (?adminP) { adminP == p };
+      case (?_exists) { true };
     };
   };
 
@@ -562,7 +563,7 @@ actor {
     withdrawalRequests.values().toArray().filter(func(r) { r.userId == userId });
   };
 
-  public shared ({ caller }) func createTournament(name : Text, dateTime : Time.Time, entryFee : Nat, prizePool : Nat, map : Text, totalSlots : Nat, upiId : Text, matchRules : Text) : async Text {
+  public shared ({ caller }) func createTournament(name : Text, dateTime : Time.Time, entryFee : Nat, prizePool : Nat, map : Text, totalSlots : Nat, upiId : Text, matchRules : Text, youtubeUrl : ?Text) : async Text {
     if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Runtime.trap("Unauthorized: Only admins can create tournaments");
     };
@@ -580,6 +581,7 @@ actor {
       qrCodeBlob = null;
       roomId = null;
       roomPassword = null;
+      youtubeUrl;
       matchRules;
       status = #upcoming;
     };
@@ -637,7 +639,7 @@ actor {
     };
   };
 
-  // Register for tournament using only coins (no payment screenshot)
+  // Register for tournament using only coins (no payment screenshot )
   public shared ({ caller }) func registerForTournamentWithCoins(tournamentId : Text, playerId : Text) : async Text {
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only authenticated users can register for tournaments");
@@ -962,5 +964,21 @@ actor {
       Runtime.trap("Unauthorized: Only authenticated users can get their user ID");
     };
     principalToUserId.get(caller);
+  };
+
+  public shared ({ caller }) func updateTournamentYouTubeUrl(tournamentId : Text, youtubeUrl : Text) : async () {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can update tournament YouTube URL");
+    };
+    switch (tournaments.get(tournamentId)) {
+      case (null) { Runtime.trap("Tournament not found") };
+      case (?tournament) {
+        let updatedTournament : Tournament = {
+          tournament with
+          youtubeUrl = ?youtubeUrl;
+        };
+        tournaments.add(tournamentId, updatedTournament);
+      };
+    };
   };
 };
