@@ -1,128 +1,39 @@
 {
   "kind": "spec_vs_diff_report",
   "version": "1.0",
-  "generatedAt": "2026-03-01T13:55:30.321Z",
-  "summary": "The diff implements the majority of requirements across backend and frontend. Most core features are present: backend actor with data models, red-orange themed frontend, home page, auth flows, player dashboard, payment modal, admin login, admin dashboard, and terms page. However, several specific requirements have gaps or are only partially addressed.",
+  "generatedAt": "2026-03-01T14:09:39.043Z",
+  "summary": "Most requirements are implemented in the diff. REQ-4 backend functions appear present in main.mo, REQ-5 AdminAuthContext is updated, REQ-6 AdminLoginPage is updated, REQ-7 Header is updated. However, REQ-1 (HomePage.tsx modification) is not directly evidenced — no HomePage.tsx appears in the diff. REQ-2 is similarly unverifiable without HomePage.tsx changes. The backend stable storage for adminPrincipal uses a var field with migration support via migration.mo.",
   "missing_requirements": [
     {
       "id": "REQ-1",
-      "requirement": "Tournament model must include 'type' field (daily/mega) and 'posterImage' blob field for mega tournaments; backend Tournament type uses 'name' instead of spec-required 'title', and 'type'/'posterImage' fields are not confirmed in truncated backend",
-      "reason": "The diff shows the Tournament type uses 'name' not 'title' per REQ-1 spec, and the 'type' (daily/mega) and 'posterImage' fields are not confirmed present in the truncated backend/main.mo.",
-      "evidence": [
-        "backend/main.mo"
-      ]
+      "requirement": "Remove the Quick Access cards (User Panel / Admin Panel) from the homepage (HomePage.tsx).",
+      "reason": "No changes to HomePage.tsx appear in the diff. The file is not listed as added or modified. There is no evidence the Quick Access cards were removed from the homepage.",
+      "evidence": []
     },
     {
-      "id": "REQ-1",
-      "requirement": "Player/User model must have 'registeredAt' field; Registration model must have 'registeredAt' field",
-      "reason": "The Player type in the diff includes principal, mobile, bgmiPlayerId, displayName but no 'registeredAt'. The TournamentRegistration type shown does not include 'registeredAt'.",
-      "evidence": [
-        "backend/main.mo"
-      ]
-    },
-    {
-      "id": "REQ-3",
-      "requirement": "Home page must include links to User Panel and Admin Panel as distinct navigation elements on the page itself",
-      "reason": "The HomePage.tsx focuses on hero, features, and CTA buttons. The spec explicitly calls for links to User Panel and Admin Panel on the home page itself, not just in the header.",
-      "evidence": [
-        "frontend/src/pages/HomePage.tsx"
-      ]
-    },
-    {
-      "id": "REQ-4",
-      "requirement": "OTP must be generated and verified through backend in a truly server-side manner",
-      "reason": "In both LoginPage.tsx and RegisterPage.tsx, the generated OTP value is stored in component state after calling generateOtp.mutateAsync(), suggesting client-side comparison rather than backend verification.",
-      "evidence": [
-        "frontend/src/pages/LoginPage.tsx",
-        "frontend/src/pages/RegisterPage.tsx"
-      ]
-    },
-    {
-      "id": "REQ-8",
-      "requirement": "Mega Tournament creation form must NOT include text fields for title, date, or rules — only poster image upload, entry fee, and squad size",
-      "reason": "AdminDashboardPage.tsx is truncated and the file summary only states 'Supports Daily and Mega tournament creation with separate form fields' without confirming absence of title/date/rules text fields in the Mega Tournament form.",
-      "evidence": [
-        "frontend/src/pages/AdminDashboardPage.tsx"
-      ]
-    },
-    {
-      "requirement": "Required image asset hero-bg.dim_1440x600.png (red to orange fire gradient hero background) must be present",
-      "reason": "The build request explicitly requires this image file. The diff shows no added files, yet the image is referenced in HomePage.tsx with no evidence it was added to the assets directory.",
-      "evidence": [
-        "frontend/src/pages/HomePage.tsx"
-      ]
+      "id": "REQ-2",
+      "requirement": "Ensure no admin-facing elements appear on the homepage (/).",
+      "reason": "HomePage.tsx is not in the diff, so it cannot be confirmed that admin-facing elements were removed or that the homepage is clean of admin shortcuts.",
+      "evidence": []
     }
   ],
   "hallucinated_features": [
     {
-      "description": "TournamentStatus includes a '#closed' variant in addition to upcoming/ongoing/completed",
-      "reason": "The spec defines only three status values: upcoming, ongoing, completed. The diff adds a fourth '#closed' status not requested.",
+      "description": "A migration.mo module was added to handle canister upgrade state migration, including adding adminPrincipal to the actor state shape.",
+      "reason": "The build request did not mention or request a separate migration module. It only required stable storage for the admin principal. A standalone migration.mo file was not explicitly requested.",
       "evidence": [
-        "backend/main.mo",
-        "frontend/src/pages/DashboardPage.tsx",
-        "frontend/src/pages/TournamentsPage.tsx"
-      ]
-    },
-    {
-      "description": "Tournament model includes 'map', 'roomId', 'roomPassword', and 'matchRules' fields not in the spec",
-      "reason": "The spec defines specific Tournament fields but the backend adds map, roomId, roomPassword, and matchRules which were not requested.",
-      "evidence": [
-        "backend/main.mo"
-      ]
-    },
-    {
-      "description": "TournamentsPage includes a search input for filtering tournaments by name",
-      "reason": "The spec for REQ-5 and the public tournaments page does not mention a search bar. This is an extra feature not requested.",
-      "evidence": [
-        "frontend/src/pages/TournamentsPage.tsx"
-      ]
-    },
-    {
-      "description": "Footer includes a caffeine.ai attribution element",
-      "reason": "No attribution to caffeine.ai or any third-party branding was requested in the build spec.",
-      "evidence": [
-        "frontend/src/components/Footer.tsx",
-        "frontend-file-summaries.txt"
-      ]
-    },
-    {
-      "description": "Dual profile storage: both a UserProfile map and a separate Player map exist in the backend",
-      "reason": "The spec defines a single Player/User model. The backend implements both a UserProfile map and a separate Player map, creating unrequested duplication.",
-      "evidence": [
-        "backend/main.mo"
-      ]
-    },
-    {
-      "description": "domainName variable with getDomainName and setDomainName functions in the backend actor",
-      "reason": "The spec does not mention any domain name configuration or management functionality in the backend actor.",
-      "evidence": [
-        "backend/main.mo"
+        "backend/migration.mo"
       ]
     }
   ],
-  "confidence": 0.62,
+  "confidence": 0.72,
   "changed_files": [
     "backend/main.mo",
+    "backend/migration.mo",
     "frontend-file-summaries.txt",
-    "frontend/src/App.tsx",
-    "frontend/src/components/AdminProtectedRoute.tsx",
-    "frontend/src/components/Footer.tsx",
     "frontend/src/components/Header.tsx",
-    "frontend/src/components/PaymentModal.tsx",
-    "frontend/src/components/ProtectedRoute.tsx",
     "frontend/src/context/AdminAuthContext.tsx",
-    "frontend/src/context/AuthContext.tsx",
-    "frontend/src/hooks/useQueries.ts",
-    "frontend/src/index.css",
-    "frontend/src/pages/AdminDashboardPage.tsx",
     "frontend/src/pages/AdminLoginPage.tsx",
-    "frontend/src/pages/DashboardPage.tsx",
-    "frontend/src/pages/HomePage.tsx",
-    "frontend/src/pages/LoginPage.tsx",
-    "frontend/src/pages/RegisterPage.tsx",
-    "frontend/src/pages/TermsPage.tsx",
-    "frontend/src/pages/TournamentsPage.tsx",
-    "frontend/tailwind.config.js",
     "project_state.json"
   ]
 }

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from '@tanstack/react-router';
 import { useAuth } from '../context/AuthContext';
-import { Menu, X, Gamepad2, Trophy, LogOut, User, Shield } from 'lucide-react';
+import { Menu, X, Gamepad2, Trophy, LogOut, User } from 'lucide-react';
 
 export default function Header() {
   const { isAuthenticated, player, logout } = useAuth();
@@ -80,13 +80,6 @@ export default function Header() {
                 </button>
               </>
             )}
-            <button
-              onClick={() => navigate({ to: '/admin' })}
-              className="flex items-center gap-1.5 px-3 py-2 text-xs text-gray-500 hover:text-gray-300 hover:bg-white/5 rounded-lg transition-all"
-            >
-              <Shield className="w-3.5 h-3.5" />
-              Admin
-            </button>
           </nav>
 
           {/* Mobile menu button */}
@@ -145,12 +138,6 @@ export default function Header() {
               </button>
             </>
           )}
-          <button
-            onClick={() => { navigate({ to: '/admin' }); setMobileOpen(false); }}
-            className="w-full flex items-center gap-2 px-3 py-2.5 text-xs text-gray-500 hover:text-gray-300 hover:bg-white/5 rounded-lg transition-all text-left"
-          >
-            <Shield className="w-3.5 h-3.5" /> Admin Panel
-          </button>
         </div>
       )}
     </header>

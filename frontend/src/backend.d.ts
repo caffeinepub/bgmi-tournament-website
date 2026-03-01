@@ -97,6 +97,7 @@ export interface backendInterface {
     createTournament(name: string, dateTime: Time, entryFee: bigint, prizePool: bigint, map: string, totalSlots: bigint, upiId: string, matchRules: string): Promise<string>;
     findUnusedSlots(): Promise<Array<Tournament>>;
     generateOtp(): Promise<string>;
+    getAdminPrincipal(): Promise<Principal | null>;
     getAllPlayers(): Promise<Array<Player>>;
     getAllSupportTicketsSorted(): Promise<Array<SupportTicket>>;
     getAllTournaments(): Promise<Array<Tournament>>;
@@ -111,7 +112,9 @@ export interface backendInterface {
     getTournamentById(id: string): Promise<Tournament | null>;
     getTournamentsByMap(map: string): Promise<Array<Tournament>>;
     getUserProfile(user: Principal): Promise<UserProfile | null>;
+    isAdminPrincipal(p: Principal): Promise<boolean>;
     isCallerAdmin(): Promise<boolean>;
+    registerAdminPrincipal(p: Principal): Promise<boolean>;
     registerForTournament(tournamentId: string, paymentScreenshotBlob: ExternalBlob): Promise<string>;
     registerPlayer(mobile: string, bgmiPlayerId: string, displayName: string): Promise<void>;
     replyToSupportTicket(ticketId: string, reply: string): Promise<void>;

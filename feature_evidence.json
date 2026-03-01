@@ -2,43 +2,11 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-build-a-red-orange-fire-gradient-themed-frontend-matching-the-reference-screenshots-deep-red-c0100a-to-bright-orange-ff6a00-gradient-background-on-hero-and-key-sections-use-orbitron-rajdhani-fonts-for-headings-apply-the-theme-consistently-across-all-pages-home-user-panel-admin-panel-login-registration",
-      "featureTitle": "Build a red-orange fire gradient themed frontend matching the reference screenshots: deep red (#C0100A) to bright orange (#FF6A00) gradient background on hero and key sections. Use Orbitron/Rajdhani fonts for headings. Apply the theme consistently across all pages — home, user panel, admin panel, login, registration.",
+      "featureId": "feature-implement-a-two-step-admin-authentication-flow-for-admin-step-1-show-a-login-form-requiring-username-empire-esports-and-password-shivam803119-only-on-successful-credential-match-should-the-user-proceed-to-step-2-step-2-require-internet-identity-login-the-internet-identity-principal-that-first-completes-admin-setup-is-stored-as-the-sole-authorized-admin-principal-persisted-in-backend-stable-storage-on-subsequent-logins-after-credential-check-passes-the-user-must-log-in-with-internet-identity-and-their-principal-must-match-the-stored-admin-principal-if-no-admin-principal-is-registered-yet-the-current-internet-identity-login-registers-it-only-after-both-steps-pass-should-the-admin-dashboard-be-accessible",
+      "featureTitle": "Implement a two-step admin authentication flow for /admin. Step 1: Show a login form requiring Username = 'Empire Esports' and Password = 'Shivam803119&'. Only on successful credential match should the user proceed to Step 2. Step 2: Require Internet Identity login. The Internet Identity principal that first completes admin setup is stored as the sole authorized admin principal (persisted in backend stable storage). On subsequent logins, after credential check passes, the user must log in with Internet Identity and their principal must match the stored admin principal. If no admin principal is registered yet, the current Internet Identity login registers it. Only after both steps pass should the admin dashboard be accessible.",
       "files": [
-        "frontend/src/components/Footer.tsx",
-        "frontend/src/components/Header.tsx",
-        "frontend/src/index.css",
-        "frontend/src/pages/AdminDashboardPage.tsx",
-        "frontend/src/pages/AdminLoginPage.tsx",
-        "frontend/src/pages/DashboardPage.tsx",
-        "frontend/src/pages/HomePage.tsx",
-        "frontend/src/pages/LoginPage.tsx",
-        "frontend/src/pages/RegisterPage.tsx",
-        "frontend/src/pages/TermsPage.tsx",
-        "frontend/tailwind.config.js"
-      ],
-      "components": [
-        "blob-storage@4.0.0",
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0",
-        "authorization@4.0.0"
-      ],
-      "testIds": [
-        "REQ-2"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-build-the-public-home-page-with-1-hero-section-with-india-s-premier-bgmi-tournament-platform-badge-raj-empire-esports-arena-heading-tagline-compete-in-thrilling-bgmi-tournaments-win-real-prizes-and-prove-you-re-the-best-player-in-the-arena-view-tournaments-and-join-now-free-cta-buttons-2-feature-highlights-section-3-links-to-user-panel-and-admin-panel-4-header-with-navigation-and-auth-aware-actions-5-footer-with-social-links-youtube-instagram-telegram-fetched-from-backend",
-      "featureTitle": "Build the public Home Page with: (1) Hero section with 'India's Premier BGMI Tournament Platform' badge, 'Raj Empire Esports Arena' heading, tagline 'Compete in thrilling BGMI tournaments, win real prizes, and prove you're the best player in the arena.', 'View Tournaments' and 'Join Now — Free' CTA buttons. (2) Feature highlights section. (3) Links to User Panel and Admin Panel. (4) Header with navigation and auth-aware actions. (5) Footer with social links (YouTube, Instagram, Telegram) fetched from backend.",
-      "files": [
-        "frontend/src/App.tsx",
-        "frontend/src/components/Footer.tsx",
-        "frontend/src/components/Header.tsx",
-        "frontend/src/pages/HomePage.tsx"
+        "frontend/src/context/AdminAuthContext.tsx",
+        "frontend/src/pages/AdminLoginPage.tsx"
       ],
       "components": [
         "blob-storage@4.0.0",
@@ -55,37 +23,10 @@
       "confidence": "high"
     },
     {
-      "featureId": "feature-build-the-player-registration-and-login-flow-1-multi-step-registration-collecting-displayname-mobilenumber-and-bgmiplayerid-verified-via-otp-2-two-step-login-with-otp-verification-3-session-persisted-in-localstorage-via-authcontext-4-protectedroute-redirects-unauthenticated-users-to-login",
-      "featureTitle": "Build the Player Registration and Login flow: (1) Multi-step registration collecting displayName, mobileNumber, and bgmiPlayerId, verified via OTP. (2) Two-step login with OTP verification. (3) Session persisted in localStorage via AuthContext. (4) ProtectedRoute redirects unauthenticated users to login.",
+      "featureId": "feature-update-adminauthcontext-to-implement-the-two-step-flow-step-1-validates-hardcoded-credentials-username-empire-esports-password-shivam803119-step-2-triggers-internet-identity-login-via-useinternetidentity-and-calls-the-backend-to-register-or-verify-the-admin-principal-expose-state-for-credentialsverified-identityverified-isadminauthenticated-both-steps-complete-persist-both-flags-in-localstorage-on-logout-clear-both-flags-and-internet-identity-session",
+      "featureTitle": "Update AdminAuthContext to implement the two-step flow: Step 1 validates hardcoded credentials (Username: 'Empire Esports', Password: 'Shivam803119&'). Step 2 triggers Internet Identity login via useInternetIdentity and calls the backend to register or verify the admin principal. Expose state for: credentialsVerified, identityVerified, isAdminAuthenticated (both steps complete). Persist both flags in localStorage. On logout, clear both flags and Internet Identity session.",
       "files": [
-        "frontend/src/App.tsx",
-        "frontend/src/components/ProtectedRoute.tsx",
-        "frontend/src/context/AuthContext.tsx",
-        "frontend/src/hooks/useQueries.ts",
-        "frontend/src/pages/LoginPage.tsx",
-        "frontend/src/pages/RegisterPage.tsx"
-      ],
-      "components": [
-        "blob-storage@4.0.0",
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0",
-        "authorization@4.0.0"
-      ],
-      "testIds": [
-        "REQ-4"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-build-the-player-dashboard-with-three-tabs-1-tournaments-tab-lists-all-tournaments-with-status-based-filtering-upcoming-ongoing-completed-shows-entry-fee-prize-pool-squad-size-available-slots-player-can-click-to-register-2-my-registrations-tab-shows-player-s-own-registrations-with-status-pending-approved-rejected-3-profile-tab-shows-player-s-display-name-mobile-bgmi-id",
-      "featureTitle": "Build the Player Dashboard with three tabs: (1) Tournaments tab — lists all tournaments with status-based filtering (Upcoming/Ongoing/Completed), shows entry fee, prize pool, squad size, available slots; player can click to register. (2) My Registrations tab — shows player's own registrations with status (pending/approved/rejected). (3) Profile tab — shows player's display name, mobile, BGMI ID.",
-      "files": [
-        "frontend/src/components/PaymentModal.tsx",
-        "frontend/src/hooks/useQueries.ts",
-        "frontend/src/pages/DashboardPage.tsx"
+        "frontend/src/context/AdminAuthContext.tsx"
       ],
       "components": [
         "blob-storage@4.0.0",
@@ -102,11 +43,10 @@
       "confidence": "high"
     },
     {
-      "featureId": "feature-build-a-payment-modal-for-tournament-registration-that-shows-the-tournament-s-upi-id-and-qr-code-image-fetched-per-tournament-from-backend-allows-player-to-upload-a-payment-screenshot-requires-terms-acceptance-checkbox-and-submits-the-registration-on-success-shows-a-confirmation-state",
-      "featureTitle": "Build a Payment Modal for tournament registration that: shows the tournament's UPI ID and QR code image (fetched per tournament from backend), allows player to upload a payment screenshot, requires terms acceptance checkbox, and submits the registration. On success shows a confirmation state.",
+      "featureId": "feature-update-adminloginpage-to-render-a-two-step-ui-step-1-username-password-form-on-success-advance-to-step-2-step-2-show-an-authenticate-with-internet-identity-button-display-clear-error-messages-if-credentials-are-wrong-or-if-the-internet-identity-principal-does-not-match-the-registered-admin-show-a-loading-state-during-internet-identity-authentication",
+      "featureTitle": "Update AdminLoginPage to render a two-step UI. Step 1: Username/Password form. On success, advance to Step 2. Step 2: Show an 'Authenticate with Internet Identity' button. Display clear error messages if credentials are wrong or if the Internet Identity principal does not match the registered admin. Show a loading state during Internet Identity authentication.",
       "files": [
-        "frontend/src/components/PaymentModal.tsx",
-        "frontend/src/hooks/useQueries.ts"
+        "frontend/src/pages/AdminLoginPage.tsx"
       ],
       "components": [
         "blob-storage@4.0.0",
@@ -123,13 +63,10 @@
       "confidence": "high"
     },
     {
-      "featureId": "feature-build-the-admin-login-page-with-username-password-form-hardcoded-credentials-show-hide-password-toggle-and-redirect-to-admin-dashboard-on-success-admin-session-persisted-in-localstorage-via-adminauthcontext",
-      "featureTitle": "Build the Admin Login page with username/password form (hardcoded credentials), show/hide password toggle, and redirect to admin dashboard on success. Admin session persisted in localStorage via AdminAuthContext.",
+      "featureId": "feature-remove-the-admin-shield-link-from-the-header-component-so-regular-users-cannot-see-or-navigate-to-the-admin-panel-from-the-main-site-header",
+      "featureTitle": "Remove the admin shield/link from the Header component so regular users cannot see or navigate to the admin panel from the main site header.",
       "files": [
-        "frontend/src/App.tsx",
-        "frontend/src/components/AdminProtectedRoute.tsx",
-        "frontend/src/context/AdminAuthContext.tsx",
-        "frontend/src/pages/AdminLoginPage.tsx"
+        "frontend/src/components/Header.tsx"
       ],
       "components": [
         "blob-storage@4.0.0",
@@ -142,50 +79,6 @@
       ],
       "testIds": [
         "REQ-7"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-build-the-admin-dashboard-with-a-collapsible-sidebar-and-the-following-tabbed-sections-1-daily-tournaments-admin-can-create-edit-delete-daily-tournaments-setting-title-entryfee-prizepool-squadsize-solo-duo-squad-totalslots-upi-id-qr-code-image-upload-status-each-daily-tournament-has-its-own-independent-upi-qr-2-mega-tournaments-admin-can-create-edit-delete-mega-tournaments-by-uploading-a-poster-image-and-setting-entryfee-squadsize-solo-duo-squad-totalslots-status-no-extra-text-fields-for-poster-3-registrations-view-all-registrations-approve-or-reject-with-status-update-view-payment-screenshots-4-players-view-all-registered-players-5-terms-conditions-edit-and-save-t-c-text-6-support-tickets-view-and-respond-7-social-links-set-youtube-instagram-telegram-urls",
-      "featureTitle": "Build the Admin Dashboard with a collapsible sidebar and the following tabbed sections: (1) Daily Tournaments — admin can create/edit/delete daily tournaments setting: title, entryFee, prizePool, squadSize (Solo/Duo/Squad), totalSlots, UPI ID, QR code image upload, status. Each daily tournament has its own independent UPI/QR. (2) Mega Tournaments — admin can create/edit/delete mega tournaments by uploading a poster image and setting: entryFee, squadSize (Solo/Duo/Squad), totalSlots, status. No extra text fields for poster. (3) Registrations — view all registrations, approve or reject with status update, view payment screenshots. (4) Players — view all registered players. (5) Terms & Conditions — edit and save T&C text. (6) Support Tickets — view and respond. (7) Social Links — set YouTube, Instagram, Telegram URLs.",
-      "files": [
-        "frontend/src/App.tsx",
-        "frontend/src/hooks/useQueries.ts",
-        "frontend/src/pages/AdminDashboardPage.tsx"
-      ],
-      "components": [
-        "blob-storage@4.0.0",
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0",
-        "authorization@4.0.0"
-      ],
-      "testIds": [
-        "REQ-8"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-build-the-terms-conditions-page-that-fetches-t-c-content-from-the-backend-and-renders-numbered-sections-with-colored-headings-include-a-hardcoded-fallback-if-backend-returns-empty",
-      "featureTitle": "Build the Terms & Conditions page that fetches T&C content from the backend and renders numbered sections with colored headings. Include a hardcoded fallback if backend returns empty.",
-      "files": [
-        "frontend/src/App.tsx",
-        "frontend/src/hooks/useQueries.ts",
-        "frontend/src/pages/TermsPage.tsx"
-      ],
-      "components": [
-        "blob-storage@4.0.0",
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0",
-        "authorization@4.0.0"
-      ],
-      "testIds": [
-        "REQ-9"
       ],
       "confidence": "high"
     }

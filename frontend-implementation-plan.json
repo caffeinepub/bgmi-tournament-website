@@ -1,283 +1,115 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Raj Empire Esports Arena — Frontend Implementation",
+  "title": "Admin double-auth (ID/password + Internet Identity), remove Quick Access cards, clean homepage",
   "requirements": [
     {
-      "id": "REQ-2",
-      "summary": "Apply red-orange fire gradient theme matching reference screenshots across all pages",
+      "id": "REQ-1",
+      "summary": "Remove Quick Access cards (User Panel / Admin Panel) from the homepage, keeping only hero section, tournaments, and other public content",
       "acceptanceCriteria": [
-        "Hero section shows red-to-orange diagonal gradient matching the screenshot",
-        "All headings use Orbitron or Rajdhani gaming fonts",
-        "Theme is consistent across all pages and components",
-        "Buttons, cards, and badges follow the red-orange brand palette"
+        "No 'User Panel' or 'Admin Panel' quick access cards are visible on the homepage",
+        "Hero section, featured tournaments, and CTA buttons remain intact",
+        "No broken layout after card removal"
       ],
       "file_operations": [
         {
-          "path": "frontend/src/index.css",
+          "path": "frontend/src/pages/HomePage.tsx",
           "operation": "modify",
-          "description": "Update global styles to include the red-orange fire gradient (#C0100A to #FF6A00) as utility classes and ensure Orbitron/Rajdhani fonts are properly configured for headings. Add brand-gradient utilities and brand color palette tokens matching the deep crimson to bright orange theme. Integrate the generated hero background image at frontend/public/assets/generated/hero-bg.dim_1440x600.png for use in hero sections."
-        },
-        {
-          "path": "frontend/tailwind.config.js",
-          "operation": "modify",
-          "description": "Extend the Tailwind theme with red-orange brand colors (#C0100A, #FF6A00) as custom color tokens. Configure Orbitron and Rajdhani as primary heading fonts. Add gradient utilities for the fire gradient effect. Ensure the configuration supports consistent theming across buttons, cards, and badges."
-        },
+          "description": "Remove the Quick Access cards section that displays User Panel and Admin Panel navigation shortcuts. Keep the hero section with CTA buttons and any existing tournament listings or features grid intact. Ensure the remaining layout flows properly without gaps or broken spacing."
+        }
+      ]
+    },
+    {
+      "id": "REQ-2",
+      "summary": "Ensure the main homepage (/) is user-facing with tournament browsing and register/login access, with no admin-facing elements",
+      "acceptanceCriteria": [
+        "Homepage shows tournament listings or a CTA to browse tournaments",
+        "Register and Login links/buttons are accessible from the homepage",
+        "No admin controls or admin shortcuts are present on the homepage"
+      ],
+      "file_operations": [
         {
           "path": "frontend/src/pages/HomePage.tsx",
           "operation": "modify",
-          "description": "Apply the red-orange fire gradient background to the hero section using the generated image at frontend/public/assets/generated/hero-bg.dim_1440x600.png. Ensure headings use Orbitron/Rajdhani fonts and that buttons follow the brand palette. Verify the hero section matches the reference screenshot styling."
-        },
-        {
-          "path": "frontend/src/components/Header.tsx",
-          "operation": "modify",
-          "description": "Apply the red-orange gradient styling to the header logo and ensure navigation buttons follow the brand palette. Use brand gradient utilities for visual consistency."
-        },
-        {
-          "path": "frontend/src/components/Footer.tsx",
-          "operation": "modify",
-          "description": "Apply brand color tokens to the footer background, links, and social icons to ensure consistency with the red-orange theme."
-        },
-        {
-          "path": "frontend/src/pages/DashboardPage.tsx",
-          "operation": "modify",
-          "description": "Apply red-orange theme to dashboard tabs, tournament cards, and buttons. Ensure headings use Orbitron/Rajdhani fonts and all interactive elements follow the brand palette."
-        },
-        {
-          "path": "frontend/src/pages/AdminDashboardPage.tsx",
-          "operation": "modify",
-          "description": "Apply red-orange theme to the admin dashboard sidebar, tabbed sections, and form buttons. Ensure consistency with the brand palette and font usage."
-        },
-        {
-          "path": "frontend/src/pages/LoginPage.tsx",
-          "operation": "modify",
-          "description": "Apply red-orange gradient styling to the login page background, form buttons, and heading fonts to match the brand theme."
-        },
-        {
-          "path": "frontend/src/pages/RegisterPage.tsx",
-          "operation": "modify",
-          "description": "Apply red-orange theme to the registration page background, step indicators, form buttons, and headings to ensure consistency with the brand."
-        },
-        {
-          "path": "frontend/src/pages/AdminLoginPage.tsx",
-          "operation": "modify",
-          "description": "Apply red-orange theme to the admin login page background, form styling, and buttons to match the overall brand aesthetic."
-        },
-        {
-          "path": "frontend/src/pages/TermsPage.tsx",
-          "operation": "modify",
-          "description": "Apply red-orange theme to the Terms & Conditions page, ensuring section headings use brand colors and fonts for consistency."
+          "description": "Verify that the homepage displays public tournament information or a clear CTA to browse tournaments. Ensure Register and Login buttons are accessible via the Header component. Remove any admin-specific UI elements or shortcuts if present. This operation validates the public-facing nature of the homepage after REQ-1 card removal."
         }
       ]
     },
     {
       "id": "REQ-3",
-      "summary": "Build public Home Page with hero section, feature highlights, navigation links, and footer with backend-fetched social links",
+      "summary": "Implement two-step admin authentication flow for /admin: Step 1 validates hardcoded credentials (Username: 'Empire Esports', Password: 'Shivam803119&'); Step 2 requires Internet Identity login with principal registration and verification",
       "acceptanceCriteria": [
-        "Home page renders hero section exactly matching the reference screenshot",
-        "CTA buttons navigate to tournaments page and registration page respectively",
-        "Footer social links are fetched from backend",
-        "Header shows login/logout/dashboard based on auth state"
+        "Visiting /admin shows a credential form (username + password) before anything else",
+        "Wrong credentials block access and show an error message",
+        "After correct credentials, user is prompted to login with Internet Identity",
+        "The first Internet Identity principal to complete admin login is saved as the sole admin principal in backend stable storage",
+        "Subsequent admin logins require the same Internet Identity principal; any other principal is rejected with an error",
+        "A successfully authenticated admin can access the full admin dashboard",
+        "Admin session state is persisted in localStorage so the user stays logged in across page refreshes",
+        "Admin can logout, which clears both credential and Internet Identity session state",
+        "Multiple devices can access admin panel using the same Internet Identity principal"
       ],
       "file_operations": [
         {
-          "path": "frontend/src/pages/HomePage.tsx",
+          "path": "frontend/src/context/AdminAuthContext.tsx",
           "operation": "modify",
-          "description": "Implement the hero section with 'India's Premier BGMI Tournament Platform' badge, 'Raj Empire Esports Arena' heading, tagline 'Compete in thrilling BGMI tournaments, win real prizes, and prove you're the best player in the arena.', and two CTA buttons: 'View Tournaments' (navigating to /tournaments) and 'Join Now — Free' (navigating to /register). Add a feature highlights section below the hero. Integrate the generated hero background image at frontend/public/assets/generated/hero-bg.dim_1440x600.png. Ensure the hero section matches the reference screenshot styling exactly. Include links to User Panel (/dashboard) and Admin Panel (/admin) in the navigation or a visible section."
+          "description": "Replace the current single-step admin authentication with a two-step flow. Step 1: Validate hardcoded credentials (Username: 'Empire Esports', Password: 'Shivam803119&'). Step 2: Integrate with useInternetIdentity hook to trigger Internet Identity login after credential verification. Add state flags: credentialsVerified (boolean), identityVerified (boolean), and isAdminAuthenticated (both must be true). After II login, call backend methods registerAdminPrincipal or isAdminPrincipal to register or verify the principal. Persist both credentialsVerified and identityVerified flags in localStorage. On logout, clear both flags, clear Internet Identity session via the clear() function from useInternetIdentity, and invalidate React Query cache. Expose loginWithCredentials(username, password), loginWithIdentity(), logout(), and the state flags. Handle errors from backend principal verification and surface them to the UI."
         },
         {
-          "path": "frontend/src/components/Header.tsx",
+          "path": "frontend/src/pages/AdminLoginPage.tsx",
           "operation": "modify",
-          "description": "Ensure the Header component displays auth-aware navigation: show login button when not authenticated, and show logout/dashboard links when authenticated. Use useAuth hook to determine authentication state. Ensure the header integrates seamlessly with the HomePage."
-        },
-        {
-          "path": "frontend/src/components/Footer.tsx",
-          "operation": "modify",
-          "description": "Ensure the Footer component fetches social links (YouTube, Instagram, Telegram) from the backend using the useGetSocialLinks query hook and displays them as clickable icons. Include quick navigation links to Terms, Tournaments, and Dashboard pages."
-        },
-        {
-          "path": "frontend/src/App.tsx",
-          "operation": "modify",
-          "description": "Ensure the /tournaments route is registered and accessible from the HomePage 'View Tournaments' button. Verify that HomePage is wired into the router and rendered within the Layout component."
-        }
-      ]
-    },
-    {
-      "id": "REQ-4",
-      "summary": "Build Player Registration and Login flow with OTP verification and session persistence",
-      "acceptanceCriteria": [
-        "Player can register with display name, mobile number, and BGMI Player ID",
-        "OTP is generated and verified through backend",
-        "Login persists session in localStorage",
-        "Protected routes redirect to login if not authenticated"
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/pages/RegisterPage.tsx",
-          "operation": "modify",
-          "description": "Implement multi-step registration flow: (1) Collect displayName, mobileNumber, and bgmiPlayerId. (2) Generate OTP via actor.generateOtp() and verify via actor.verifyOtp(). (3) Call actor.registerPlayer() and actor.saveCallerUserProfile() to complete registration. On success, update AuthContext with the new player session and navigate to /dashboard. Use the authorization component to ensure the player profile is persisted. Verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/pages/LoginPage.tsx",
-          "operation": "modify",
-          "description": "Implement two-step login: (1) Collect mobile number and generate OTP via actor.generateOtp(). (2) Verify OTP via actor.verifyOtp(). On success, fetch the player's profile via actor.getCallerUserProfile() and update AuthContext with the session (mobile, displayName, bgmiPlayerId). Persist the session in localStorage and navigate to /dashboard. Use the authorization component to verify user role and fetch profile. Verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/context/AuthContext.tsx",
-          "operation": "modify",
-          "description": "Ensure AuthContext persists player session (mobile, displayName, bgmiPlayerId) in localStorage under a consistent key. Expose login and logout functions that update both context state and localStorage. Ensure logout clears all cached data and invalidates React Query cache."
-        },
-        {
-          "path": "frontend/src/components/ProtectedRoute.tsx",
-          "operation": "modify",
-          "description": "Ensure ProtectedRoute checks AuthContext.isAuthenticated and redirects unauthenticated users to /login. Render children only if authenticated."
-        },
-        {
-          "path": "frontend/src/App.tsx",
-          "operation": "modify",
-          "description": "Wrap the /dashboard route with ProtectedRoute to enforce authentication. Ensure /register and /login routes are accessible without authentication."
-        },
-        {
-          "path": "frontend/src/hooks/useQueries.ts",
-          "operation": "modify",
-          "description": "Add React Query hooks for OTP generation (useGenerateOtp), OTP verification (useVerifyOtp), and player registration (useRegisterPlayer). Ensure these hooks call the corresponding actor methods (generateOtp, verifyOtp, registerPlayer, saveCallerUserProfile). Use the authorization component to handle profile persistence. Verify the component's usage instructions before implementing."
+          "description": "Refactor the admin login page to render a two-step UI. Step 1: Display a username and password form with fields for 'Empire Esports' and 'Shivam803119&'. On form submit, call AdminAuthContext.loginWithCredentials(). Show an error message if credentials are incorrect. On success, transition to Step 2. Step 2: Display an 'Authenticate with Internet Identity' button. On click, call AdminAuthContext.loginWithIdentity(). Show a loading spinner during II authentication. Display error messages if the Internet Identity principal does not match the registered admin principal (e.g., 'Unauthorized: This Internet Identity is not registered as admin'). On full success (both steps complete), redirect to /admin dashboard. Use conditional rendering to show only the current step based on AdminAuthContext.credentialsVerified state. Ensure clear visual feedback for each step and any errors."
         }
       ]
     },
     {
       "id": "REQ-5",
-      "summary": "Build Player Dashboard with Tournaments, My Registrations, and Profile tabs",
+      "summary": "Update AdminAuthContext to implement the two-step flow with credential validation and Internet Identity principal registration/verification",
       "acceptanceCriteria": [
-        "Player dashboard shows three tabs: Tournaments, My Registrations, Profile",
-        "Tournament cards display entry fee, prize pool, squad size, and slot count",
-        "Player can initiate registration from a tournament card",
-        "My Registrations tab shows registration status for each entry"
+        "AdminAuthContext exposes credentialsVerified and isAdminAuthenticated flags",
+        "isAdminAuthenticated is true only when both credential and Internet Identity steps succeed",
+        "Logout clears all admin session state from localStorage",
+        "Context uses useInternetIdentity hook for II integration"
       ],
       "file_operations": [
         {
-          "path": "frontend/src/pages/DashboardPage.tsx",
+          "path": "frontend/src/context/AdminAuthContext.tsx",
           "operation": "modify",
-          "description": "Implement three-tab layout: (1) Tournaments tab — fetch all tournaments via useGetAllTournaments and display status-based filters (Upcoming/Ongoing/Completed). Show tournament cards with entry fee, prize pool, squad size (Solo/Duo/Squad), and available slots (totalSlots - filledSlots). Include a 'Register' button per card that opens the PaymentModal. (2) My Registrations tab — fetch player's registrations via useGetMyRegistrations and display each with tournament details and status badge (pending/approved/rejected). (3) Profile tab — display the player's displayName, mobile, and bgmiPlayerId from AuthContext or fetched via actor.getCallerUserProfile(). Use the authorization component to fetch the user profile. Verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/components/PaymentModal.tsx",
-          "operation": "modify",
-          "description": "Ensure PaymentModal is wired into DashboardPage and can be triggered from a tournament card. Verify the modal is correctly integrated and accessible from the Tournaments tab."
-        },
-        {
-          "path": "frontend/src/hooks/useQueries.ts",
-          "operation": "modify",
-          "description": "Ensure useGetAllTournaments, useGetMyRegistrations, and useGetCallerUserProfile hooks are available and correctly fetch data from the backend. Use the authorization component for profile fetching. Verify the component's usage instructions before implementing."
+          "description": "This requirement is covered by REQ-3 frontend file operations. Ensure the context exposes credentialsVerified, identityVerified, and isAdminAuthenticated (computed as credentialsVerified && identityVerified). Use useInternetIdentity to access identity.getPrincipal() after II login. Call actor.registerAdminPrincipal(principal) on first login or actor.isAdminPrincipal(principal) on subsequent logins. Store flags in localStorage keys 'adminCredentialsVerified' and 'adminIdentityVerified'. On logout, remove both keys, call clear() from useInternetIdentity, and call queryClient.clear() to reset all cached data."
         }
       ]
     },
     {
       "id": "REQ-6",
-      "summary": "Build Payment Modal for tournament registration with UPI details, screenshot upload, and terms acceptance",
+      "summary": "Update AdminLoginPage to render a two-step UI with credential form and Internet Identity authentication button",
       "acceptanceCriteria": [
-        "Payment modal shows the specific UPI ID and QR code for the selected tournament",
-        "Player can upload a payment screenshot",
-        "Terms acceptance checkbox must be checked before submission",
-        "Success state is shown after successful submission"
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/components/PaymentModal.tsx",
-          "operation": "modify",
-          "description": "Implement the Payment Modal to: (1) Fetch and display the selected tournament's UPI ID and QR code image (qrCodeBlob) via actor.getTournamentById(). (2) Provide a file input for the player to upload a payment screenshot. Convert the screenshot to ExternalBlob using ExternalBlob.fromBytes(). (3) Include a terms acceptance checkbox that must be checked before submission. (4) On submit, call actor.registerForTournament(tournamentId, paymentScreenshotBlob). (5) On success, display a confirmation state within the modal or close and show a success message. Use the blob-storage component to handle screenshot upload. Verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/hooks/useQueries.ts",
-          "operation": "modify",
-          "description": "Add or update useRegisterForTournament mutation hook that accepts tournamentId and paymentScreenshotBlob (ExternalBlob) and calls actor.registerForTournament(). Ensure the hook invalidates relevant queries (getMyRegistrations, getAllTournaments) on success. Use the blob-storage component to handle blob operations. Verify the component's usage instructions before implementing."
-        }
-      ]
-    },
-    {
-      "id": "REQ-7",
-      "summary": "Build Admin Login page with username/password form and session persistence",
-      "acceptanceCriteria": [
-        "Admin login page renders with username/password form",
-        "Show/hide password toggle works",
-        "Successful login redirects to admin dashboard",
-        "Failed login shows error message"
+        "Step 1 shows username and password fields with a submit button",
+        "Wrong credentials show an error and do not advance to Step 2",
+        "Step 2 shows an 'Login with Internet Identity' button",
+        "If the Internet Identity principal is rejected, an error message is shown",
+        "On full success, user is redirected to /admin dashboard",
+        "Loading spinner shown during Internet Identity authentication"
       ],
       "file_operations": [
         {
           "path": "frontend/src/pages/AdminLoginPage.tsx",
           "operation": "modify",
-          "description": "Implement admin login form with username and password fields. Add a show/hide password toggle icon. On submit, call AdminAuthContext.login(username, password) with hardcoded credentials. On success, navigate to /admin. On failure, display an error message. Ensure the form follows the red-orange brand theme."
-        },
-        {
-          "path": "frontend/src/context/AdminAuthContext.tsx",
-          "operation": "modify",
-          "description": "Ensure AdminAuthContext persists admin authentication state in localStorage under a consistent key. Expose login and logout functions. Hardcode admin credentials (e.g., username: 'admin', password: 'admin123') and validate them in the login function. Return true on success, false on failure."
-        },
-        {
-          "path": "frontend/src/components/AdminProtectedRoute.tsx",
-          "operation": "modify",
-          "description": "Ensure AdminProtectedRoute checks AdminAuthContext.isAdminAuthenticated and redirects to /admin if not authenticated. Render children only if authenticated."
-        },
-        {
-          "path": "frontend/src/App.tsx",
-          "operation": "modify",
-          "description": "Wrap the /admin route (admin dashboard) with AdminProtectedRoute to enforce admin authentication. Ensure /admin (login page) is accessible without authentication."
+          "description": "This requirement is covered by REQ-3 frontend file operations. Render the credential form in Step 1 with username and password inputs. Display inline error messages for wrong credentials. Only show Step 2 (Internet Identity button) after credentialsVerified is true. Show a loading spinner using loginStatus from useInternetIdentity or a local loading state during II authentication. Display backend errors (e.g., principal mismatch) in an error alert. Use useNavigate to redirect to /admin on successful authentication (isAdminAuthenticated === true). Ensure UI is responsive and accessible with proper labels and ARIA attributes."
         }
       ]
     },
     {
-      "id": "REQ-8",
-      "summary": "Build Admin Dashboard with sidebar and tabbed sections for managing tournaments, registrations, players, terms, support, and social links",
+      "id": "REQ-7",
+      "summary": "Remove the admin shield/link from the Header component so regular users cannot navigate to the admin panel from the main site header",
       "acceptanceCriteria": [
-        "Admin can create a Daily Tournament with independent entry fee, prize pool, squad size, UPI ID, and QR code per tournament",
-        "Admin can create a Mega Tournament by uploading only a poster image + setting entry fee and squad size",
-        "Mega Tournament creation form does NOT show extra text fields (no title/date/rules text inputs beyond entry fee and squad size)",
-        "Admin can approve or reject player registrations and view payment screenshots",
-        "Admin can edit Terms & Conditions text",
-        "Admin can set social media links",
-        "Admin dashboard is protected by AdminProtectedRoute"
+        "No admin icon, link, or shortcut appears in the public site header",
+        "Admin panel is only accessible by directly typing /admin in the URL bar"
       ],
       "file_operations": [
         {
-          "path": "frontend/src/pages/AdminDashboardPage.tsx",
+          "path": "frontend/src/components/Header.tsx",
           "operation": "modify",
-          "description": "Implement the Admin Dashboard with a collapsible sidebar and seven tabbed sections: (1) Daily Tournaments — form to create/edit/delete tournaments with fields: title, entryFee, prizePool, squadSize (Solo/Duo/Squad dropdown), totalSlots, upiId, QR code image upload (using blob-storage component), status dropdown. Each daily tournament has independent UPI/QR. Display list of existing daily tournaments with edit/delete actions. (2) Mega Tournaments — form to create/edit/delete mega tournaments with ONLY: poster image upload (using blob-storage component), entryFee, squadSize dropdown, totalSlots, status dropdown. Do NOT include title, date, or rules text fields in this form. Display list of existing mega tournaments with edit/delete actions. (3) Registrations — table of all registrations via useGetAllRegistrations, with columns: player name, tournament name, payment screenshot (view button opens image in modal), status, actions (approve/reject buttons). Use blob-storage component to display payment screenshots. (4) Players — table of all players via useGetAllPlayers. (5) Terms & Conditions — textarea to edit terms content, save button calls useUpdateTermsAndConditions. (6) Support Tickets — table of all tickets via useGetAllSupportTickets, with view/reply functionality. (7) Social Links — form with inputs for YouTube, Instagram, Telegram URLs, save button calls useUpdateSocialLinks. Use blob-storage component for all image uploads (QR codes, posters, payment screenshots). Verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/hooks/useQueries.ts",
-          "operation": "modify",
-          "description": "Add or update mutation hooks for: useCreateTournament (accepts all tournament fields including qrCodeBlob as ExternalBlob), useUpdateTournamentQrCode, useUpdateTournamentStatus, useUpdateRegistrationStatus, useGetAllRegistrations, useGetAllPlayers, useUpdateTermsAndConditions, useUpdateSocialLinks, useGetAllSupportTickets, useReplyToSupportTicket. Ensure all blob fields use the blob-storage component's ExternalBlob type. Verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/App.tsx",
-          "operation": "modify",
-          "description": "Ensure the /admin route (admin dashboard) is wrapped with AdminProtectedRoute and correctly renders AdminDashboardPage. Verify the route is registered in the router."
-        }
-      ]
-    },
-    {
-      "id": "REQ-9",
-      "summary": "Build Terms & Conditions page that fetches content from backend and renders with colored headings",
-      "acceptanceCriteria": [
-        "Terms page fetches content from backend",
-        "Numbered sections render with alternating colored headings",
-        "Hardcoded fallback content displays if backend returns empty"
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/pages/TermsPage.tsx",
-          "operation": "modify",
-          "description": "Fetch Terms & Conditions content via useGetTermsAndConditions query hook. Parse the content into numbered sections and render each with alternating colored headings (use brand red-orange palette). If backend returns empty or null, display a hardcoded fallback terms text. Style the page with a rainbow-bar styled card layout matching the existing design."
-        },
-        {
-          "path": "frontend/src/hooks/useQueries.ts",
-          "operation": "modify",
-          "description": "Ensure useGetTermsAndConditions hook fetches content via actor.getTermsAndConditions() and caches the result. Return the TermsAndConditions object with content field."
-        },
-        {
-          "path": "frontend/src/App.tsx",
-          "operation": "modify",
-          "description": "Ensure the /terms route is registered and renders TermsPage within the Layout component. Verify the route is accessible from the footer and navigation."
+          "description": "Remove the admin shield icon and /admin navigation link from the Header component. This includes removing the shield icon from both desktop and mobile navigation menus. Ensure the remaining navigation items (Home, Tournaments, Terms & Conditions, Login/Register/Logout) remain functional and properly styled. The admin panel will only be accessible by directly typing /admin in the browser's address bar."
         }
       ]
     }

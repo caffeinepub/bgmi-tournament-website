@@ -11,7 +11,9 @@ import MixinStorage "blob-storage/Mixin";
 import Storage "blob-storage/Storage";
 import MixinAuthorization "authorization/MixinAuthorization";
 import AccessControl "authorization/access-control";
+import Migration "migration";
 
+(with migration = Migration.run)
 actor {
   include MixinStorage();
 
@@ -145,6 +147,46 @@ actor {
     youtube = "";
     instagram = "";
     telegram = "";
+  };
+
+  // Admin persistent principal (only one allowed!)
+  var adminPrincipal : ?Principal = null;
+
+  // Register the caller as admin principal.
+  // Only allowed if:
+  //   1. No admin principal has been registered yet.
+  //   2. The caller is not anonymous.
+  //   3. The provided principal p matches the caller (cannot register on behalf of someone else).
+  public shared ({ caller }) func registerAdminPrincipal(p : Principal) : async Bool {
+    // Prevent anonymous principal from registering as admin
+    if (caller.isAnonymous()) {
+      Runtime.trap("Unauthorized: Anonymous callers cannot register as admin");
+    };
+    // Prevent registering a principal other than the caller's own
+    if (caller != p) {
+      Runtime.trap("Unauthorized: Can only register your own principal as admin");
+    };
+    if (adminPrincipal == null) {
+      adminPrincipal := ?caller;
+      true;
+    } else {
+      false;
+    };
+  };
+
+  // Returns the stored admin principal (if any). Public — frontend needs this to
+  // determine whether an admin has been registered and to verify identity.
+  public query func getAdminPrincipal() : async ?Principal {
+    adminPrincipal;
+  };
+
+  // Checks whether the given principal matches the stored admin principal.
+  // Public — frontend uses this to verify the logged-in Internet Identity principal.
+  public query func isAdminPrincipal(p : Principal) : async Bool {
+    switch (adminPrincipal) {
+      case (null) { false };
+      case (?adminP) { adminP == p };
+    };
   };
 
   // Domain Name functions

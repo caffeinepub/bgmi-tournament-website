@@ -1,194 +1,102 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-03-01T13:55:30.324Z",
+  "generatedAt": "2026-03-01T14:09:39.046Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
   },
   "requirements": {
-    "total": 9,
-    "implemented": 8,
+    "total": 7,
+    "implemented": 4,
     "items": [
       {
         "id": "REQ-1",
-        "summary": "Build the complete backend actor with the following data models and logic: (1) Tournament model with fields: id, type (daily/mega), title, entryFee, prizePool, squadSize (Solo/Duo/Squad), upiId, qrCodeImage (blob), posterImage (blob, mega only), status (upcoming/ongoing/completed), slots, registeredCount, createdAt. (2) Player/User model with fields: id, displayName, mobileNumber, bgmiPlayerId, registeredAt. (3) Registration model with fields: id, tournamentId, playerId, paymentScreenshot (blob), status (pending/approved/rejected), registeredAt. (4) Support ticket model. (5) Social links model. (6) Terms & Conditions model. Expose CRUD functions for all models with admin-only write access.",
+        "summary": "Remove the Quick Access cards (User Panel / Admin Panel) from the homepage (HomePage.tsx). The homepage should only show the hero section, tournaments, and other existing public content — no shortcut navigation cards to panels.",
+        "status": "missing",
+        "plannedFiles": [
+          "frontend/src/pages/HomePage.tsx"
+        ],
+        "matchedFiles": []
+      },
+      {
+        "id": "REQ-2",
+        "summary": "The main homepage (/) must be the user-facing page where players can browse tournaments and access register/login. This is already the primary route but ensure no admin-facing elements appear here.",
+        "status": "missing",
+        "plannedFiles": [
+          "frontend/src/pages/HomePage.tsx"
+        ],
+        "matchedFiles": []
+      },
+      {
+        "id": "REQ-3",
+        "summary": "Implement a two-step admin authentication flow for /admin. Step 1: Show a login form requiring Username = 'Empire Esports' and Password = 'Shivam803119&'. Only on successful credential match should the user proceed to Step 2. Step 2: Require Internet Identity login. The Internet Identity principal that first completes admin setup is stored as the sole authorized admin principal (persisted in backend stable storage). On subsequent logins, after credential check passes, the user must log in with Internet Identity and their principal must match the stored admin principal. If no admin principal is registered yet, the current Internet Identity login registers it. Only after both steps pass should the admin dashboard be accessible.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/context/AdminAuthContext.tsx",
+          "frontend/src/pages/AdminLoginPage.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/context/AdminAuthContext.tsx",
+          "frontend/src/pages/AdminLoginPage.tsx"
+        ]
+      },
+      {
+        "id": "REQ-4",
+        "summary": "Add backend Motoko functions to store and retrieve the registered admin Internet Identity principal. Include: `registerAdminPrincipal(p: Principal): async Bool` — stores the principal only if none is registered yet (returns true on success, false if already set); `getAdminPrincipal(): async ?Principal` — returns the stored admin principal; `isAdminPrincipal(p: Principal): async Bool` — checks if the given principal matches the stored admin principal. Use stable storage for the admin principal.",
         "status": "unknown",
         "plannedFiles": [],
         "matchedFiles": []
       },
       {
-        "id": "REQ-2",
-        "summary": "Build a red-orange fire gradient themed frontend matching the reference screenshots: deep red (#C0100A) to bright orange (#FF6A00) gradient background on hero and key sections. Use Orbitron/Rajdhani fonts for headings. Apply the theme consistently across all pages — home, user panel, admin panel, login, registration.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/index.css",
-          "frontend/tailwind.config.js",
-          "frontend/src/pages/HomePage.tsx",
-          "frontend/src/components/Header.tsx",
-          "frontend/src/components/Footer.tsx",
-          "frontend/src/pages/DashboardPage.tsx",
-          "frontend/src/pages/AdminDashboardPage.tsx",
-          "frontend/src/pages/LoginPage.tsx",
-          "frontend/src/pages/RegisterPage.tsx",
-          "frontend/src/pages/AdminLoginPage.tsx",
-          "frontend/src/pages/TermsPage.tsx"
-        ],
-        "matchedFiles": [
-          "frontend/src/index.css",
-          "frontend/tailwind.config.js",
-          "frontend/src/pages/HomePage.tsx",
-          "frontend/src/components/Header.tsx",
-          "frontend/src/components/Footer.tsx",
-          "frontend/src/pages/DashboardPage.tsx",
-          "frontend/src/pages/AdminDashboardPage.tsx",
-          "frontend/src/pages/LoginPage.tsx",
-          "frontend/src/pages/RegisterPage.tsx",
-          "frontend/src/pages/AdminLoginPage.tsx",
-          "frontend/src/pages/TermsPage.tsx"
-        ]
-      },
-      {
-        "id": "REQ-3",
-        "summary": "Build the public Home Page with: (1) Hero section with 'India's Premier BGMI Tournament Platform' badge, 'Raj Empire Esports Arena' heading, tagline 'Compete in thrilling BGMI tournaments, win real prizes, and prove you're the best player in the arena.', 'View Tournaments' and 'Join Now — Free' CTA buttons. (2) Feature highlights section. (3) Links to User Panel and Admin Panel. (4) Header with navigation and auth-aware actions. (5) Footer with social links (YouTube, Instagram, Telegram) fetched from backend.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/pages/HomePage.tsx",
-          "frontend/src/components/Header.tsx",
-          "frontend/src/components/Footer.tsx",
-          "frontend/src/App.tsx"
-        ],
-        "matchedFiles": [
-          "frontend/src/pages/HomePage.tsx",
-          "frontend/src/components/Header.tsx",
-          "frontend/src/components/Footer.tsx",
-          "frontend/src/App.tsx"
-        ]
-      },
-      {
-        "id": "REQ-4",
-        "summary": "Build the Player Registration and Login flow: (1) Multi-step registration collecting displayName, mobileNumber, and bgmiPlayerId, verified via OTP. (2) Two-step login with OTP verification. (3) Session persisted in localStorage via AuthContext. (4) ProtectedRoute redirects unauthenticated users to login.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/pages/RegisterPage.tsx",
-          "frontend/src/pages/LoginPage.tsx",
-          "frontend/src/context/AuthContext.tsx",
-          "frontend/src/components/ProtectedRoute.tsx",
-          "frontend/src/App.tsx",
-          "frontend/src/hooks/useQueries.ts"
-        ],
-        "matchedFiles": [
-          "frontend/src/pages/RegisterPage.tsx",
-          "frontend/src/pages/LoginPage.tsx",
-          "frontend/src/context/AuthContext.tsx",
-          "frontend/src/components/ProtectedRoute.tsx",
-          "frontend/src/App.tsx",
-          "frontend/src/hooks/useQueries.ts"
-        ]
-      },
-      {
         "id": "REQ-5",
-        "summary": "Build the Player Dashboard with three tabs: (1) Tournaments tab — lists all tournaments with status-based filtering (Upcoming/Ongoing/Completed), shows entry fee, prize pool, squad size, available slots; player can click to register. (2) My Registrations tab — shows player's own registrations with status (pending/approved/rejected). (3) Profile tab — shows player's display name, mobile, BGMI ID.",
+        "summary": "Update AdminAuthContext to implement the two-step flow: Step 1 validates hardcoded credentials (Username: 'Empire Esports', Password: 'Shivam803119&'). Step 2 triggers Internet Identity login via useInternetIdentity and calls the backend to register or verify the admin principal. Expose state for: credentialsVerified, identityVerified, isAdminAuthenticated (both steps complete). Persist both flags in localStorage. On logout, clear both flags and Internet Identity session.",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/pages/DashboardPage.tsx",
-          "frontend/src/components/PaymentModal.tsx",
-          "frontend/src/hooks/useQueries.ts"
+          "frontend/src/context/AdminAuthContext.tsx"
         ],
         "matchedFiles": [
-          "frontend/src/pages/DashboardPage.tsx",
-          "frontend/src/components/PaymentModal.tsx",
-          "frontend/src/hooks/useQueries.ts"
+          "frontend/src/context/AdminAuthContext.tsx"
         ]
       },
       {
         "id": "REQ-6",
-        "summary": "Build a Payment Modal for tournament registration that: shows the tournament's UPI ID and QR code image (fetched per tournament from backend), allows player to upload a payment screenshot, requires terms acceptance checkbox, and submits the registration. On success shows a confirmation state.",
+        "summary": "Update AdminLoginPage to render a two-step UI. Step 1: Username/Password form. On success, advance to Step 2. Step 2: Show an 'Authenticate with Internet Identity' button. Display clear error messages if credentials are wrong or if the Internet Identity principal does not match the registered admin. Show a loading state during Internet Identity authentication.",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/components/PaymentModal.tsx",
-          "frontend/src/hooks/useQueries.ts"
+          "frontend/src/pages/AdminLoginPage.tsx"
         ],
         "matchedFiles": [
-          "frontend/src/components/PaymentModal.tsx",
-          "frontend/src/hooks/useQueries.ts"
+          "frontend/src/pages/AdminLoginPage.tsx"
         ]
       },
       {
         "id": "REQ-7",
-        "summary": "Build the Admin Login page with username/password form (hardcoded credentials), show/hide password toggle, and redirect to admin dashboard on success. Admin session persisted in localStorage via AdminAuthContext.",
+        "summary": "Remove the admin shield/link from the Header component so regular users cannot see or navigate to the admin panel from the main site header.",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/pages/AdminLoginPage.tsx",
-          "frontend/src/context/AdminAuthContext.tsx",
-          "frontend/src/components/AdminProtectedRoute.tsx",
-          "frontend/src/App.tsx"
+          "frontend/src/components/Header.tsx"
         ],
         "matchedFiles": [
-          "frontend/src/pages/AdminLoginPage.tsx",
-          "frontend/src/context/AdminAuthContext.tsx",
-          "frontend/src/components/AdminProtectedRoute.tsx",
-          "frontend/src/App.tsx"
-        ]
-      },
-      {
-        "id": "REQ-8",
-        "summary": "Build the Admin Dashboard with a collapsible sidebar and the following tabbed sections: (1) Daily Tournaments — admin can create/edit/delete daily tournaments setting: title, entryFee, prizePool, squadSize (Solo/Duo/Squad), totalSlots, UPI ID, QR code image upload, status. Each daily tournament has its own independent UPI/QR. (2) Mega Tournaments — admin can create/edit/delete mega tournaments by uploading a poster image and setting: entryFee, squadSize (Solo/Duo/Squad), totalSlots, status. No extra text fields for poster. (3) Registrations — view all registrations, approve or reject with status update, view payment screenshots. (4) Players — view all registered players. (5) Terms & Conditions — edit and save T&C text. (6) Support Tickets — view and respond. (7) Social Links — set YouTube, Instagram, Telegram URLs.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/pages/AdminDashboardPage.tsx",
-          "frontend/src/hooks/useQueries.ts",
-          "frontend/src/App.tsx"
-        ],
-        "matchedFiles": [
-          "frontend/src/pages/AdminDashboardPage.tsx",
-          "frontend/src/hooks/useQueries.ts",
-          "frontend/src/App.tsx"
-        ]
-      },
-      {
-        "id": "REQ-9",
-        "summary": "Build the Terms & Conditions page that fetches T&C content from the backend and renders numbered sections with colored headings. Include a hardcoded fallback if backend returns empty.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/pages/TermsPage.tsx",
-          "frontend/src/hooks/useQueries.ts",
-          "frontend/src/App.tsx"
-        ],
-        "matchedFiles": [
-          "frontend/src/pages/TermsPage.tsx",
-          "frontend/src/hooks/useQueries.ts",
-          "frontend/src/App.tsx"
+          "frontend/src/components/Header.tsx"
         ]
       }
     ]
   },
   "changedFiles": [
     "backend/main.mo",
+    "backend/migration.mo",
     "build-request.json",
     "feature_evidence.json",
     "frontend-file-summaries.txt",
     "frontend-implementation-plan.json",
-    "frontend/public/assets/generated/hero-bg.dim_1440x600.png",
-    "frontend/src/App.tsx",
-    "frontend/src/components/AdminProtectedRoute.tsx",
-    "frontend/src/components/Footer.tsx",
+    "frontend/src/backend.d.ts",
+    "frontend/src/backend.ts",
     "frontend/src/components/Header.tsx",
-    "frontend/src/components/PaymentModal.tsx",
-    "frontend/src/components/ProtectedRoute.tsx",
     "frontend/src/context/AdminAuthContext.tsx",
-    "frontend/src/context/AuthContext.tsx",
-    "frontend/src/hooks/useQueries.ts",
-    "frontend/src/index.css",
-    "frontend/src/pages/AdminDashboardPage.tsx",
+    "frontend/src/declarations/backend.did.d.ts",
+    "frontend/src/declarations/backend.did.js",
     "frontend/src/pages/AdminLoginPage.tsx",
-    "frontend/src/pages/DashboardPage.tsx",
-    "frontend/src/pages/HomePage.tsx",
-    "frontend/src/pages/LoginPage.tsx",
-    "frontend/src/pages/RegisterPage.tsx",
-    "frontend/src/pages/TermsPage.tsx",
-    "frontend/src/pages/TournamentsPage.tsx",
-    "frontend/tailwind.config.js",
     "project_state.json",
     "scratch/component-selection.json",
     "spec.md",

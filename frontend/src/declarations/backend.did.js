@@ -137,6 +137,7 @@ export const idlService = IDL.Service({
     ),
   'findUnusedSlots' : IDL.Func([], [IDL.Vec(Tournament)], ['query']),
   'generateOtp' : IDL.Func([], [IDL.Text], []),
+  'getAdminPrincipal' : IDL.Func([], [IDL.Opt(IDL.Principal)], ['query']),
   'getAllPlayers' : IDL.Func([], [IDL.Vec(Player)], ['query']),
   'getAllSupportTicketsSorted' : IDL.Func(
       [],
@@ -171,7 +172,9 @@ export const idlService = IDL.Service({
       [IDL.Opt(UserProfile)],
       ['query'],
     ),
+  'isAdminPrincipal' : IDL.Func([IDL.Principal], [IDL.Bool], ['query']),
   'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
+  'registerAdminPrincipal' : IDL.Func([IDL.Principal], [IDL.Bool], []),
   'registerForTournament' : IDL.Func([IDL.Text, ExternalBlob], [IDL.Text], []),
   'registerPlayer' : IDL.Func([IDL.Text, IDL.Text, IDL.Text], [], []),
   'replyToSupportTicket' : IDL.Func([IDL.Text, IDL.Text], [], []),
@@ -336,6 +339,7 @@ export const idlFactory = ({ IDL }) => {
       ),
     'findUnusedSlots' : IDL.Func([], [IDL.Vec(Tournament)], ['query']),
     'generateOtp' : IDL.Func([], [IDL.Text], []),
+    'getAdminPrincipal' : IDL.Func([], [IDL.Opt(IDL.Principal)], ['query']),
     'getAllPlayers' : IDL.Func([], [IDL.Vec(Player)], ['query']),
     'getAllSupportTicketsSorted' : IDL.Func(
         [],
@@ -374,7 +378,9 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Opt(UserProfile)],
         ['query'],
       ),
+    'isAdminPrincipal' : IDL.Func([IDL.Principal], [IDL.Bool], ['query']),
     'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
+    'registerAdminPrincipal' : IDL.Func([IDL.Principal], [IDL.Bool], []),
     'registerForTournament' : IDL.Func(
         [IDL.Text, ExternalBlob],
         [IDL.Text],

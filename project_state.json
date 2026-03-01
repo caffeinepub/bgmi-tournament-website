@@ -1,78 +1,43 @@
 {
   "schemaVersion": "1.0.0",
   "projectStateVersion": 3,
-  "summary": "Raj Empire Esports Arena — BGMI Tournament Platform with Red/Orange fire gradient theme. Includes Daily Tournament (admin sets entry fee, prize pool, squad size solo/duo/squad, UPI/QR per tournament), Mega Tournament (admin uploads poster + sets entry fee and squad size together, image only), User Panel (view/register tournaments), and Admin Panel.",
+  "summary": "Esports tournament platform with user-facing homepage for viewing/registering tournaments, and a protected /admin panel. Admin panel requires double authentication: secret ID/password (Empire Esports / Shivam803119&) plus Internet Identity (single account, multi-device).",
   "architectural_notes": [
-    "Project is 'Raj Empire Esports Arena' — BGMI Tournament Platform",
-    "Repeated build/deployment failures observed; may need simplified architecture or dependency fixes"
+    "Admin panel (/admin) requires two-factor auth: secret credentials (Empire Esports / Shivam803119&) + Internet Identity",
+    "Internet Identity for admin is a single registered account (multi-device support via Google)"
   ],
-  "known_issues": [
-    "Deployment errors occurring repeatedly during build process"
-  ],
-  "isFixRequest": true,
-  "imageRequirements": "## Required Images\n- Red to orange fire gradient hero background for BGMI esports platform, deep crimson red on the left transitioning to bright orange on the right (hero-bg.dim_1440x600.png)",
+  "known_issues": [],
+  "isFixRequest": false,
   "existing_features": [
     {
-      "id": "feature-build-a-red-orange-fire-gradient-themed-frontend-matching-the-reference-screenshots-deep-red-c0100a-to-bright-orange-ff6a00-gradient-background-on-hero-and-key-sections-use-orbitron-rajdhani-fonts-for-headings-apply-the-theme-consistently-across-all-pages-home-user-panel-admin-panel-login-registration",
-      "title": "Build a red-orange fire gradient themed frontend matching the reference screenshots: deep red (#C0100A) to bright orange (#FF6A00) gradient background on hero and key sections. Use Orbitron/Rajdhani fonts for headings. Apply the theme consistently across all pages — home, user panel, admin panel, login, registration.",
-      "reqIds": [
-        "REQ-2"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-build-the-public-home-page-with-1-hero-section-with-india-s-premier-bgmi-tournament-platform-badge-raj-empire-esports-arena-heading-tagline-compete-in-thrilling-bgmi-tournaments-win-real-prizes-and-prove-you-re-the-best-player-in-the-arena-view-tournaments-and-join-now-free-cta-buttons-2-feature-highlights-section-3-links-to-user-panel-and-admin-panel-4-header-with-navigation-and-auth-aware-actions-5-footer-with-social-links-youtube-instagram-telegram-fetched-from-backend",
-      "title": "Build the public Home Page with: (1) Hero section with 'India's Premier BGMI Tournament Platform' badge, 'Raj Empire Esports Arena' heading, tagline 'Compete in thrilling BGMI tournaments, win real prizes, and prove you're the best player in the arena.', 'View Tournaments' and 'Join Now — Free' CTA buttons. (2) Feature highlights section. (3) Links to User Panel and Admin Panel. (4) Header with navigation and auth-aware actions. (5) Footer with social links (YouTube, Instagram, Telegram) fetched from backend.",
+      "id": "feature-implement-a-two-step-admin-authentication-flow-for-admin-step-1-show-a-login-form-requiring-username-empire-esports-and-password-shivam803119-only-on-successful-credential-match-should-the-user-proceed-to-step-2-step-2-require-internet-identity-login-the-internet-identity-principal-that-first-completes-admin-setup-is-stored-as-the-sole-authorized-admin-principal-persisted-in-backend-stable-storage-on-subsequent-logins-after-credential-check-passes-the-user-must-log-in-with-internet-identity-and-their-principal-must-match-the-stored-admin-principal-if-no-admin-principal-is-registered-yet-the-current-internet-identity-login-registers-it-only-after-both-steps-pass-should-the-admin-dashboard-be-accessible",
+      "title": "Implement a two-step admin authentication flow for /admin. Step 1: Show a login form requiring Username = 'Empire Esports' and Password = 'Shivam803119&'. Only on successful credential match should the user proceed to Step 2. Step 2: Require Internet Identity login. The Internet Identity principal that first completes admin setup is stored as the sole authorized admin principal (persisted in backend stable storage). On subsequent logins, after credential check passes, the user must log in with Internet Identity and their principal must match the stored admin principal. If no admin principal is registered yet, the current Internet Identity login registers it. Only after both steps pass should the admin dashboard be accessible.",
       "reqIds": [
         "REQ-3"
       ],
       "version": 1
     },
     {
-      "id": "feature-build-the-player-registration-and-login-flow-1-multi-step-registration-collecting-displayname-mobilenumber-and-bgmiplayerid-verified-via-otp-2-two-step-login-with-otp-verification-3-session-persisted-in-localstorage-via-authcontext-4-protectedroute-redirects-unauthenticated-users-to-login",
-      "title": "Build the Player Registration and Login flow: (1) Multi-step registration collecting displayName, mobileNumber, and bgmiPlayerId, verified via OTP. (2) Two-step login with OTP verification. (3) Session persisted in localStorage via AuthContext. (4) ProtectedRoute redirects unauthenticated users to login.",
-      "reqIds": [
-        "REQ-4"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-build-the-player-dashboard-with-three-tabs-1-tournaments-tab-lists-all-tournaments-with-status-based-filtering-upcoming-ongoing-completed-shows-entry-fee-prize-pool-squad-size-available-slots-player-can-click-to-register-2-my-registrations-tab-shows-player-s-own-registrations-with-status-pending-approved-rejected-3-profile-tab-shows-player-s-display-name-mobile-bgmi-id",
-      "title": "Build the Player Dashboard with three tabs: (1) Tournaments tab — lists all tournaments with status-based filtering (Upcoming/Ongoing/Completed), shows entry fee, prize pool, squad size, available slots; player can click to register. (2) My Registrations tab — shows player's own registrations with status (pending/approved/rejected). (3) Profile tab — shows player's display name, mobile, BGMI ID.",
+      "id": "feature-update-adminauthcontext-to-implement-the-two-step-flow-step-1-validates-hardcoded-credentials-username-empire-esports-password-shivam803119-step-2-triggers-internet-identity-login-via-useinternetidentity-and-calls-the-backend-to-register-or-verify-the-admin-principal-expose-state-for-credentialsverified-identityverified-isadminauthenticated-both-steps-complete-persist-both-flags-in-localstorage-on-logout-clear-both-flags-and-internet-identity-session",
+      "title": "Update AdminAuthContext to implement the two-step flow: Step 1 validates hardcoded credentials (Username: 'Empire Esports', Password: 'Shivam803119&'). Step 2 triggers Internet Identity login via useInternetIdentity and calls the backend to register or verify the admin principal. Expose state for: credentialsVerified, identityVerified, isAdminAuthenticated (both steps complete). Persist both flags in localStorage. On logout, clear both flags and Internet Identity session.",
       "reqIds": [
         "REQ-5"
       ],
       "version": 1
     },
     {
-      "id": "feature-build-a-payment-modal-for-tournament-registration-that-shows-the-tournament-s-upi-id-and-qr-code-image-fetched-per-tournament-from-backend-allows-player-to-upload-a-payment-screenshot-requires-terms-acceptance-checkbox-and-submits-the-registration-on-success-shows-a-confirmation-state",
-      "title": "Build a Payment Modal for tournament registration that: shows the tournament's UPI ID and QR code image (fetched per tournament from backend), allows player to upload a payment screenshot, requires terms acceptance checkbox, and submits the registration. On success shows a confirmation state.",
+      "id": "feature-update-adminloginpage-to-render-a-two-step-ui-step-1-username-password-form-on-success-advance-to-step-2-step-2-show-an-authenticate-with-internet-identity-button-display-clear-error-messages-if-credentials-are-wrong-or-if-the-internet-identity-principal-does-not-match-the-registered-admin-show-a-loading-state-during-internet-identity-authentication",
+      "title": "Update AdminLoginPage to render a two-step UI. Step 1: Username/Password form. On success, advance to Step 2. Step 2: Show an 'Authenticate with Internet Identity' button. Display clear error messages if credentials are wrong or if the Internet Identity principal does not match the registered admin. Show a loading state during Internet Identity authentication.",
       "reqIds": [
         "REQ-6"
       ],
       "version": 1
     },
     {
-      "id": "feature-build-the-admin-login-page-with-username-password-form-hardcoded-credentials-show-hide-password-toggle-and-redirect-to-admin-dashboard-on-success-admin-session-persisted-in-localstorage-via-adminauthcontext",
-      "title": "Build the Admin Login page with username/password form (hardcoded credentials), show/hide password toggle, and redirect to admin dashboard on success. Admin session persisted in localStorage via AdminAuthContext.",
+      "id": "feature-remove-the-admin-shield-link-from-the-header-component-so-regular-users-cannot-see-or-navigate-to-the-admin-panel-from-the-main-site-header",
+      "title": "Remove the admin shield/link from the Header component so regular users cannot see or navigate to the admin panel from the main site header.",
       "reqIds": [
         "REQ-7"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-build-the-admin-dashboard-with-a-collapsible-sidebar-and-the-following-tabbed-sections-1-daily-tournaments-admin-can-create-edit-delete-daily-tournaments-setting-title-entryfee-prizepool-squadsize-solo-duo-squad-totalslots-upi-id-qr-code-image-upload-status-each-daily-tournament-has-its-own-independent-upi-qr-2-mega-tournaments-admin-can-create-edit-delete-mega-tournaments-by-uploading-a-poster-image-and-setting-entryfee-squadsize-solo-duo-squad-totalslots-status-no-extra-text-fields-for-poster-3-registrations-view-all-registrations-approve-or-reject-with-status-update-view-payment-screenshots-4-players-view-all-registered-players-5-terms-conditions-edit-and-save-t-c-text-6-support-tickets-view-and-respond-7-social-links-set-youtube-instagram-telegram-urls",
-      "title": "Build the Admin Dashboard with a collapsible sidebar and the following tabbed sections: (1) Daily Tournaments — admin can create/edit/delete daily tournaments setting: title, entryFee, prizePool, squadSize (Solo/Duo/Squad), totalSlots, UPI ID, QR code image upload, status. Each daily tournament has its own independent UPI/QR. (2) Mega Tournaments — admin can create/edit/delete mega tournaments by uploading a poster image and setting: entryFee, squadSize (Solo/Duo/Squad), totalSlots, status. No extra text fields for poster. (3) Registrations — view all registrations, approve or reject with status update, view payment screenshots. (4) Players — view all registered players. (5) Terms & Conditions — edit and save T&C text. (6) Support Tickets — view and respond. (7) Social Links — set YouTube, Instagram, Telegram URLs.",
-      "reqIds": [
-        "REQ-8"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-build-the-terms-conditions-page-that-fetches-t-c-content-from-the-backend-and-renders-numbered-sections-with-colored-headings-include-a-hardcoded-fallback-if-backend-returns-empty",
-      "title": "Build the Terms & Conditions page that fetches T&C content from the backend and renders numbered sections with colored headings. Include a hardcoded fallback if backend returns empty.",
-      "reqIds": [
-        "REQ-9"
       ],
       "version": 1
     }
@@ -80,45 +45,49 @@
   "new_feature_requests": [
     {
       "id": "AR-1",
-      "summary": "Daily Tournament admin panel: set entry fee, prize pool, squad size (solo/duo/squad), and UPI/QR per tournament",
+      "summary": "User homepage showing tournaments with register/login functionality",
       "reqIds": [],
       "status": "pending"
     },
     {
       "id": "AR-2",
-      "summary": "Mega Tournament admin panel: upload poster + set entry fee and squad size together (image only, no extra text fields)",
+      "summary": "Remove Quick Access (User Panel / Admin Panel) cards from homepage",
       "reqIds": [],
       "status": "pending"
     },
     {
       "id": "AR-3",
-      "summary": "User panel: view tournaments and register",
+      "summary": "Admin panel at /admin URL with double protection: secret ID/password + Internet Identity (single account, multi-device)",
       "reqIds": [],
       "status": "pending"
     },
     {
       "id": "AR-4",
-      "summary": "Admin panel: manage all tournaments and settings",
-      "reqIds": [],
+      "summary": "Remove the Quick Access cards (User Panel / Admin Panel) from the homepage (HomePage.tsx). The homepage should only show the hero section, tournaments, and other existing public content — no shortcut navigation cards to panels.",
+      "reqIds": [
+        "REQ-1"
+      ],
       "status": "pending"
     },
     {
       "id": "AR-5",
-      "summary": "Red/Orange fire gradient design theme matching reference screenshots",
-      "reqIds": [],
+      "summary": "The main homepage (/) must be the user-facing page where players can browse tournaments and access register/login. This is already the primary route but ensure no admin-facing elements appear here.",
+      "reqIds": [
+        "REQ-2"
+      ],
       "status": "pending"
     },
     {
-      "id": "AR-6",
-      "summary": "Build the complete backend actor with the following data models and logic: (1) Tournament model with fields: id, type (daily/mega), title, entryFee, prizePool, squadSize (Solo/Duo/Squad), upiId, qrCodeImage (blob), posterImage (blob, mega only), status (upcoming/ongoing/completed), slots, registeredCount, createdAt. (2) Player/User model with fields: id, displayName, mobileNumber, bgmiPlayerId, registeredAt. (3) Registration model with fields: id, tournamentId, playerId, paymentScreenshot (blob), status (pending/approved/rejected), registeredAt. (4) Support ticket model. (5) Social links model. (6) Terms & Conditions model. Expose CRUD functions for all models with admin-only write access.",
+      "id": "AR-7",
+      "summary": "Add backend Motoko functions to store and retrieve the registered admin Internet Identity principal. Include: `registerAdminPrincipal(p: Principal): async Bool` — stores the principal only if none is registered yet (returns true on success, false if already set); `getAdminPrincipal(): async ?Principal` — returns the stored admin principal; `isAdminPrincipal(p: Principal): async Bool` — checks if the given principal matches the stored admin principal. Use stable storage for the admin principal.",
       "reqIds": [
-        "REQ-1"
+        "REQ-4"
       ],
       "status": "pending"
     }
   ],
   "gameProjectType": "none",
-  "projectName": "Raj Empire Esports Arena",
+  "projectName": "Empire Esports",
   "clarification_mode": "instant",
   "clarification_rounds": 0
 }
