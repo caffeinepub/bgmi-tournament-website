@@ -1,115 +1,30 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Admin double-auth (ID/password + Internet Identity), remove Quick Access cards, clean homepage",
+  "title": "Remove OTP from Registration and Replace with Internet Identity Authentication",
   "requirements": [
     {
       "id": "REQ-1",
-      "summary": "Remove Quick Access cards (User Panel / Admin Panel) from the homepage, keeping only hero section, tournaments, and other public content",
+      "summary": "Refactor RegisterPage to a 2-step flow: Step 1 collects Display Name, Mobile Number, and BGMI Player ID with a Continue button; Step 2 shows an Internet Identity authentication prompt instead of OTP verification. Remove all OTP-related UI and logic.",
       "acceptanceCriteria": [
-        "No 'User Panel' or 'Admin Panel' quick access cards are visible on the homepage",
-        "Hero section, featured tournaments, and CTA buttons remain intact",
-        "No broken layout after card removal"
+        "Registration page shows only 2 steps in the stepper: 'Details' and 'Done'",
+        "Step 1 contains Display Name, Mobile Number, and BGMI Player ID fields with a Continue button",
+        "Step 2 shows an Internet Identity login button (no OTP input, no OTP banner)",
+        "Clicking the Internet Identity button triggers the Internet Identity authentication popup",
+        "After successful Internet Identity authentication, the player profile is registered on-chain using the authenticated identity",
+        "No 'Demo OTP: 1234' banner or OTP input field exists anywhere in the registration flow",
+        "The 'Unauthorized: Only authenticated users can register as a player' error no longer appears because Internet Identity is authenticated before the registerPlayer call is made"
       ],
       "file_operations": [
         {
-          "path": "frontend/src/pages/HomePage.tsx",
+          "path": "frontend/src/pages/RegisterPage.tsx",
           "operation": "modify",
-          "description": "Remove the Quick Access cards section that displays User Panel and Admin Panel navigation shortcuts. Keep the hero section with CTA buttons and any existing tournament listings or features grid intact. Ensure the remaining layout flows properly without gaps or broken spacing."
-        }
-      ]
-    },
-    {
-      "id": "REQ-2",
-      "summary": "Ensure the main homepage (/) is user-facing with tournament browsing and register/login access, with no admin-facing elements",
-      "acceptanceCriteria": [
-        "Homepage shows tournament listings or a CTA to browse tournaments",
-        "Register and Login links/buttons are accessible from the homepage",
-        "No admin controls or admin shortcuts are present on the homepage"
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/pages/HomePage.tsx",
-          "operation": "modify",
-          "description": "Verify that the homepage displays public tournament information or a clear CTA to browse tournaments. Ensure Register and Login buttons are accessible via the Header component. Remove any admin-specific UI elements or shortcuts if present. This operation validates the public-facing nature of the homepage after REQ-1 card removal."
-        }
-      ]
-    },
-    {
-      "id": "REQ-3",
-      "summary": "Implement two-step admin authentication flow for /admin: Step 1 validates hardcoded credentials (Username: 'Empire Esports', Password: 'Shivam803119&'); Step 2 requires Internet Identity login with principal registration and verification",
-      "acceptanceCriteria": [
-        "Visiting /admin shows a credential form (username + password) before anything else",
-        "Wrong credentials block access and show an error message",
-        "After correct credentials, user is prompted to login with Internet Identity",
-        "The first Internet Identity principal to complete admin login is saved as the sole admin principal in backend stable storage",
-        "Subsequent admin logins require the same Internet Identity principal; any other principal is rejected with an error",
-        "A successfully authenticated admin can access the full admin dashboard",
-        "Admin session state is persisted in localStorage so the user stays logged in across page refreshes",
-        "Admin can logout, which clears both credential and Internet Identity session state",
-        "Multiple devices can access admin panel using the same Internet Identity principal"
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/context/AdminAuthContext.tsx",
-          "operation": "modify",
-          "description": "Replace the current single-step admin authentication with a two-step flow. Step 1: Validate hardcoded credentials (Username: 'Empire Esports', Password: 'Shivam803119&'). Step 2: Integrate with useInternetIdentity hook to trigger Internet Identity login after credential verification. Add state flags: credentialsVerified (boolean), identityVerified (boolean), and isAdminAuthenticated (both must be true). After II login, call backend methods registerAdminPrincipal or isAdminPrincipal to register or verify the principal. Persist both credentialsVerified and identityVerified flags in localStorage. On logout, clear both flags, clear Internet Identity session via the clear() function from useInternetIdentity, and invalidate React Query cache. Expose loginWithCredentials(username, password), loginWithIdentity(), logout(), and the state flags. Handle errors from backend principal verification and surface them to the UI."
+          "description": "Refactor the RegisterPage component to implement a 2-step registration flow. Step 1: Collect Display Name, Mobile Number, and BGMI Player ID with a 'Continue' button that advances to Step 2. Step 2: Display an Internet Identity authentication button using the existing useInternetIdentity hook. Remove the entire OTP verification step (Step 2 'Verify OTP'), including the OTP input field, the 'Demo OTP: 1234' banner, and all calls to generateOtp and verifyOtp mutations. Update the stepper UI to show only 2 steps labeled 'Details' and 'Done'. After successful Internet Identity authentication in Step 2, call the registerPlayer backend capability with the collected user details and the authenticated identity. Handle the registration success by logging the user into the player session (via AuthContext) and navigating to the player dashboard. Remove all OTP-related state variables, mutation hooks (useGenerateOtp, useVerifyOtp), and conditional rendering logic related to OTP. Ensure error handling displays appropriate messages if Internet Identity authentication fails or if registerPlayer returns an error. Use the authorization component to ensure the user is authenticated before calling registerPlayer, preventing the 'Unauthorized: Only authenticated users can register as a player' error."
         },
         {
-          "path": "frontend/src/pages/AdminLoginPage.tsx",
+          "path": "frontend/src/hooks/useQueries.ts",
           "operation": "modify",
-          "description": "Refactor the admin login page to render a two-step UI. Step 1: Display a username and password form with fields for 'Empire Esports' and 'Shivam803119&'. On form submit, call AdminAuthContext.loginWithCredentials(). Show an error message if credentials are incorrect. On success, transition to Step 2. Step 2: Display an 'Authenticate with Internet Identity' button. On click, call AdminAuthContext.loginWithIdentity(). Show a loading spinner during II authentication. Display error messages if the Internet Identity principal does not match the registered admin principal (e.g., 'Unauthorized: This Internet Identity is not registered as admin'). On full success (both steps complete), redirect to /admin dashboard. Use conditional rendering to show only the current step based on AdminAuthContext.credentialsVerified state. Ensure clear visual feedback for each step and any errors."
-        }
-      ]
-    },
-    {
-      "id": "REQ-5",
-      "summary": "Update AdminAuthContext to implement the two-step flow with credential validation and Internet Identity principal registration/verification",
-      "acceptanceCriteria": [
-        "AdminAuthContext exposes credentialsVerified and isAdminAuthenticated flags",
-        "isAdminAuthenticated is true only when both credential and Internet Identity steps succeed",
-        "Logout clears all admin session state from localStorage",
-        "Context uses useInternetIdentity hook for II integration"
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/context/AdminAuthContext.tsx",
-          "operation": "modify",
-          "description": "This requirement is covered by REQ-3 frontend file operations. Ensure the context exposes credentialsVerified, identityVerified, and isAdminAuthenticated (computed as credentialsVerified && identityVerified). Use useInternetIdentity to access identity.getPrincipal() after II login. Call actor.registerAdminPrincipal(principal) on first login or actor.isAdminPrincipal(principal) on subsequent logins. Store flags in localStorage keys 'adminCredentialsVerified' and 'adminIdentityVerified'. On logout, remove both keys, call clear() from useInternetIdentity, and call queryClient.clear() to reset all cached data."
-        }
-      ]
-    },
-    {
-      "id": "REQ-6",
-      "summary": "Update AdminLoginPage to render a two-step UI with credential form and Internet Identity authentication button",
-      "acceptanceCriteria": [
-        "Step 1 shows username and password fields with a submit button",
-        "Wrong credentials show an error and do not advance to Step 2",
-        "Step 2 shows an 'Login with Internet Identity' button",
-        "If the Internet Identity principal is rejected, an error message is shown",
-        "On full success, user is redirected to /admin dashboard",
-        "Loading spinner shown during Internet Identity authentication"
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/pages/AdminLoginPage.tsx",
-          "operation": "modify",
-          "description": "This requirement is covered by REQ-3 frontend file operations. Render the credential form in Step 1 with username and password inputs. Display inline error messages for wrong credentials. Only show Step 2 (Internet Identity button) after credentialsVerified is true. Show a loading spinner using loginStatus from useInternetIdentity or a local loading state during II authentication. Display backend errors (e.g., principal mismatch) in an error alert. Use useNavigate to redirect to /admin on successful authentication (isAdminAuthenticated === true). Ensure UI is responsive and accessible with proper labels and ARIA attributes."
-        }
-      ]
-    },
-    {
-      "id": "REQ-7",
-      "summary": "Remove the admin shield/link from the Header component so regular users cannot navigate to the admin panel from the main site header",
-      "acceptanceCriteria": [
-        "No admin icon, link, or shortcut appears in the public site header",
-        "Admin panel is only accessible by directly typing /admin in the URL bar"
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/components/Header.tsx",
-          "operation": "modify",
-          "description": "Remove the admin shield icon and /admin navigation link from the Header component. This includes removing the shield icon from both desktop and mobile navigation menus. Ensure the remaining navigation items (Home, Tournaments, Terms & Conditions, Login/Register/Logout) remain functional and properly styled. The admin panel will only be accessible by directly typing /admin in the browser's address bar."
+          "description": "Remove the useGenerateOtp and useVerifyOtp mutation hooks from this file, as they are no longer needed after removing OTP-based registration. Ensure all other query and mutation hooks remain intact and functional. This cleanup prevents unused backend capabilities from being exposed in the frontend codebase."
         }
       ]
     }

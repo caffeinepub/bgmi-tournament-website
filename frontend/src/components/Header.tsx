@@ -80,6 +80,13 @@ export default function Header() {
                 </button>
               </>
             )}
+            {/* Admin link - intentionally subtle so regular users overlook it */}
+            <button
+              onClick={() => navigate({ to: '/admin' })}
+              className="px-2 py-1 text-[10px] text-gray-600 hover:text-gray-400 transition-colors rounded"
+            >
+              Admin
+            </button>
           </nav>
 
           {/* Mobile menu button */}
@@ -138,6 +145,13 @@ export default function Header() {
               </button>
             </>
           )}
+          {/* Admin link - subtle in mobile menu too */}
+          <button
+            onClick={() => { navigate({ to: '/admin' }); setMobileOpen(false); }}
+            className="w-full px-3 py-1.5 text-[10px] text-gray-600 hover:text-gray-400 transition-colors text-left"
+          >
+            Admin
+          </button>
         </div>
       )}
     </header>

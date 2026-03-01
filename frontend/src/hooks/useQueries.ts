@@ -155,26 +155,6 @@ export function useGetAllSupportTickets() {
   });
 }
 
-export function useGenerateOtp() {
-  const { actor } = useActor();
-  return useMutation({
-    mutationFn: async () => {
-      if (!actor) throw new Error('Actor not available');
-      return actor.generateOtp();
-    },
-  });
-}
-
-export function useVerifyOtp() {
-  const { actor } = useActor();
-  return useMutation({
-    mutationFn: async (otp: string) => {
-      if (!actor) throw new Error('Actor not available');
-      return actor.verifyOtp(otp);
-    },
-  });
-}
-
 export function useRegisterPlayer() {
   const { actor } = useActor();
   const queryClient = useQueryClient();
@@ -212,8 +192,8 @@ export function useRegisterForTournament() {
       return actor.registerForTournament(tournamentId, paymentScreenshotBlob);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['myRegistrations'] });
       queryClient.invalidateQueries({ queryKey: ['tournaments'] });
+      queryClient.invalidateQueries({ queryKey: ['myRegistrations'] });
     },
   });
 }
@@ -225,31 +205,11 @@ export function useCreateTournament() {
     mutationFn: async ({
       name, dateTime, entryFee, prizePool, map, totalSlots, upiId, matchRules,
     }: {
-      name: string;
-      dateTime: bigint;
-      entryFee: bigint;
-      prizePool: bigint;
-      map: string;
-      totalSlots: bigint;
-      upiId: string;
-      matchRules: string;
+      name: string; dateTime: bigint; entryFee: bigint; prizePool: bigint;
+      map: string; totalSlots: bigint; upiId: string; matchRules: string;
     }) => {
       if (!actor) throw new Error('Actor not available');
       return actor.createTournament(name, dateTime, entryFee, prizePool, map, totalSlots, upiId, matchRules);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['tournaments'] });
-    },
-  });
-}
-
-export function useUpdateTournamentQrCode() {
-  const { actor } = useActor();
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async ({ tournamentId, qrCodeBlob }: { tournamentId: string; qrCodeBlob: ExternalBlob }) => {
-      if (!actor) throw new Error('Actor not available');
-      return actor.updateTournamentQrCode(tournamentId, qrCodeBlob);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tournaments'] });
@@ -263,7 +223,7 @@ export function useUpdateTournamentStatus() {
   return useMutation({
     mutationFn: async ({ tournamentId, status }: { tournamentId: string; status: TournamentStatus }) => {
       if (!actor) throw new Error('Actor not available');
-      return actor.updateTournamentStatus(tournamentId, status);
+      await actor.updateTournamentStatus(tournamentId, status);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tournaments'] });
@@ -277,7 +237,7 @@ export function useUpdateTournamentRoomDetails() {
   return useMutation({
     mutationFn: async ({ tournamentId, roomId, roomPassword }: { tournamentId: string; roomId: string; roomPassword: string }) => {
       if (!actor) throw new Error('Actor not available');
-      return actor.updateTournamentRoomDetails(tournamentId, roomId, roomPassword);
+      await actor.updateTournamentRoomDetails(tournamentId, roomId, roomPassword);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tournaments'] });
@@ -291,25 +251,11 @@ export function useUpdateRegistrationStatus() {
   return useMutation({
     mutationFn: async ({ registrationId, status }: { registrationId: string; status: RegistrationStatus }) => {
       if (!actor) throw new Error('Actor not available');
-      return actor.updateRegistrationStatus(registrationId, status);
+      await actor.updateRegistrationStatus(registrationId, status);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['allRegistrations'] });
       queryClient.invalidateQueries({ queryKey: ['registrationsForTournament'] });
-    },
-  });
-}
-
-export function useUpdateTermsAndConditions() {
-  const { actor } = useActor();
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async (content: string) => {
-      if (!actor) throw new Error('Actor not available');
-      return actor.updateTermsAndConditions(content);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['termsAndConditions'] });
     },
   });
 }
@@ -320,11 +266,59 @@ export function useUpdateSocialLinks() {
   return useMutation({
     mutationFn: async ({ youtube, instagram, telegram }: { youtube: string; instagram: string; telegram: string }) => {
       if (!actor) throw new Error('Actor not available');
-      return actor.updateSocialLinks(youtube, instagram, telegram);
+      await actor.updateSocialLinks(youtube, instagram, telegram);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['socialLinks'] });
     },
+  });
+}
+
+export function useUpdateTermsAndConditions() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (content: string) => {
+      if (!actor) throw new Error('Actor not available');
+      await actor.updateTermsAndConditions(content);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['termsAndConditions'] });
+    },
+  });
+}
+
+export function useCreateSupportTicket() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      playerName, subject, description, screenshotBlob,
+    }: {
+      playerName: string; subject: string; description: string; screenshotBlob: ExternalBlob | null;
+    }) => {
+      if (!actor) throw new Error('Actor not available');
+      return actor.createSupportTicket(playerName, subject, description, screenshotBlob);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['mySupportTickets'] });
+    },
+  });
+}
+
+export function useGetMySupportTickets() {
+  const { actor, isFetching } = useActor();
+  return useQuery<SupportTicket[]>({
+    queryKey: ['mySupportTickets'],
+    queryFn: async () => {
+      if (!actor) return [];
+      try {
+        return await actor.getMySupportTickets();
+      } catch {
+        return [];
+      }
+    },
+    enabled: !!actor && !isFetching,
   });
 }
 
@@ -334,7 +328,7 @@ export function useReplyToSupportTicket() {
   return useMutation({
     mutationFn: async ({ ticketId, reply }: { ticketId: string; reply: string }) => {
       if (!actor) throw new Error('Actor not available');
-      return actor.replyToSupportTicket(ticketId, reply);
+      await actor.replyToSupportTicket(ticketId, reply);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['allSupportTickets'] });
@@ -348,7 +342,7 @@ export function useCloseSupportTicket() {
   return useMutation({
     mutationFn: async (ticketId: string) => {
       if (!actor) throw new Error('Actor not available');
-      return actor.closeSupportTicket(ticketId);
+      await actor.closeSupportTicket(ticketId);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['allSupportTickets'] });
@@ -356,21 +350,16 @@ export function useCloseSupportTicket() {
   });
 }
 
-export function useCreateSupportTicket() {
+export function useUpdateTournamentQrCode() {
   const { actor } = useActor();
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ playerName, subject, description, screenshotBlob }: {
-      playerName: string;
-      subject: string;
-      description: string;
-      screenshotBlob: ExternalBlob | null;
-    }) => {
+    mutationFn: async ({ tournamentId, qrCodeBlob }: { tournamentId: string; qrCodeBlob: ExternalBlob }) => {
       if (!actor) throw new Error('Actor not available');
-      return actor.createSupportTicket(playerName, subject, description, screenshotBlob);
+      await actor.updateTournamentQrCode(tournamentId, qrCodeBlob);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['allSupportTickets'] });
+      queryClient.invalidateQueries({ queryKey: ['tournaments'] });
     },
   });
 }

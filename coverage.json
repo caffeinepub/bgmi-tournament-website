@@ -1,102 +1,46 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-03-01T14:09:39.046Z",
+  "generatedAt": "2026-03-01T15:57:58.112Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
   },
   "requirements": {
-    "total": 7,
-    "implemented": 4,
+    "total": 2,
+    "implemented": 1,
     "items": [
       {
         "id": "REQ-1",
-        "summary": "Remove the Quick Access cards (User Panel / Admin Panel) from the homepage (HomePage.tsx). The homepage should only show the hero section, tournaments, and other existing public content — no shortcut navigation cards to panels.",
-        "status": "missing",
+        "summary": "Refactor the RegisterPage to a 2-step flow: Step 1 collects Display Name, Mobile Number, and BGMI Player ID with a Continue button; Step 2 shows an Internet Identity authentication prompt (using the existing useInternetIdentity hook) instead of OTP verification. Remove the entire OTP step (Step 2 'Verify OTP'), including the OTP input field, 'Demo OTP: 1234' banner, and all OTP generation/verification logic. The stepper UI should update to show only 2 steps: 'Details' and 'Done'.",
+        "status": "implemented",
         "plannedFiles": [
-          "frontend/src/pages/HomePage.tsx"
+          "frontend/src/pages/RegisterPage.tsx",
+          "frontend/src/hooks/useQueries.ts"
         ],
-        "matchedFiles": []
+        "matchedFiles": [
+          "frontend/src/pages/RegisterPage.tsx",
+          "frontend/src/hooks/useQueries.ts"
+        ]
       },
       {
         "id": "REQ-2",
-        "summary": "The main homepage (/) must be the user-facing page where players can browse tournaments and access register/login. This is already the primary route but ensure no admin-facing elements appear here.",
-        "status": "missing",
-        "plannedFiles": [
-          "frontend/src/pages/HomePage.tsx"
-        ],
-        "matchedFiles": []
-      },
-      {
-        "id": "REQ-3",
-        "summary": "Implement a two-step admin authentication flow for /admin. Step 1: Show a login form requiring Username = 'Empire Esports' and Password = 'Shivam803119&'. Only on successful credential match should the user proceed to Step 2. Step 2: Require Internet Identity login. The Internet Identity principal that first completes admin setup is stored as the sole authorized admin principal (persisted in backend stable storage). On subsequent logins, after credential check passes, the user must log in with Internet Identity and their principal must match the stored admin principal. If no admin principal is registered yet, the current Internet Identity login registers it. Only after both steps pass should the admin dashboard be accessible.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/context/AdminAuthContext.tsx",
-          "frontend/src/pages/AdminLoginPage.tsx"
-        ],
-        "matchedFiles": [
-          "frontend/src/context/AdminAuthContext.tsx",
-          "frontend/src/pages/AdminLoginPage.tsx"
-        ]
-      },
-      {
-        "id": "REQ-4",
-        "summary": "Add backend Motoko functions to store and retrieve the registered admin Internet Identity principal. Include: `registerAdminPrincipal(p: Principal): async Bool` — stores the principal only if none is registered yet (returns true on success, false if already set); `getAdminPrincipal(): async ?Principal` — returns the stored admin principal; `isAdminPrincipal(p: Principal): async Bool` — checks if the given principal matches the stored admin principal. Use stable storage for the admin principal.",
+        "summary": "Update the backend registerPlayer function (or its authorization check in main.mo) to accept calls from Internet Identity-authenticated principals. Ensure that when a player registers after authenticating via Internet Identity, the caller's principal is treated as authenticated and registration succeeds without returning an 'Unauthorized' error.",
         "status": "unknown",
         "plannedFiles": [],
         "matchedFiles": []
-      },
-      {
-        "id": "REQ-5",
-        "summary": "Update AdminAuthContext to implement the two-step flow: Step 1 validates hardcoded credentials (Username: 'Empire Esports', Password: 'Shivam803119&'). Step 2 triggers Internet Identity login via useInternetIdentity and calls the backend to register or verify the admin principal. Expose state for: credentialsVerified, identityVerified, isAdminAuthenticated (both steps complete). Persist both flags in localStorage. On logout, clear both flags and Internet Identity session.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/context/AdminAuthContext.tsx"
-        ],
-        "matchedFiles": [
-          "frontend/src/context/AdminAuthContext.tsx"
-        ]
-      },
-      {
-        "id": "REQ-6",
-        "summary": "Update AdminLoginPage to render a two-step UI. Step 1: Username/Password form. On success, advance to Step 2. Step 2: Show an 'Authenticate with Internet Identity' button. Display clear error messages if credentials are wrong or if the Internet Identity principal does not match the registered admin. Show a loading state during Internet Identity authentication.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/pages/AdminLoginPage.tsx"
-        ],
-        "matchedFiles": [
-          "frontend/src/pages/AdminLoginPage.tsx"
-        ]
-      },
-      {
-        "id": "REQ-7",
-        "summary": "Remove the admin shield/link from the Header component so regular users cannot see or navigate to the admin panel from the main site header.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/components/Header.tsx"
-        ],
-        "matchedFiles": [
-          "frontend/src/components/Header.tsx"
-        ]
       }
     ]
   },
   "changedFiles": [
     "backend/main.mo",
-    "backend/migration.mo",
     "build-request.json",
     "feature_evidence.json",
     "frontend-file-summaries.txt",
     "frontend-implementation-plan.json",
-    "frontend/src/backend.d.ts",
-    "frontend/src/backend.ts",
-    "frontend/src/components/Header.tsx",
-    "frontend/src/context/AdminAuthContext.tsx",
-    "frontend/src/declarations/backend.did.d.ts",
-    "frontend/src/declarations/backend.did.js",
-    "frontend/src/pages/AdminLoginPage.tsx",
+    "frontend/src/hooks/useQueries.ts",
+    "frontend/src/pages/LoginPage.tsx",
+    "frontend/src/pages/RegisterPage.tsx",
     "project_state.json",
     "scratch/component-selection.json",
     "spec.md",

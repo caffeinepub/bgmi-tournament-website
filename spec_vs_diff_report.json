@@ -1,39 +1,26 @@
 {
   "kind": "spec_vs_diff_report",
   "version": "1.0",
-  "generatedAt": "2026-03-01T14:09:39.043Z",
-  "summary": "Most requirements are implemented in the diff. REQ-4 backend functions appear present in main.mo, REQ-5 AdminAuthContext is updated, REQ-6 AdminLoginPage is updated, REQ-7 Header is updated. However, REQ-1 (HomePage.tsx modification) is not directly evidenced — no HomePage.tsx appears in the diff. REQ-2 is similarly unverifiable without HomePage.tsx changes. The backend stable storage for adminPrincipal uses a var field with migration support via migration.mo.",
+  "generatedAt": "2026-03-01T15:57:58.108Z",
+  "summary": "The diff implements both REQ-1 and REQ-2. REQ-1 is addressed in frontend/src/pages/RegisterPage.tsx with a refactored multi-step registration flow using Internet Identity instead of OTP, and removal of OTP-related hooks in useQueries.ts. REQ-2 is addressed in backend/main.mo with authorization updates. However, the stepper implementation shows 3 steps ('Details', 'Authenticate', 'Done') rather than the required 2 steps ('Details', 'Done'), which is a partial non-compliance with REQ-1.",
   "missing_requirements": [
     {
       "id": "REQ-1",
-      "requirement": "Remove the Quick Access cards (User Panel / Admin Panel) from the homepage (HomePage.tsx).",
-      "reason": "No changes to HomePage.tsx appear in the diff. The file is not listed as added or modified. There is no evidence the Quick Access cards were removed from the homepage.",
-      "evidence": []
-    },
-    {
-      "id": "REQ-2",
-      "requirement": "Ensure no admin-facing elements appear on the homepage (/).",
-      "reason": "HomePage.tsx is not in the diff, so it cannot be confirmed that admin-facing elements were removed or that the homepage is clean of admin shortcuts.",
-      "evidence": []
-    }
-  ],
-  "hallucinated_features": [
-    {
-      "description": "A migration.mo module was added to handle canister upgrade state migration, including adding adminPrincipal to the actor state shape.",
-      "reason": "The build request did not mention or request a separate migration module. It only required stable storage for the admin principal. A standalone migration.mo file was not explicitly requested.",
+      "requirement": "The stepper UI should update to show only 2 steps: 'Details' and 'Done'.",
+      "reason": "The diff shows the RegisterPage uses a 3-step array: ['Details', 'Authenticate', 'Done'] with currentStepIdx mapping to 0, 1, or 2. The requirement explicitly states only 2 steps should appear in the stepper: 'Details' and 'Done'.",
       "evidence": [
-        "backend/migration.mo"
+        "frontend/src/pages/RegisterPage.tsx"
       ]
     }
   ],
-  "confidence": 0.72,
+  "hallucinated_features": [],
+  "confidence": 0.85,
   "changed_files": [
     "backend/main.mo",
-    "backend/migration.mo",
     "frontend-file-summaries.txt",
-    "frontend/src/components/Header.tsx",
-    "frontend/src/context/AdminAuthContext.tsx",
-    "frontend/src/pages/AdminLoginPage.tsx",
+    "frontend/src/hooks/useQueries.ts",
+    "frontend/src/pages/LoginPage.tsx",
+    "frontend/src/pages/RegisterPage.tsx",
     "project_state.json"
   ]
 }

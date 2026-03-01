@@ -1,56 +1,58 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from '@tanstack/react-router';
 import { useAuth } from '../context/AuthContext';
-import { useActor } from '../hooks/useActor';
-import { useGenerateOtp, useVerifyOtp, useRegisterPlayer, useSaveCallerUserProfile } from '../hooks/useQueries';
-import { Gamepad2, Phone, KeyRound, User, Hash, ArrowRight, Loader2, CheckCircle } from 'lucide-react';
+import { useInternetIdentity } from '../hooks/useInternetIdentity';
+import { useRegisterPlayer, useSaveCallerUserProfile } from '../hooks/useQueries';
+import { Gamepad2, Phone, User, Hash, ArrowRight, Loader2, CheckCircle, ShieldCheck } from 'lucide-react';
 
 export default function RegisterPage() {
   const navigate = useNavigate();
   const { login } = useAuth();
-  const { actor } = useActor();
-  const generateOtp = useGenerateOtp();
-  const verifyOtp = useVerifyOtp();
+  const { login: iiLogin, clear: iiClear, loginStatus, identity, isLoggingIn } = useInternetIdentity();
   const registerPlayer = useRegisterPlayer();
   const saveProfile = useSaveCallerUserProfile();
 
-  const [step, setStep] = useState<'details' | 'otp' | 'success'>('details');
+  const [step, setStep] = useState<'details' | 'authenticate' | 'success'>('details');
   const [form, setForm] = useState({ displayName: '', mobile: '', bgmiPlayerId: '' });
-  const [otp, setOtp] = useState('');
   const [error, setError] = useState('');
-  const [generatedOtp, setGeneratedOtp] = useState('');
+  const [isRegistering, setIsRegistering] = useState(false);
 
-  const handleDetailsSubmit = async (e: React.FormEvent) => {
+  // When identity becomes available in the 'authenticate' step, complete registration
+  useEffect(() => {
+    if (step === 'authenticate' && identity && !isRegistering) {
+      handleCompleteRegistration();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [identity, step]);
+
+  const handleDetailsSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     if (!form.displayName.trim()) { setError('Please enter your display name'); return; }
     if (!form.mobile.trim() || form.mobile.length < 10) { setError('Please enter a valid 10-digit mobile number'); return; }
     if (!form.bgmiPlayerId.trim()) { setError('Please enter your BGMI Player ID'); return; }
+    setStep('authenticate');
+  };
+
+  const handleInternetIdentityLogin = async () => {
+    setError('');
     try {
-      const otpVal = await generateOtp.mutateAsync();
-      setGeneratedOtp(otpVal);
-      setStep('otp');
+      await iiLogin();
     } catch (err: any) {
-      setError(err?.message || 'Failed to send OTP. Please try again.');
+      setError(err?.message || 'Internet Identity authentication failed. Please try again.');
     }
   };
 
-  const handleOtpSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleCompleteRegistration = async () => {
+    setIsRegistering(true);
     setError('');
-    if (!otp.trim()) { setError('Please enter the OTP'); return; }
     try {
-      const isValid = await verifyOtp.mutateAsync(otp);
-      if (!isValid) { setError('Invalid OTP. Please try again.'); return; }
-
-      // Register player
       await registerPlayer.mutateAsync({
         mobile: form.mobile,
         bgmiPlayerId: form.bgmiPlayerId,
         displayName: form.displayName,
       });
 
-      // Save profile
       await saveProfile.mutateAsync({
         displayName: form.displayName,
         mobile: form.mobile,
@@ -62,17 +64,20 @@ export default function RegisterPage() {
     } catch (err: any) {
       const msg = err?.message || '';
       if (msg.includes('Player already exists')) {
-        // Already registered, just login
         login({ mobile: form.mobile, displayName: form.displayName, bgmiPlayerId: form.bgmiPlayerId });
         setStep('success');
       } else {
         setError(msg || 'Registration failed. Please try again.');
+        // Clear II identity so user can retry
+        await iiClear();
       }
+    } finally {
+      setIsRegistering(false);
     }
   };
 
-  const steps = ['Details', 'Verify OTP', 'Done'];
-  const currentStepIdx = step === 'details' ? 0 : step === 'otp' ? 1 : 2;
+  const steps = ['Details', 'Authenticate', 'Done'];
+  const currentStepIdx = step === 'details' ? 0 : step === 'authenticate' ? 1 : 2;
 
   return (
     <div className="min-h-screen bg-brand-darker flex items-center justify-center px-4 py-12">
@@ -92,7 +97,13 @@ export default function RegisterPage() {
             {steps.map((s, i) => (
               <React.Fragment key={s}>
                 <div className="flex flex-col items-center gap-1">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all ${i < currentStepIdx ? 'bg-green-500 text-white' : i === currentStepIdx ? 'bg-brand-red text-white' : 'bg-white/10 text-gray-500'}`}>
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
+                    i < currentStepIdx
+                      ? 'bg-green-500 text-white'
+                      : i === currentStepIdx
+                      ? 'bg-brand-red text-white'
+                      : 'bg-white/10 text-gray-500'
+                  }`}>
                     {i < currentStepIdx ? <CheckCircle className="w-4 h-4" /> : i + 1}
                   </div>
                   <span className={`text-xs ${i === currentStepIdx ? 'text-brand-orange' : 'text-gray-600'}`}>{s}</span>
@@ -106,6 +117,7 @@ export default function RegisterPage() {
             ))}
           </div>
 
+          {/* Step 1: Details */}
           {step === 'details' && (
             <form onSubmit={handleDetailsSubmit} className="space-y-4">
               <div>
@@ -155,38 +167,39 @@ export default function RegisterPage() {
 
               <button
                 type="submit"
-                disabled={generateOtp.isPending}
-                className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-brand-red to-brand-orange text-white font-bold py-3 rounded-xl hover:opacity-90 transition-opacity disabled:opacity-60 shadow-lg shadow-brand-red/20"
+                className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-brand-red to-brand-orange text-white font-bold py-3 rounded-xl hover:opacity-90 transition-opacity shadow-lg shadow-brand-red/20"
               >
-                {generateOtp.isPending ? (
-                  <><Loader2 className="w-4 h-4 animate-spin" /> Sending OTP...</>
-                ) : (
-                  <><ArrowRight className="w-4 h-4" /> Continue</>
-                )}
+                <ArrowRight className="w-4 h-4" /> Continue
               </button>
             </form>
           )}
 
-          {step === 'otp' && (
-            <form onSubmit={handleOtpSubmit} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-1.5">Enter OTP</label>
-                <p className="text-xs text-gray-500 mb-3">OTP sent to +91 {form.mobile}</p>
-                {generatedOtp && (
-                  <div className="bg-brand-orange/10 border border-brand-orange/30 rounded-lg px-3 py-2 text-brand-orange text-sm mb-3">
-                    Demo OTP: <strong>{generatedOtp}</strong>
-                  </div>
-                )}
-                <div className="relative">
-                  <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
-                  <input
-                    type="text"
-                    value={otp}
-                    onChange={(e) => setOtp(e.target.value)}
-                    placeholder="Enter 4-digit OTP"
-                    className="w-full bg-white/5 border border-white/10 rounded-xl pl-10 pr-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-brand-red/60 transition-all text-sm tracking-widest"
-                    maxLength={4}
-                  />
+          {/* Step 2: Internet Identity Authentication */}
+          {step === 'authenticate' && (
+            <div className="space-y-5">
+              <div className="text-center">
+                <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-700 shadow-lg shadow-blue-600/30 mb-3">
+                  <ShieldCheck className="w-7 h-7 text-white" />
+                </div>
+                <h3 className="font-orbitron font-bold text-white text-base mb-1">Verify Your Identity</h3>
+                <p className="text-gray-400 text-sm">
+                  Authenticate with Internet Identity to securely create your account on the blockchain.
+                </p>
+              </div>
+
+              <div className="bg-white/5 border border-white/10 rounded-xl p-4 space-y-2">
+                <p className="text-xs text-gray-400 font-medium uppercase tracking-wider">Account Details</p>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-500">Name</span>
+                  <span className="text-white font-medium">{form.displayName}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-500">Mobile</span>
+                  <span className="text-white font-medium">{form.mobile}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-500">BGMI ID</span>
+                  <span className="text-white font-medium">{form.bgmiPlayerId}</span>
                 </div>
               </div>
 
@@ -194,28 +207,36 @@ export default function RegisterPage() {
                 <div className="bg-red-500/10 border border-red-500/30 rounded-lg px-3 py-2 text-red-400 text-sm">{error}</div>
               )}
 
-              <button
-                type="submit"
-                disabled={verifyOtp.isPending || registerPlayer.isPending || saveProfile.isPending}
-                className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-brand-red to-brand-orange text-white font-bold py-3 rounded-xl hover:opacity-90 transition-opacity disabled:opacity-60 shadow-lg shadow-brand-red/20"
-              >
-                {(verifyOtp.isPending || registerPlayer.isPending || saveProfile.isPending) ? (
-                  <><Loader2 className="w-4 h-4 animate-spin" /> Registering...</>
-                ) : (
-                  <><CheckCircle className="w-4 h-4" /> Complete Registration</>
-                )}
-              </button>
+              {isRegistering ? (
+                <div className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-brand-red to-brand-orange text-white font-bold py-3 rounded-xl opacity-80 cursor-not-allowed">
+                  <Loader2 className="w-4 h-4 animate-spin" /> Creating Account...
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handleInternetIdentityLogin}
+                  disabled={isLoggingIn || isRegistering}
+                  className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-700 text-white font-bold py-3 rounded-xl hover:opacity-90 transition-opacity disabled:opacity-60 shadow-lg shadow-blue-600/20"
+                >
+                  {isLoggingIn ? (
+                    <><Loader2 className="w-4 h-4 animate-spin" /> Authenticating...</>
+                  ) : (
+                    <><ShieldCheck className="w-4 h-4" /> Login with Internet Identity</>
+                  )}
+                </button>
+              )}
 
               <button
                 type="button"
-                onClick={() => { setStep('details'); setError(''); setOtp(''); }}
+                onClick={() => { setStep('details'); setError(''); }}
                 className="w-full text-sm text-gray-500 hover:text-gray-300 transition-colors py-1"
               >
                 ← Go back
               </button>
-            </form>
+            </div>
           )}
 
+          {/* Step 3: Success */}
           {step === 'success' && (
             <div className="text-center py-4">
               <div className="w-16 h-16 rounded-full bg-green-500/20 flex items-center justify-center mx-auto mb-4">

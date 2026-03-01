@@ -6,14 +6,11 @@ import Iter "mo:core/Iter";
 import Principal "mo:core/Principal";
 import Array "mo:core/Array";
 import Runtime "mo:core/Runtime";
-
 import MixinStorage "blob-storage/Mixin";
 import Storage "blob-storage/Storage";
 import MixinAuthorization "authorization/MixinAuthorization";
 import AccessControl "authorization/access-control";
-import Migration "migration";
 
-(with migration = Migration.run)
 actor {
   include MixinStorage();
 
@@ -22,7 +19,6 @@ actor {
 
   var domainName : Text = "Raj-Empire-Esports";
 
-  // User profile data type required by the frontend
   type UserProfile = {
     displayName : Text;
     mobile : Text;
@@ -149,23 +145,17 @@ actor {
     telegram = "";
   };
 
-  // Admin persistent principal (only one allowed!)
   var adminPrincipal : ?Principal = null;
 
-  // Register the caller as admin principal.
-  // Only allowed if:
-  //   1. No admin principal has been registered yet.
-  //   2. The caller is not anonymous.
-  //   3. The provided principal p matches the caller (cannot register on behalf of someone else).
   public shared ({ caller }) func registerAdminPrincipal(p : Principal) : async Bool {
-    // Prevent anonymous principal from registering as admin
     if (caller.isAnonymous()) {
       Runtime.trap("Unauthorized: Anonymous callers cannot register as admin");
     };
-    // Prevent registering a principal other than the caller's own
+
     if (caller != p) {
       Runtime.trap("Unauthorized: Can only register your own principal as admin");
     };
+
     if (adminPrincipal == null) {
       adminPrincipal := ?caller;
       true;
@@ -174,14 +164,10 @@ actor {
     };
   };
 
-  // Returns the stored admin principal (if any). Public — frontend needs this to
-  // determine whether an admin has been registered and to verify identity.
   public query func getAdminPrincipal() : async ?Principal {
     adminPrincipal;
   };
 
-  // Checks whether the given principal matches the stored admin principal.
-  // Public — frontend uses this to verify the logged-in Internet Identity principal.
   public query func isAdminPrincipal(p : Principal) : async Bool {
     switch (adminPrincipal) {
       case (null) { false };
@@ -189,7 +175,6 @@ actor {
     };
   };
 
-  // Domain Name functions
   public query func getDomainName() : async Text {
     domainName;
   };
@@ -201,7 +186,6 @@ actor {
     domainName := newName;
   };
 
-  // Player functions
   public shared ({ caller }) func registerPlayer(mobile : Text, bgmiPlayerId : Text, displayName : Text) : async () {
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only authenticated users can register as a player");
@@ -216,7 +200,6 @@ actor {
     players.add(caller, player);
   };
 
-  // Tournament functions - admin only
   public shared ({ caller }) func createTournament(name : Text, dateTime : Time.Time, entryFee : Nat, prizePool : Nat, map : Text, totalSlots : Nat, upiId : Text, matchRules : Text) : async Text {
     if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Runtime.trap("Unauthorized: Only admins can create tournaments");
@@ -270,7 +253,6 @@ actor {
     };
   };
 
-  // Terms and Conditions
   public query func getTermsAndConditions() : async TermsAndConditions {
     termsAndConditions;
   };
@@ -282,7 +264,6 @@ actor {
     termsAndConditions := { content };
   };
 
-  // Social Links
   public query func getSocialLinks() : async SocialLinks {
     socialLinks;
   };
@@ -298,7 +279,6 @@ actor {
     };
   };
 
-  // Support Ticket
   public shared ({ caller }) func createSupportTicket(playerName : Text, subject : Text, description : Text, screenshotBlob : ?Storage.ExternalBlob) : async Text {
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only authenticated users can create support tickets");
@@ -355,8 +335,6 @@ actor {
     };
   };
 
-  // OTP Generation - no authorization check; anonymous/unauthenticated callers allowed
-  // so that new players can register and existing players can log in
   public shared ({ caller }) func generateOtp() : async Text {
     let otp = "1234";
     let otpEntry : OtpEntry = {
@@ -367,7 +345,6 @@ actor {
     otp;
   };
 
-  // OTP Verification - no authorization check; anonymous/unauthenticated callers allowed
   public shared ({ caller }) func verifyOtp(otp : Text) : async Bool {
     switch (otps.get(caller)) {
       case (null) { Runtime.trap("No OTP found") };
@@ -382,7 +359,6 @@ actor {
     };
   };
 
-  // Find unused slots in tournaments - admin only
   public query ({ caller }) func findUnusedSlots() : async [Tournament] {
     if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Runtime.trap("Unauthorized: Only admins can view unused slots");
@@ -390,7 +366,6 @@ actor {
     tournaments.values().toArray().filter(func(t) { t.filledSlots < t.totalSlots });
   };
 
-  // Search support tickets by player name - admin only
   public query ({ caller }) func searchSupportTicketsByPlayerName(name : Text) : async [SupportTicket] {
     if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Runtime.trap("Unauthorized: Only admins can search support tickets");
@@ -398,7 +373,6 @@ actor {
     supportTickets.values().toArray().filter(func(ticket) { ticket.playerName.contains(#text name) });
   };
 
-  // Get all support tickets sorted by createdAt - admin only
   public query ({ caller }) func getAllSupportTicketsSorted() : async [SupportTicket] {
     if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Runtime.trap("Unauthorized: Only admins can view all support tickets");
@@ -406,22 +380,18 @@ actor {
     supportTickets.values().toArray();
   };
 
-  // Get tournaments by map - public, anyone can view
   public query func getTournamentsByMap(map : Text) : async [Tournament] {
     tournaments.values().toArray().filter(func(t) { t.map == map });
   };
 
-  // Get all tournaments - public, anyone can view
   public query func getAllTournaments() : async [Tournament] {
     tournaments.values().toArray();
   };
 
-  // Get tournament by id - public, anyone can view
   public query func getTournamentById(id : Text) : async ?Tournament {
     tournaments.get(id);
   };
 
-  // Update tournament room details - admin only
   public shared ({ caller }) func updateTournamentRoomDetails(tournamentId : Text, roomId : Text, roomPassword : Text) : async () {
     if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Runtime.trap("Unauthorized: Only admins can update tournament room details");
@@ -439,7 +409,6 @@ actor {
     };
   };
 
-  // Update tournament status - admin only
   public shared ({ caller }) func updateTournamentStatus(tournamentId : Text, status : TournamentStatus) : async () {
     if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Runtime.trap("Unauthorized: Only admins can update tournament status");
@@ -456,7 +425,6 @@ actor {
     };
   };
 
-  // Approve or reject a registration - admin only
   public shared ({ caller }) func updateRegistrationStatus(registrationId : Text, status : RegistrationStatus) : async () {
     if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Runtime.trap("Unauthorized: Only admins can update registration status");
@@ -473,7 +441,6 @@ actor {
     };
   };
 
-  // Get all registrations for a tournament - admin only
   public query ({ caller }) func getRegistrationsForTournament(tournamentId : Text) : async [TournamentRegistration] {
     if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Runtime.trap("Unauthorized: Only admins can view all registrations");
@@ -481,7 +448,6 @@ actor {
     registrations.values().toArray().filter(func(r) { r.tournamentId == tournamentId });
   };
 
-  // Get caller's own registrations - authenticated users only
   public query ({ caller }) func getMyRegistrations() : async [TournamentRegistration] {
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only authenticated users can view their registrations");
@@ -490,7 +456,6 @@ actor {
     registrations.values().toArray().filter(func(r) { r.playerId == callerText });
   };
 
-  // Get caller's own support tickets - authenticated users only
   public query ({ caller }) func getMySupportTickets() : async [SupportTicket] {
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only authenticated users can view their support tickets");
@@ -499,7 +464,6 @@ actor {
     supportTickets.values().toArray().filter(func(ticket) { ticket.playerId == callerText });
   };
 
-  // Get all players - admin only
   public query ({ caller }) func getAllPlayers() : async [Player] {
     if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Runtime.trap("Unauthorized: Only admins can view all players");
@@ -507,7 +471,6 @@ actor {
     players.values().toArray();
   };
 
-  // Update tournament QR code - admin only
   public shared ({ caller }) func updateTournamentQrCode(tournamentId : Text, qrCodeBlob : Storage.ExternalBlob) : async () {
     if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Runtime.trap("Unauthorized: Only admins can update tournament QR codes");

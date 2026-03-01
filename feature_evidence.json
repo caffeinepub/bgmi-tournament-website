@@ -2,11 +2,11 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-implement-a-two-step-admin-authentication-flow-for-admin-step-1-show-a-login-form-requiring-username-empire-esports-and-password-shivam803119-only-on-successful-credential-match-should-the-user-proceed-to-step-2-step-2-require-internet-identity-login-the-internet-identity-principal-that-first-completes-admin-setup-is-stored-as-the-sole-authorized-admin-principal-persisted-in-backend-stable-storage-on-subsequent-logins-after-credential-check-passes-the-user-must-log-in-with-internet-identity-and-their-principal-must-match-the-stored-admin-principal-if-no-admin-principal-is-registered-yet-the-current-internet-identity-login-registers-it-only-after-both-steps-pass-should-the-admin-dashboard-be-accessible",
-      "featureTitle": "Implement a two-step admin authentication flow for /admin. Step 1: Show a login form requiring Username = 'Empire Esports' and Password = 'Shivam803119&'. Only on successful credential match should the user proceed to Step 2. Step 2: Require Internet Identity login. The Internet Identity principal that first completes admin setup is stored as the sole authorized admin principal (persisted in backend stable storage). On subsequent logins, after credential check passes, the user must log in with Internet Identity and their principal must match the stored admin principal. If no admin principal is registered yet, the current Internet Identity login registers it. Only after both steps pass should the admin dashboard be accessible.",
+      "featureId": "feature-refactor-the-registerpage-to-a-2-step-flow-step-1-collects-display-name-mobile-number-and-bgmi-player-id-with-a-continue-button-step-2-shows-an-internet-identity-authentication-prompt-using-the-existing-useinternetidentity-hook-instead-of-otp-verification-remove-the-entire-otp-step-step-2-verify-otp-including-the-otp-input-field-demo-otp-1234-banner-and-all-otp-generation-verification-logic-the-stepper-ui-should-update-to-show-only-2-steps-details-and-done",
+      "featureTitle": "Refactor the RegisterPage to a 2-step flow: Step 1 collects Display Name, Mobile Number, and BGMI Player ID with a Continue button; Step 2 shows an Internet Identity authentication prompt (using the existing useInternetIdentity hook) instead of OTP verification. Remove the entire OTP step (Step 2 'Verify OTP'), including the OTP input field, 'Demo OTP: 1234' banner, and all OTP generation/verification logic. The stepper UI should update to show only 2 steps: 'Details' and 'Done'.",
       "files": [
-        "frontend/src/context/AdminAuthContext.tsx",
-        "frontend/src/pages/AdminLoginPage.tsx"
+        "frontend/src/hooks/useQueries.ts",
+        "frontend/src/pages/RegisterPage.tsx"
       ],
       "components": [
         "blob-storage@4.0.0",
@@ -18,67 +18,7 @@
         "authorization@4.0.0"
       ],
       "testIds": [
-        "REQ-3"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-update-adminauthcontext-to-implement-the-two-step-flow-step-1-validates-hardcoded-credentials-username-empire-esports-password-shivam803119-step-2-triggers-internet-identity-login-via-useinternetidentity-and-calls-the-backend-to-register-or-verify-the-admin-principal-expose-state-for-credentialsverified-identityverified-isadminauthenticated-both-steps-complete-persist-both-flags-in-localstorage-on-logout-clear-both-flags-and-internet-identity-session",
-      "featureTitle": "Update AdminAuthContext to implement the two-step flow: Step 1 validates hardcoded credentials (Username: 'Empire Esports', Password: 'Shivam803119&'). Step 2 triggers Internet Identity login via useInternetIdentity and calls the backend to register or verify the admin principal. Expose state for: credentialsVerified, identityVerified, isAdminAuthenticated (both steps complete). Persist both flags in localStorage. On logout, clear both flags and Internet Identity session.",
-      "files": [
-        "frontend/src/context/AdminAuthContext.tsx"
-      ],
-      "components": [
-        "blob-storage@4.0.0",
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0",
-        "authorization@4.0.0"
-      ],
-      "testIds": [
-        "REQ-5"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-update-adminloginpage-to-render-a-two-step-ui-step-1-username-password-form-on-success-advance-to-step-2-step-2-show-an-authenticate-with-internet-identity-button-display-clear-error-messages-if-credentials-are-wrong-or-if-the-internet-identity-principal-does-not-match-the-registered-admin-show-a-loading-state-during-internet-identity-authentication",
-      "featureTitle": "Update AdminLoginPage to render a two-step UI. Step 1: Username/Password form. On success, advance to Step 2. Step 2: Show an 'Authenticate with Internet Identity' button. Display clear error messages if credentials are wrong or if the Internet Identity principal does not match the registered admin. Show a loading state during Internet Identity authentication.",
-      "files": [
-        "frontend/src/pages/AdminLoginPage.tsx"
-      ],
-      "components": [
-        "blob-storage@4.0.0",
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0",
-        "authorization@4.0.0"
-      ],
-      "testIds": [
-        "REQ-6"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-remove-the-admin-shield-link-from-the-header-component-so-regular-users-cannot-see-or-navigate-to-the-admin-panel-from-the-main-site-header",
-      "featureTitle": "Remove the admin shield/link from the Header component so regular users cannot see or navigate to the admin panel from the main site header.",
-      "files": [
-        "frontend/src/components/Header.tsx"
-      ],
-      "components": [
-        "blob-storage@4.0.0",
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0",
-        "authorization@4.0.0"
-      ],
-      "testIds": [
-        "REQ-7"
+        "REQ-1"
       ],
       "confidence": "high"
     }
