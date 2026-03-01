@@ -2,9 +2,10 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-in-registerpage-tsx-when-the-user-reaches-step-2-authenticate-automatically-trigger-the-internet-identity-login-popup-via-useinternetidentity-hook-without-requiring-any-manual-button-click-use-a-useeffect-that-fires-when-the-step-becomes-2-to-call-the-login-function-immediately",
-      "featureTitle": "In RegisterPage.tsx, when the user reaches Step 2 (Authenticate), automatically trigger the Internet Identity login popup via `useInternetIdentity` hook without requiring any manual button click. Use a `useEffect` that fires when the step becomes 2 to call the login function immediately.",
+      "featureId": "feature-on-the-register-page-step-2-authenticate-screen-replace-the-single-verify-with-internet-identity-button-with-four-distinct-authentication-option-buttons-matching-the-internet-identity-id-ai-ui-a-google-button-with-google-g-logo-an-apple-button-with-apple-logo-a-microsoft-button-with-microsoft-colored-squares-logo-and-a-continue-with-passkey-button-with-passkey-person-icon-each-button-when-clicked-must-trigger-the-internet-identity-login-flow-the-underlying-authentication-mechanism-remains-internet-identity-but-the-ui-presents-these-four-options-directly-on-the-screen-so-users-can-visually-select-their-preferred-method-before-the-popup-opens",
+      "featureTitle": "On the Register page Step 2 (Authenticate screen), replace the single 'Verify with Internet Identity' button with four distinct authentication option buttons matching the Internet Identity (id.ai) UI: a Google button (with Google 'G' logo), an Apple button (with Apple logo), a Microsoft button (with Microsoft colored squares logo), and a 'Continue with Passkey' button (with passkey/person icon). Each button, when clicked, must trigger the Internet Identity login flow — the underlying authentication mechanism remains Internet Identity, but the UI presents these four options directly on the screen so users can visually select their preferred method before the popup opens.",
       "files": [
+        "frontend/src/components/AuthMethodButtons.tsx",
         "frontend/src/pages/RegisterPage.tsx"
       ],
       "components": [
@@ -22,10 +23,10 @@
       "confidence": "high"
     },
     {
-      "featureId": "feature-fix-the-connecting-stuck-loading-state-bug-on-step-2-of-registerpage-tsx-the-button-must-not-remain-permanently-in-a-loading-spinning-state-reset-the-connecting-state-if-the-internet-identity-login-is-cancelled-fails-or-times-out-and-re-enable-the-button-so-the-user-can-retry",
-      "featureTitle": "Fix the 'Connecting...' stuck loading state bug on Step 2 of RegisterPage.tsx. The button must not remain permanently in a loading/spinning state. Reset the connecting state if the Internet Identity login is cancelled, fails, or times out, and re-enable the button so the user can retry.",
+      "featureId": "feature-on-the-login-page-replace-the-existing-single-internet-identity-authentication-button-with-the-same-four-authentication-option-buttons-google-with-google-g-logo-apple-with-apple-logo-microsoft-with-microsoft-colored-squares-logo-and-continue-with-passkey-with-passkey-person-icon-each-button-triggers-the-internet-identity-login-flow-the-underlying-authentication-mechanism-remains-internet-identity",
+      "featureTitle": "On the Login page, replace the existing single Internet Identity authentication button with the same four authentication option buttons: Google (with Google 'G' logo), Apple (with Apple logo), Microsoft (with Microsoft colored squares logo), and 'Continue with Passkey' (with passkey/person icon). Each button triggers the Internet Identity login flow. The underlying authentication mechanism remains Internet Identity.",
       "files": [
-        "frontend/src/pages/RegisterPage.tsx"
+        "frontend/src/pages/LoginPage.tsx"
       ],
       "components": [
         "blob-storage@4.0.0",
@@ -38,26 +39,6 @@
       ],
       "testIds": [
         "REQ-2"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-after-successful-registration-completion-step-3-done-in-registerpage-tsx-redirect-the-user-to-the-home-page-using-the-router-s-navigate-function-instead-of-staying-on-the-registration-page-or-going-to-the-dashboard",
-      "featureTitle": "After successful registration completion (Step 3 - Done) in RegisterPage.tsx, redirect the user to the Home Page ('/') using the router's navigate function instead of staying on the registration page or going to the dashboard.",
-      "files": [
-        "frontend/src/pages/RegisterPage.tsx"
-      ],
-      "components": [
-        "blob-storage@4.0.0",
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0",
-        "authorization@4.0.0"
-      ],
-      "testIds": [
-        "REQ-3"
       ],
       "confidence": "high"
     }

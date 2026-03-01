@@ -1,11 +1,13 @@
 # Specification
 
 ## Summary
-**Goal:** Fix the registration flow in `RegisterPage.tsx` so that Step 2 auto-triggers the Internet Identity popup, handles cancelled/failed auth gracefully, and redirects the user to the Home Page after successful registration.
+**Goal:** Replace the single "Verify with Internet Identity" button on the Register Step 2 (Authenticate) screen and the Login page with four distinct authentication option buttons styled after the id.ai "Choose method" UI.
 
 **Planned changes:**
-- Add a `useEffect` in `RegisterPage.tsx` that automatically calls the Internet Identity login function when the step transitions to Step 2, removing the need for a manual button click
-- Fix the stuck "Connecting..." loading state: reset the connecting state if Internet Identity login is cancelled, fails, or times out, so the user can retry
-- After successful registration (Step 3 - Done), automatically redirect the user to `/` (Home Page) using the router's navigate function
+- On Register Step 2 (Authenticate screen), remove the single "Verify with Internet Identity" button and replace it with four buttons: Google (multicolor G icon), Apple (Apple logo), Microsoft (colored squares logo), and "Continue with Passkey" (person/passkey icon)
+- Google, Apple, and Microsoft buttons are displayed in a row (3 columns), with "Continue with Passkey" as a full-width button below
+- On the Login page, replace the existing single Internet Identity button with the same four-button layout (Google, Apple, Microsoft in a row + Continue with Passkey full-width below)
+- Each of the four buttons triggers the same existing Internet Identity login flow — no backend changes
+- Error state and retry behavior remain unchanged
 
-**User-visible outcome:** When a user completes Step 1 and moves to Step 2, the Internet Identity popup opens automatically. If authentication fails or is cancelled, the button resets for retry. Once registration is fully complete, the user is automatically sent to the Home Page.
+**User-visible outcome:** Users on both the Register (Step 2) and Login pages now see four visually distinct authentication options (Google, Apple, Microsoft, Continue with Passkey) matching the id.ai "Choose method" style, instead of a single generic Internet Identity button.

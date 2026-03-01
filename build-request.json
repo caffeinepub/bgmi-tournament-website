@@ -1,76 +1,70 @@
 {
   "kind": "build_request",
-  "title": "Fix Registration Step 2: Auto-trigger Internet Identity & Redirect to Home After Registration",
-  "priority": "high",
+  "title": "Add Google, Apple, Microsoft, and Passkey login options on Register Step 2 and Login page",
+  "projectName": "Raj Empire Esports",
+  "priority": "normal",
   "requirements": [
     {
       "id": "REQ-1",
-      "text": "In RegisterPage.tsx, when the user reaches Step 2 (Authenticate), automatically trigger the Internet Identity login popup via `useInternetIdentity` hook without requiring any manual button click. Use a `useEffect` that fires when the step becomes 2 to call the login function immediately.",
+      "text": "On the Register page Step 2 (Authenticate screen), replace the single 'Verify with Internet Identity' button with four distinct authentication option buttons matching the Internet Identity (id.ai) UI: a Google button (with Google 'G' logo), an Apple button (with Apple logo), a Microsoft button (with Microsoft colored squares logo), and a 'Continue with Passkey' button (with passkey/person icon). Each button, when clicked, must trigger the Internet Identity login flow — the underlying authentication mechanism remains Internet Identity, but the UI presents these four options directly on the screen so users can visually select their preferred method before the popup opens.",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-6",
-          "msg-8"
+          "msg-14",
+          "msg-16",
+          "msg-18",
+          "msg-20"
         ],
         "quotes": [
-          "AUTOMATICALLY TRIGGER HO JAYE MANUAALLY Internet Identity YE WALA OPTION ME"
+          "screen 2 pe kam kare",
+          "dono pe",
+          "Google, Apple, Microsoft, aur Passkey",
+          "ye photo me dikh raha h na loging karne ka option aisa option tum bhi add karo taki user name mobile no. or bgmi id dalne ke baad ye option aye fir ragisterd done ho jaye"
         ]
       },
       "acceptanceCriteria": [
-        "When user completes Step 1 and proceeds to Step 2, the Internet Identity popup opens automatically without any button click",
-        "No manual 'Connect with Internet Identity' button interaction is required to trigger the popup",
-        "The useEffect dependency correctly watches for step === 2 transition"
+        "Step 2 (Authenticate) screen shows four separate buttons: Google, Apple, Microsoft, and Continue with Passkey",
+        "Each button has its respective brand logo/icon (Google multicolor G, Apple black logo, Microsoft colored squares, passkey person icon)",
+        "The single 'Verify with Internet Identity' button is no longer displayed",
+        "Clicking any of the four buttons triggers the Internet Identity authentication flow",
+        "After successful authentication, registration proceeds to Step 3 (Success screen) as before",
+        "Error state ('Authentication cancelled or failed') still shows if login is cancelled, with option to retry",
+        "Layout matches the id.ai 'Choose method' style: Google, Apple, Microsoft in a row, then 'Continue with Passkey' as a full-width button below"
       ]
     },
     {
       "id": "REQ-2",
-      "text": "Fix the 'Connecting...' stuck loading state bug on Step 2 of RegisterPage.tsx. The button must not remain permanently in a loading/spinning state. Reset the connecting state if the Internet Identity login is cancelled, fails, or times out, and re-enable the button so the user can retry.",
+      "text": "On the Login page, replace the existing single Internet Identity authentication button with the same four authentication option buttons: Google (with Google 'G' logo), Apple (with Apple logo), Microsoft (with Microsoft colored squares logo), and 'Continue with Passkey' (with passkey/person icon). Each button triggers the Internet Identity login flow. The underlying authentication mechanism remains Internet Identity.",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-2",
-          "msg-4"
+          "msg-18",
+          "msg-20"
         ],
         "quotes": [
-          "'Connecting...' button stuck in loading state on Step 2 of registration - Internet Identity popup not opening"
+          "dono pe",
+          "Login page — same 4 options directly dikhenge"
         ]
       },
       "acceptanceCriteria": [
-        "The 'Connecting...' spinner does not remain stuck indefinitely",
-        "If Internet Identity login is cancelled or fails, the button resets to a clickable retry state",
-        "No permanent loading state is shown after a failed or cancelled authentication attempt"
-      ]
-    },
-    {
-      "id": "REQ-3",
-      "text": "After successful registration completion (Step 3 - Done) in RegisterPage.tsx, redirect the user to the Home Page ('/') using the router's navigate function instead of staying on the registration page or going to the dashboard.",
-      "target": "frontend",
-      "source": {
-        "messageIds": [
-          "msg-6",
-          "msg-8"
-        ],
-        "quotes": [
-          "Registration complete hone ke baad (Step 3 - Done) user ko kahan bheja jaaye — HOME PAGE ME BHEJA JAYE"
-        ]
-      },
-      "acceptanceCriteria": [
-        "After registration is fully completed (Step 3 reached and backend registration confirmed), the user is automatically redirected to '/' (Home Page)",
-        "The redirect happens without requiring any additional user interaction after Step 3"
+        "Login page shows four separate buttons: Google, Apple, Microsoft, and Continue with Passkey",
+        "Each button has its respective brand logo/icon",
+        "The single Internet Identity button is replaced by these four options",
+        "Clicking any of the four buttons triggers the Internet Identity authentication flow",
+        "After successful authentication, user is logged in and redirected to dashboard as before",
+        "Layout matches the id.ai 'Choose method' style: Google, Apple, Microsoft in a row, then 'Continue with Passkey' as full-width button below"
       ]
     }
   ],
   "constraints": [
-    "Do not modify frontend/src/hooks/useInternetIdentity.ts — use it as-is via the existing hook interface",
-    "Do not modify frontend/src/main.tsx",
-    "Do not modify any files under frontend/src/components/ui",
-    "All changes must be confined to frontend/src/pages/RegisterPage.tsx"
+    "Do not change the backend authentication mechanism — Internet Identity must remain the underlying auth provider",
+    "Do not modify files in frontend/src/hooks/useInternetIdentity.ts or frontend/src/hooks/useActor.ts",
+    "The four buttons are UI wrappers that call the same Internet Identity login function already in use"
   ],
   "nonGoals": [
-    "Do not change the Step 1 form fields (Name, Mobile, BGMI ID)",
-    "Do not change the backend registration logic",
-    "Do not redesign the registration page UI",
-    "Do not add email/OTP verification"
+    "Replacing Internet Identity with direct Google/Apple/Microsoft OAuth integrations",
+    "Adding any new backend authentication logic",
+    "Changing the registration form (Step 1) or success screen (Step 3)"
   ],
   "imageRequirements": {
     "required": [],

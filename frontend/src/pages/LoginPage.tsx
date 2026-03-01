@@ -3,7 +3,8 @@ import { useNavigate } from '@tanstack/react-router';
 import { useAuth } from '../context/AuthContext';
 import { useActor } from '../hooks/useActor';
 import { useInternetIdentity } from '../hooks/useInternetIdentity';
-import { Gamepad2, ShieldCheck, Loader2, ArrowRight } from 'lucide-react';
+import { Gamepad2, ShieldCheck } from 'lucide-react';
+import AuthMethodButtons from '../components/AuthMethodButtons';
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -47,7 +48,7 @@ export default function LoginPage() {
     }
   };
 
-  const handleLogin = async () => {
+  const handleMethodClick = async () => {
     setError('');
     try {
       await iiLogin();
@@ -77,7 +78,7 @@ export default function LoginPage() {
             </div>
             <h3 className="font-orbitron font-bold text-white text-base mb-1">Secure Login</h3>
             <p className="text-gray-400 text-sm">
-              Use Internet Identity to securely access your account on the blockchain.
+              Choose a method to securely access your account.
             </p>
           </div>
 
@@ -87,18 +88,11 @@ export default function LoginPage() {
             </div>
           )}
 
-          <button
-            type="button"
-            onClick={handleLogin}
-            disabled={isLoading}
-            className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-700 text-white font-bold py-3 rounded-xl hover:opacity-90 transition-opacity disabled:opacity-60 shadow-lg shadow-blue-600/20"
-          >
-            {isLoading ? (
-              <><Loader2 className="w-4 h-4 animate-spin" /> {isVerifying ? 'Verifying...' : 'Authenticating...'}</>
-            ) : (
-              <><ShieldCheck className="w-4 h-4" /> Login with Internet Identity</>
-            )}
-          </button>
+          <AuthMethodButtons
+            onMethodClick={handleMethodClick}
+            isLoading={isLoading}
+            loadingText={isVerifying ? 'Verifying...' : 'Authenticating...'}
+          />
 
           <div className="mt-5 pt-4 border-t border-white/5 text-center">
             <p className="text-sm text-gray-500">

@@ -11,6 +11,8 @@ import MixinStorage "blob-storage/Mixin";
 import MixinAuthorization "authorization/MixinAuthorization";
 import AccessControl "authorization/access-control";
 
+
+
 actor {
   include MixinStorage();
 
@@ -206,6 +208,9 @@ actor {
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only authenticated users can register as a player");
     };
+    if (mobile == "") { Runtime.trap("Mobile number cannot be empty") };
+    if (bgmiPlayerId == "") { Runtime.trap("BGMI player ID cannot be empty") };
+    if (displayName == "") { Runtime.trap("Display name cannot be empty") };
     // Prevent duplicate registration
     switch (principalToUserId.get(caller)) {
       case (?existingId) { return existingId };
@@ -235,6 +240,13 @@ actor {
     };
     verifiedUsers.add(playerId, verifiedUser);
     principalToUserId.add(caller, playerId);
+
+    let profile : UserProfile = {
+      displayName;
+      mobile;
+      bgmiPlayerId;
+    };
+    userProfiles.add(caller, profile);
     playerId;
   };
 

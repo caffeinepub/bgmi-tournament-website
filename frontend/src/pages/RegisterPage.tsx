@@ -4,7 +4,17 @@ import { useAuth } from '../context/AuthContext';
 import { useInternetIdentity } from '../hooks/useInternetIdentity';
 import { useActor } from '../hooks/useActor';
 import { useRegisterPlayer, useSaveCallerUserProfile } from '../hooks/useQueries';
-import { Gamepad2, Phone, User, Hash, ArrowRight, Loader2, CheckCircle, ShieldCheck } from 'lucide-react';
+import {
+  Gamepad2, Phone, User, Hash, ArrowRight, Loader2,
+  CheckCircle, ShieldCheck, AlertCircle, PartyPopper, LayoutDashboard
+} from 'lucide-react';
+import AuthMethodButtons from '../components/AuthMethodButtons';
+
+interface FieldErrors {
+  displayName?: string;
+  mobile?: string;
+  bgmiPlayerId?: string;
+}
 
 export default function RegisterPage() {
   const navigate = useNavigate();
@@ -16,29 +26,20 @@ export default function RegisterPage() {
 
   const [step, setStep] = useState<'details' | 'authenticate' | 'success'>('details');
   const [form, setForm] = useState({ displayName: '', mobile: '', bgmiPlayerId: '' });
-  const [error, setError] = useState('');
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
+  const [globalError, setGlobalError] = useState('');
   const [isRegistering, setIsRegistering] = useState(false);
 
-  // Track whether the auto-trigger login has been attempted for this authenticate session
-  const autoLoginAttemptedRef = useRef(false);
   // Track if we've already triggered registration to avoid double-calls
   const registrationTriggeredRef = useRef(false);
-
-  // Auto-trigger Internet Identity login when step becomes 'authenticate'
-  useEffect(() => {
-    if (step === 'authenticate' && !autoLoginAttemptedRef.current && !identity) {
-      autoLoginAttemptedRef.current = true;
-      setError('');
-      // login() returns void — call it directly, watch isLoginError via separate effect
-      iiLogin();
-    }
-  }, [step, identity, iiLogin]);
+  // Track if the user has explicitly clicked an auth method button on step 2
+  const loginInitiatedRef = useRef(false);
 
   // Watch isLoginError: if login fails/is cancelled, reset so user can retry
   useEffect(() => {
     if (step === 'authenticate' && isLoginError) {
-      autoLoginAttemptedRef.current = false;
-      setError('Authentication failed or was cancelled. Please try again.');
+      loginInitiatedRef.current = false;
+      setGlobalError('Authentication cancelled or failed. Please try again.');
     }
   }, [isLoginError, step]);
 
@@ -50,7 +51,8 @@ export default function RegisterPage() {
       actor &&
       !actorFetching &&
       !isRegistering &&
-      !registrationTriggeredRef.current
+      !registrationTriggeredRef.current &&
+      loginInitiatedRef.current
     ) {
       registrationTriggeredRef.current = true;
       handleCompleteRegistration();
@@ -58,37 +60,90 @@ export default function RegisterPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [identity, step, actor, actorFetching]);
 
-  // Redirect to Home Page after successful registration
-  useEffect(() => {
-    if (step === 'success') {
-      const timer = setTimeout(() => {
-        navigate({ to: '/' });
-      }, 2000);
-      return () => clearTimeout(timer);
+  // ── Validation helpers ──────────────────────────────────────────────────────
+
+  const validateDisplayName = (value: string): string => {
+    if (!value.trim()) return 'Display name is required';
+    if (value.trim().length < 2) return 'Display name must be at least 2 characters';
+    return '';
+  };
+
+  const validateMobile = (value: string): string => {
+    if (!value.trim()) return 'Mobile number is required';
+    if (!/^[0-9]+$/.test(value)) return 'Mobile number must contain digits only';
+    if (value.length !== 10) return 'Mobile number must be exactly 10 digits';
+    return '';
+  };
+
+  const validateBgmiPlayerId = (value: string): string => {
+    if (!value.trim()) return 'BGMI Player ID is required';
+    if (!/^[a-zA-Z0-9]+$/.test(value.trim())) return 'BGMI Player ID must be alphanumeric (letters and numbers only)';
+    return '';
+  };
+
+  // ── Field change handlers ───────────────────────────────────────────────────
+
+  const handleDisplayNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setForm(prev => ({ ...prev, displayName: value }));
+    if (fieldErrors.displayName) {
+      setFieldErrors(prev => ({ ...prev, displayName: validateDisplayName(value) || undefined }));
     }
-  }, [step, navigate]);
+  };
+
+  const handleMobileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value.replace(/[^0-9]/g, '');
+    setForm(prev => ({ ...prev, mobile: value }));
+    if (fieldErrors.mobile) {
+      setFieldErrors(prev => ({ ...prev, mobile: validateMobile(value) || undefined }));
+    }
+  };
+
+  const handleBgmiPlayerIdChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setForm(prev => ({ ...prev, bgmiPlayerId: value }));
+    if (fieldErrors.bgmiPlayerId) {
+      setFieldErrors(prev => ({ ...prev, bgmiPlayerId: validateBgmiPlayerId(value) || undefined }));
+    }
+  };
+
+  // ── Form submit ─────────────────────────────────────────────────────────────
 
   const handleDetailsSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
-    if (!form.displayName.trim()) { setError('Please enter your display name'); return; }
-    if (!form.mobile.trim() || form.mobile.length < 10) { setError('Please enter a valid 10-digit mobile number'); return; }
-    if (!form.bgmiPlayerId.trim()) { setError('Please enter your BGMI Player ID'); return; }
+    setGlobalError('');
+
+    const errors: FieldErrors = {};
+    const dnErr = validateDisplayName(form.displayName);
+    const mobErr = validateMobile(form.mobile);
+    const bgmiErr = validateBgmiPlayerId(form.bgmiPlayerId);
+
+    if (dnErr) errors.displayName = dnErr;
+    if (mobErr) errors.mobile = mobErr;
+    if (bgmiErr) errors.bgmiPlayerId = bgmiErr;
+
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors);
+      return;
+    }
+
+    setFieldErrors({});
     // Reset refs when entering authenticate step
     registrationTriggeredRef.current = false;
-    autoLoginAttemptedRef.current = false;
+    loginInitiatedRef.current = false;
     setStep('authenticate');
   };
 
-  const handleInternetIdentityLogin = () => {
-    setError('');
-    autoLoginAttemptedRef.current = true;
+  // Called when user clicks any auth method button on Step 2
+  const handleAuthMethodClick = () => {
+    setGlobalError('');
+    loginInitiatedRef.current = true;
     iiLogin();
   };
 
   const handleCompleteRegistration = async () => {
     setIsRegistering(true);
-    setError('');
+    setGlobalError('');
     try {
       await registerPlayer.mutateAsync({
         mobile: form.mobile,
@@ -110,10 +165,9 @@ export default function RegisterPage() {
         login({ mobile: form.mobile, displayName: form.displayName, bgmiPlayerId: form.bgmiPlayerId });
         setStep('success');
       } else {
-        setError(msg || 'Registration failed. Please try again.');
+        setGlobalError(msg || 'Registration failed. Please try again.');
         registrationTriggeredRef.current = false;
-        autoLoginAttemptedRef.current = false;
-        // Clear II identity so user can retry
+        loginInitiatedRef.current = false;
         await iiClear();
       }
     } finally {
@@ -124,11 +178,10 @@ export default function RegisterPage() {
   const steps = ['Details', 'Authenticate', 'Done'];
   const currentStepIdx = step === 'details' ? 0 : step === 'authenticate' ? 1 : 2;
 
-  // Determine the state of the authenticate step
   const isActorReady = !!actor && !actorFetching;
   const isWaitingForActor = identity && !isActorReady && step === 'authenticate';
-  // Show connecting state when: logging in OR auto-login attempted and not yet failed/succeeded
-  const isConnecting = isLoggingIn || (autoLoginAttemptedRef.current && !identity && !isLoginError);
+  // Show connecting state only after user has clicked the button
+  const isConnecting = loginInitiatedRef.current && isLoggingIn && !identity;
 
   return (
     <div className="min-h-screen bg-brand-darker flex items-center justify-center px-4 py-12">
@@ -168,64 +221,134 @@ export default function RegisterPage() {
             ))}
           </div>
 
-          {/* Step 1: Details */}
+          {/* ── Step 1: Details ── */}
           {step === 'details' && (
-            <form onSubmit={handleDetailsSubmit} className="space-y-4">
+            <form onSubmit={handleDetailsSubmit} className="space-y-4" noValidate>
+              {/* Display Name */}
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-1.5">Display Name</label>
+                <label className="block text-sm font-medium text-gray-300 mb-1.5">
+                  Display Name <span className="text-brand-red">*</span>
+                </label>
                 <div className="relative">
                   <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
                   <input
                     type="text"
                     value={form.displayName}
-                    onChange={(e) => setForm({ ...form, displayName: e.target.value })}
+                    onChange={handleDisplayNameChange}
+                    onBlur={() => {
+                      const err = validateDisplayName(form.displayName);
+                      setFieldErrors(prev => ({ ...prev, displayName: err || undefined }));
+                    }}
                     placeholder="Your in-game name"
-                    className="w-full bg-white/5 border border-white/10 rounded-xl pl-10 pr-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-brand-red/60 transition-all text-sm"
+                    className={`w-full bg-white/5 border rounded-xl pl-10 pr-4 py-3 text-white placeholder-gray-500 focus:outline-none transition-all text-sm ${
+                      fieldErrors.displayName
+                        ? 'border-red-500/60 focus:border-red-500'
+                        : 'border-white/10 focus:border-brand-red/60'
+                    }`}
                   />
                 </div>
+                {fieldErrors.displayName && (
+                  <div className="flex items-center gap-1.5 mt-1.5">
+                    <AlertCircle className="w-3.5 h-3.5 text-red-400 flex-shrink-0" />
+                    <p className="text-red-400 text-xs">{fieldErrors.displayName}</p>
+                  </div>
+                )}
               </div>
+
+              {/* Mobile Number */}
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-1.5">Mobile Number</label>
+                <label className="block text-sm font-medium text-gray-300 mb-1.5">
+                  Mobile Number <span className="text-brand-red">*</span>
+                </label>
                 <div className="relative">
                   <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
                   <input
                     type="tel"
+                    inputMode="numeric"
                     value={form.mobile}
-                    onChange={(e) => setForm({ ...form, mobile: e.target.value })}
+                    onChange={handleMobileChange}
+                    onBlur={() => {
+                      const err = validateMobile(form.mobile);
+                      setFieldErrors(prev => ({ ...prev, mobile: err || undefined }));
+                    }}
                     placeholder="10-digit mobile number"
-                    className="w-full bg-white/5 border border-white/10 rounded-xl pl-10 pr-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-brand-red/60 transition-all text-sm"
+                    className={`w-full bg-white/5 border rounded-xl pl-10 pr-4 py-3 text-white placeholder-gray-500 focus:outline-none transition-all text-sm ${
+                      fieldErrors.mobile
+                        ? 'border-red-500/60 focus:border-red-500'
+                        : 'border-white/10 focus:border-brand-red/60'
+                    }`}
                     maxLength={10}
                   />
                 </div>
+                {fieldErrors.mobile && (
+                  <div className="flex items-center gap-1.5 mt-1.5">
+                    <AlertCircle className="w-3.5 h-3.5 text-red-400 flex-shrink-0" />
+                    <p className="text-red-400 text-xs">{fieldErrors.mobile}</p>
+                  </div>
+                )}
+                <p className="text-gray-600 text-xs mt-1">Digits only, no spaces or dashes</p>
               </div>
+
+              {/* BGMI Player ID */}
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-1.5">BGMI Player ID</label>
+                <label className="block text-sm font-medium text-gray-300 mb-1.5">
+                  BGMI Player ID <span className="text-brand-red">*</span>
+                </label>
                 <div className="relative">
                   <Hash className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
                   <input
                     type="text"
                     value={form.bgmiPlayerId}
-                    onChange={(e) => setForm({ ...form, bgmiPlayerId: e.target.value })}
-                    placeholder="Your BGMI Player ID"
-                    className="w-full bg-white/5 border border-white/10 rounded-xl pl-10 pr-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-brand-red/60 transition-all text-sm"
+                    onChange={handleBgmiPlayerIdChange}
+                    onBlur={() => {
+                      const err = validateBgmiPlayerId(form.bgmiPlayerId);
+                      setFieldErrors(prev => ({ ...prev, bgmiPlayerId: err || undefined }));
+                    }}
+                    placeholder="Your BGMI Player ID (e.g. 5123456789)"
+                    className={`w-full bg-white/5 border rounded-xl pl-10 pr-4 py-3 text-white placeholder-gray-500 focus:outline-none transition-all text-sm ${
+                      fieldErrors.bgmiPlayerId
+                        ? 'border-red-500/60 focus:border-red-500'
+                        : 'border-white/10 focus:border-brand-red/60'
+                    }`}
                   />
                 </div>
+                {fieldErrors.bgmiPlayerId && (
+                  <div className="flex items-center gap-1.5 mt-1.5">
+                    <AlertCircle className="w-3.5 h-3.5 text-red-400 flex-shrink-0" />
+                    <p className="text-red-400 text-xs">{fieldErrors.bgmiPlayerId}</p>
+                  </div>
+                )}
+                <p className="text-gray-600 text-xs mt-1">Letters and numbers only</p>
               </div>
 
-              {error && (
-                <div className="bg-red-500/10 border border-red-500/30 rounded-lg px-3 py-2 text-red-400 text-sm">{error}</div>
+              {globalError && (
+                <div className="bg-red-500/10 border border-red-500/30 rounded-lg px-3 py-2 text-red-400 text-sm flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                  {globalError}
+                </div>
               )}
 
               <button
                 type="submit"
-                className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-brand-red to-brand-orange text-white font-bold py-3 rounded-xl hover:opacity-90 transition-opacity shadow-lg shadow-brand-red/20"
+                className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-brand-red to-brand-orange text-white font-bold py-3 rounded-xl hover:opacity-90 transition-opacity shadow-lg shadow-brand-red/20 mt-2"
               >
                 <ArrowRight className="w-4 h-4" /> Continue
               </button>
+
+              <p className="text-center text-gray-500 text-sm">
+                Already have an account?{' '}
+                <button
+                  type="button"
+                  onClick={() => navigate({ to: '/player/login' })}
+                  className="text-brand-orange hover:underline font-medium"
+                >
+                  Login here
+                </button>
+              </p>
             </form>
           )}
 
-          {/* Step 2: Internet Identity Authentication */}
+          {/* ── Step 2: Authentication ── */}
           {step === 'authenticate' && (
             <div className="space-y-5">
               <div className="text-center">
@@ -234,14 +357,15 @@ export default function RegisterPage() {
                 </div>
                 <h3 className="font-orbitron font-bold text-white text-base mb-1">Verify Your Identity</h3>
                 <p className="text-gray-400 text-sm">
-                  Authenticate with Internet Identity to securely create your account on the blockchain.
+                  Choose a method to securely create your account on the blockchain.
                 </p>
               </div>
 
+              {/* Account details summary */}
               <div className="bg-white/5 border border-white/10 rounded-xl p-4 space-y-2">
-                <p className="text-xs text-gray-400 font-medium uppercase tracking-wider">Account Details</p>
+                <p className="text-xs text-gray-400 font-medium uppercase tracking-wider mb-2">Account Details</p>
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-500">Name</span>
+                  <span className="text-gray-500">Display Name</span>
                   <span className="text-white font-medium">{form.displayName}</span>
                 </div>
                 <div className="flex justify-between text-sm">
@@ -254,83 +378,93 @@ export default function RegisterPage() {
                 </div>
               </div>
 
-              {error && (
-                <div className="bg-red-500/10 border border-red-500/30 rounded-lg px-3 py-2 text-red-400 text-sm">{error}</div>
+              {globalError && (
+                <div className="bg-red-500/10 border border-red-500/30 rounded-lg px-3 py-2 text-red-400 text-sm flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                  {globalError}
+                </div>
               )}
 
-              {/* Show loading state while registering or waiting for actor */}
+              {/* Auth method buttons or loading state */}
               {(isRegistering || isWaitingForActor) ? (
-                <div className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-brand-red to-brand-orange text-white font-bold py-3 rounded-xl opacity-80 cursor-not-allowed">
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  {isWaitingForActor ? 'Connecting...' : 'Creating Account...'}
-                </div>
+                <AuthMethodButtons
+                  onMethodClick={handleAuthMethodClick}
+                  isLoading={true}
+                  loadingText={isWaitingForActor ? 'Connecting...' : 'Creating Account...'}
+                />
               ) : isConnecting ? (
-                /* Auto-triggering or manually logging in */
-                <div className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-700 text-white font-bold py-3 rounded-xl opacity-80 cursor-not-allowed">
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  Opening Internet Identity...
-                </div>
+                <AuthMethodButtons
+                  onMethodClick={handleAuthMethodClick}
+                  isLoading={true}
+                  loadingText="Opening Identity Provider..."
+                />
               ) : (
-                /* Retry button — shown after failure/cancellation */
-                <button
-                  type="button"
-                  onClick={handleInternetIdentityLogin}
-                  disabled={isLoggingIn || isRegistering}
-                  className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-700 text-white font-bold py-3 rounded-xl hover:opacity-90 transition-opacity disabled:opacity-60 shadow-lg shadow-blue-600/20"
-                >
-                  <ShieldCheck className="w-4 h-4" /> Login with Internet Identity
-                </button>
+                <AuthMethodButtons
+                  onMethodClick={handleAuthMethodClick}
+                  isLoading={false}
+                />
               )}
 
-              {!isRegistering && !isWaitingForActor && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setStep('details');
-                    setError('');
-                    registrationTriggeredRef.current = false;
-                    autoLoginAttemptedRef.current = false;
-                  }}
-                  className="w-full text-sm text-gray-500 hover:text-gray-300 transition-colors py-1"
-                >
-                  ← Go back
-                </button>
-              )}
-            </div>
-          )}
-
-          {/* Step 3: Success — auto-redirects to Home Page */}
-          {step === 'success' && (
-            <div className="text-center py-4">
-              <div className="w-16 h-16 rounded-full bg-green-500/20 flex items-center justify-center mx-auto mb-4">
-                <CheckCircle className="w-8 h-8 text-green-400" />
-              </div>
-              <h3 className="font-orbitron font-bold text-white text-lg mb-2">Welcome, {form.displayName}!</h3>
-              <p className="text-gray-400 text-sm mb-2">Your account has been created successfully.</p>
-              <p className="text-gray-500 text-xs mb-6 flex items-center justify-center gap-1">
-                <Loader2 className="w-3 h-3 animate-spin" />
-                Redirecting to Home...
-              </p>
               <button
-                onClick={() => navigate({ to: '/' })}
-                className="w-full bg-gradient-to-r from-brand-red to-brand-orange text-white font-bold py-3 rounded-xl hover:opacity-90 transition-opacity shadow-lg shadow-brand-red/20"
+                type="button"
+                onClick={() => {
+                  setStep('details');
+                  setGlobalError('');
+                  registrationTriggeredRef.current = false;
+                  loginInitiatedRef.current = false;
+                }}
+                className="w-full text-center text-gray-500 text-sm hover:text-gray-300 transition-colors"
               >
-                Go to Home
+                ← Back to Details
               </button>
-            </div>
-          )}
 
-          {step !== 'success' && (
-            <div className="mt-5 pt-4 border-t border-white/5 text-center">
-              <p className="text-sm text-gray-500">
+              <p className="text-center text-gray-500 text-sm">
                 Already have an account?{' '}
                 <button
+                  type="button"
                   onClick={() => navigate({ to: '/player/login' })}
-                  className="text-brand-orange hover:text-brand-red transition-colors font-medium"
+                  className="text-brand-orange hover:underline font-medium"
                 >
                   Login here
                 </button>
               </p>
+            </div>
+          )}
+
+          {/* ── Step 3: Success ── */}
+          {step === 'success' && (
+            <div className="space-y-5 text-center">
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-green-500/20 border border-green-500/40 mb-2">
+                <PartyPopper className="w-8 h-8 text-green-400" />
+              </div>
+              <div>
+                <h3 className="font-orbitron font-bold text-white text-lg mb-1">Account Created! 🎉</h3>
+                <p className="text-gray-400 text-sm">Welcome to Raj Empire Esports Arena, {form.displayName}!</p>
+              </div>
+
+              <div className="bg-white/5 border border-white/10 rounded-xl p-4 space-y-2 text-left">
+                <p className="text-xs text-gray-400 font-medium uppercase tracking-wider mb-2">Your Account</p>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-500">Display Name</span>
+                  <span className="text-white font-medium">{form.displayName}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-500">Mobile</span>
+                  <span className="text-white font-medium">{form.mobile}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-500">BGMI ID</span>
+                  <span className="text-white font-medium">{form.bgmiPlayerId}</span>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => navigate({ to: '/player' })}
+                className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-brand-red to-brand-orange text-white font-bold py-3 rounded-xl hover:opacity-90 transition-opacity shadow-lg shadow-brand-red/20"
+              >
+                <LayoutDashboard className="w-4 h-4" /> Go to Dashboard
+              </button>
             </div>
           )}
         </div>

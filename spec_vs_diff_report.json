@@ -1,13 +1,15 @@
 {
   "kind": "spec_vs_diff_report",
   "version": "1.0",
-  "generatedAt": "2026-03-01T20:13:49.439Z",
-  "summary": "All three requirements are implemented in the diff. REQ-1 is addressed via a useEffect that auto-triggers iiLogin() when step becomes 'authenticate'. REQ-2 is addressed by watching isLoginError and resetting the auto-login ref/state so the user can retry. REQ-3 is addressed by a useEffect that navigates to '/' when step becomes 'success'. No missing requirements or hallucinated features were identified.",
+  "generatedAt": "2026-03-01T21:12:10.318Z",
+  "summary": "The diff implements both REQ-1 and REQ-2 by creating a shared AuthMethodButtons component with Google, Apple, Microsoft, and Passkey buttons, and integrating it into both RegisterPage.tsx (Step 2) and LoginPage.tsx. All four buttons call the same Internet Identity login function. The layout (three brand buttons in a row + full-width Passkey button) matches the id.ai style. Icons are implemented as inline SVGs with correct brand colors. Error handling and retry logic are preserved.",
   "missing_requirements": [],
   "hallucinated_features": [],
-  "confidence": 0.93,
+  "confidence": 0.95,
   "changed_files": [
     "frontend-file-summaries.txt",
+    "frontend/src/components/AuthMethodButtons.tsx",
+    "frontend/src/pages/LoginPage.tsx",
     "frontend/src/pages/RegisterPage.tsx",
     "project_state.json"
   ]

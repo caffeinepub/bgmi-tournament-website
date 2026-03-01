@@ -1,52 +1,69 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Fix Registration Step 2: Auto-trigger Internet Identity & Redirect to Home After Registration",
+  "title": "Add Google, Apple, Microsoft, and Passkey login options on Register Step 2 and Login page",
   "requirements": [
     {
       "id": "REQ-1",
-      "summary": "Auto-trigger Internet Identity popup when user reaches Step 2 without requiring manual button click",
+      "summary": "Replace single 'Verify with Internet Identity' button on Register Step 2 (Authenticate screen) with four distinct authentication option buttons: Google, Apple, Microsoft, and Continue with Passkey, each triggering the Internet Identity login flow",
       "acceptanceCriteria": [
-        "When user completes Step 1 and proceeds to Step 2, the Internet Identity popup opens automatically without any button click",
-        "No manual 'Connect with Internet Identity' button interaction is required to trigger the popup",
-        "The useEffect dependency correctly watches for step === 2 transition"
+        "Step 2 (Authenticate) screen shows four separate buttons: Google, Apple, Microsoft, and Continue with Passkey",
+        "Each button has its respective brand logo/icon (Google multicolor G, Apple black logo, Microsoft colored squares, passkey person icon)",
+        "The single 'Verify with Internet Identity' button is no longer displayed",
+        "Clicking any of the four buttons triggers the Internet Identity authentication flow",
+        "After successful authentication, registration proceeds to Step 3 (Success screen) as before",
+        "Error state ('Authentication cancelled or failed') still shows if login is cancelled, with option to retry",
+        "Layout matches the id.ai 'Choose method' style: Google, Apple, Microsoft in a row, then 'Continue with Passkey' as a full-width button below"
       ],
       "file_operations": [
         {
+          "path": "frontend/src/components/AuthMethodButtons.tsx",
+          "operation": "create",
+          "description": "Create a reusable AuthMethodButtons component that renders four authentication option buttons (Google, Apple, Microsoft, and Continue with Passkey) in the id.ai 'Choose method' layout style. Each button displays the appropriate brand logo/icon and triggers a callback when clicked. The component accepts an onMethodClick callback prop that receives the method name and executes the Internet Identity login flow. Use Tailwind classes for styling: display Google, Apple, and Microsoft buttons in a horizontal row (flex gap), then render 'Continue with Passkey' as a full-width button below. Ensure buttons are visually distinct with proper spacing, hover states, and accessible labels."
+        },
+        {
+          "path": "frontend/public/assets/icons/google-logo.svg",
+          "operation": "create",
+          "description": "Add Google multicolor 'G' logo SVG icon for the Google authentication button. Use the standard Google brand colors (blue, red, yellow, green) in the official Google logo design."
+        },
+        {
+          "path": "frontend/public/assets/icons/apple-logo.svg",
+          "operation": "create",
+          "description": "Add Apple black logo SVG icon for the Apple authentication button. Use the standard Apple logo silhouette in black (#000000)."
+        },
+        {
+          "path": "frontend/public/assets/icons/microsoft-logo.svg",
+          "operation": "create",
+          "description": "Add Microsoft colored squares logo SVG icon for the Microsoft authentication button. Use the standard Microsoft logo with four colored squares (red, green, blue, yellow) arranged in a 2x2 grid."
+        },
+        {
+          "path": "frontend/public/assets/icons/passkey-icon.svg",
+          "operation": "create",
+          "description": "Add passkey/person icon SVG for the 'Continue with Passkey' authentication button. Use a simple person silhouette or key icon that represents passkey authentication."
+        },
+        {
           "path": "frontend/src/pages/RegisterPage.tsx",
           "operation": "modify",
-          "description": "Add a useEffect hook that automatically triggers the Internet Identity login flow when step transitions to 2. The effect should call the login function from useInternetIdentity hook immediately when step === 2. Verify the useInternetIdentity hook's usage instructions before implementing. Include proper dependency array [step, login] and ensure the effect only fires once per step transition by adding a guard to prevent multiple invocations."
+          "description": "In the RegisterPage component, replace the single 'Verify with Internet Identity' button on Step 2 (Authenticate screen) with the new AuthMethodButtons component. Remove the existing blue button that displays 'Verify with Internet Identity'. Import and render <AuthMethodButtons onMethodClick={handleMethodClick} /> where handleMethodClick calls the existing handleAuth function to trigger Internet Identity login. Ensure the error state ('Authentication cancelled or failed') and retry button remain unchanged. Preserve all existing registration flow logic (Step 1 form validation, Step 3 success screen, backend actor calls). Do not modify Steps 1 or 3."
         }
       ]
     },
     {
       "id": "REQ-2",
-      "summary": "Fix stuck 'Connecting...' loading state on Step 2 by resetting button state on authentication failure or cancellation",
+      "summary": "Replace single Internet Identity authentication button on Login page with four distinct authentication option buttons: Google, Apple, Microsoft, and Continue with Passkey, each triggering the Internet Identity login flow",
       "acceptanceCriteria": [
-        "The 'Connecting...' spinner does not remain stuck indefinitely",
-        "If Internet Identity login is cancelled or fails, the button resets to a clickable retry state",
-        "No permanent loading state is shown after a failed or cancelled authentication attempt"
+        "Login page shows four separate buttons: Google, Apple, Microsoft, and Continue with Passkey",
+        "Each button has its respective brand logo/icon",
+        "The single Internet Identity button is replaced by these four options",
+        "Clicking any of the four buttons triggers the Internet Identity authentication flow",
+        "After successful authentication, user is logged in and redirected to dashboard as before",
+        "Layout matches the id.ai 'Choose method' style: Google, Apple, Microsoft in a row, then 'Continue with Passkey' as full-width button below"
       ],
       "file_operations": [
         {
-          "path": "frontend/src/pages/RegisterPage.tsx",
+          "path": "frontend/src/pages/LoginPage.tsx",
           "operation": "modify",
-          "description": "Wrap the Internet Identity login call in a try-catch block within the auto-trigger useEffect. On catch, reset any local connecting/loading state variables to allow retry. Ensure the loginStatus from useInternetIdentity is properly monitored, and if loginStatus indicates failure or the promise rejects, the UI reverts to an actionable state. Add error handling that clears connecting state and optionally displays an error message to the user, prompting them to retry authentication."
-        }
-      ]
-    },
-    {
-      "id": "REQ-3",
-      "summary": "Redirect user to Home Page ('/') after successful registration completion (Step 3 - Done)",
-      "acceptanceCriteria": [
-        "After registration is fully completed (Step 3 reached and backend registration confirmed), the user is automatically redirected to '/' (Home Page)",
-        "The redirect happens without requiring any additional user interaction after Step 3"
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/pages/RegisterPage.tsx",
-          "operation": "modify",
-          "description": "Add navigation logic using the useNavigate hook from react-router-dom. When step 3 is reached and the backend registration mutation is successful (after saveCallerUserProfile completes), immediately call navigate('/') to redirect the user to the Home Page. Ensure the redirect is conditional on successful completion of all registration steps and backend confirmation, preventing premature navigation. Optionally, add a short delay or success message display before redirecting to improve UX."
+          "description": "In the LoginPage component, replace the existing single Internet Identity authentication button with the new AuthMethodButtons component. Remove the current login button and import <AuthMethodButtons onMethodClick={handleMethodClick} /> where handleMethodClick triggers the existing Internet Identity login flow (calling login() from useInternetIdentity hook). Preserve all existing login logic: fetch caller's profile from backend actor after successful authentication, redirect to player dashboard on success, show error message if no account is found. Ensure the 'Don't have an account? Register here' link remains visible below the authentication buttons. Do not modify the overall page layout or navigation header."
         }
       ]
     }
