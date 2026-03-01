@@ -1,61 +1,43 @@
 {
   "kind": "build_request",
-  "title": "Remove OTP from Registration and Replace with Internet Identity Authentication",
+  "title": "Fix Registration Flow: Details Form → Internet Identity Step",
   "projectName": "Raj Empire Esports",
-  "priority": "normal",
+  "priority": "high",
   "requirements": [
     {
       "id": "REQ-1",
-      "text": "Refactor the RegisterPage to a 2-step flow: Step 1 collects Display Name, Mobile Number, and BGMI Player ID with a Continue button; Step 2 shows an Internet Identity authentication prompt (using the existing useInternetIdentity hook) instead of OTP verification. Remove the entire OTP step (Step 2 'Verify OTP'), including the OTP input field, 'Demo OTP: 1234' banner, and all OTP generation/verification logic. The stepper UI should update to show only 2 steps: 'Details' and 'Done'.",
+      "text": "Fix the multi-step registration flow on RegisterPage so that: Step 1 collects Name, Phone Number, and BGMI Player ID; after the user submits Step 1, Step 2 renders the Internet Identity login/authentication button so the user can complete registration via Internet Identity. The Internet Identity step must be clearly visible and functional after Step 1 form submission.",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-recent"
+          "msg-4",
+          "msg-6",
+          "msg-8"
         ],
         "quotes": [
-          "otp hata do jab Internet Identity ka option hai to",
-          "display name, mobile no., bgmi player id Internet Identity ka option ana chahiye lekin display name mobile no. bgmi player id ye tino chij dalne ke baad main login internet Identity se hoga"
+          "Pehle user name/phone/BGMI ID bhare, phir Internet Identity se login kare",
+          "user me rgister karne ke time name , phone no. ,bgmi id ye sab mang raha lekin esake baad Internet Identity option nhi aa raha h"
         ]
       },
       "acceptanceCriteria": [
-        "Registration page shows only 2 steps in the stepper: 'Details' and 'Done'",
-        "Step 1 contains Display Name, Mobile Number, and BGMI Player ID fields with a Continue button",
-        "Step 2 shows an Internet Identity login button (no OTP input, no OTP banner)",
-        "Clicking the Internet Identity button triggers the Internet Identity authentication popup",
-        "After successful Internet Identity authentication, the player profile is registered on-chain using the authenticated identity",
-        "No 'Demo OTP: 1234' banner or OTP input field exists anywhere in the registration flow",
-        "The 'Unauthorized: Only authenticated users can register as a player' error no longer appears because Internet Identity is authenticated before the registerPlayer call is made"
-      ]
-    },
-    {
-      "id": "REQ-2",
-      "text": "Update the backend registerPlayer function (or its authorization check in main.mo) to accept calls from Internet Identity-authenticated principals. Ensure that when a player registers after authenticating via Internet Identity, the caller's principal is treated as authenticated and registration succeeds without returning an 'Unauthorized' error.",
-      "target": "backend",
-      "source": {
-        "messageIds": [
-          "msg-recent"
-        ],
-        "quotes": [
-          "Unauthorized: Only authenticated users can register as a player"
-        ]
-      },
-      "acceptanceCriteria": [
-        "A player authenticated via Internet Identity can successfully call registerPlayer without receiving an 'Unauthorized' error",
-        "Anonymous principal calls to registerPlayer are still rejected",
-        "Existing registered players are not affected"
+        "Step 1 of registration shows Name, Phone Number, and BGMI Player ID fields",
+        "After submitting Step 1, the page transitions to Step 2 which displays the Internet Identity login button",
+        "Internet Identity button is fully visible and clickable in Step 2",
+        "After successful Internet Identity authentication, the player is registered and redirected to the player dashboard",
+        "The step indicator clearly shows progress (Step 1 → Step 2 → Success)"
       ]
     }
   ],
   "constraints": [
-    "Do not modify frontend/src/hooks/useInternetIdentity.ts or frontend/src/hooks/useActor.ts",
-    "Do not add any new OTP or SMS-based verification system",
-    "Preserve existing admin login flow — only player registration flow should be changed"
+    "Do not modify files under frontend/src/hooks/useInternetIdentity.ts or frontend/src/hooks/useActor.ts",
+    "Do not change the backend registration logic or data model",
+    "Preserve existing styling and brand theme of the RegisterPage"
   ],
   "nonGoals": [
-    "Changing the Login page flow",
-    "Adding custom domain configuration",
-    "Modifying admin authentication",
-    "Changing tournament registration or payment flow"
+    "Adding OTP or SMS phone number verification",
+    "Changing the login flow for existing users (LoginPage)",
+    "Adding new fields to the registration form",
+    "Implementing coin wallet or payment proof system"
   ],
   "imageRequirements": {
     "required": [],

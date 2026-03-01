@@ -1,62 +1,78 @@
-import React, { useState, useRef } from 'react';
-import { Tournament } from '../backend';
-import { ExternalBlob } from '../backend';
-import { useRegisterForTournament } from '../hooks/useQueries';
-import { X, Upload, CheckCircle, Loader2, AlertCircle } from 'lucide-react';
+import React, { useState } from "react";
+import { X, CheckCircle, AlertCircle, Coins } from "lucide-react";
+import type { Tournament } from "../backend";
+import {
+  useGetMyUserId,
+  useGetWalletBalance,
+  useRegisterForTournamentWithCoins,
+} from "../hooks/useQueries";
 
 interface PaymentModalProps {
   tournament: Tournament;
   onClose: () => void;
 }
 
-export default function PaymentModal({ tournament, onClose }: PaymentModalProps) {
-  const [screenshot, setScreenshot] = useState<File | null>(null);
-  const [screenshotPreview, setScreenshotPreview] = useState<string | null>(null);
-  const [termsAccepted, setTermsAccepted] = useState(false);
+export default function PaymentModal({
+  tournament,
+  onClose,
+}: PaymentModalProps) {
+  const { data: userId } = useGetMyUserId();
+  const { data: balance } = useGetWalletBalance(userId ?? null);
+  const registerWithCoins = useRegisterForTournamentWithCoins();
+
   const [success, setSuccess] = useState(false);
-  const [error, setError] = useState('');
-  const [uploadProgress, setUploadProgress] = useState(0);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const registerMutation = useRegisterForTournament();
+  const [error, setError] = useState("");
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setScreenshot(file);
-    const reader = new FileReader();
-    reader.onload = (ev) => setScreenshotPreview(ev.target?.result as string);
-    reader.readAsDataURL(file);
-  };
+  const hasBalance =
+    balance !== undefined && balance >= tournament.entryFee;
+  const balanceAfter =
+    balance !== undefined ? balance - tournament.entryFee : BigInt(0);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-    if (!screenshot) { setError('Please upload your payment screenshot'); return; }
-    if (!termsAccepted) { setError('Please accept the terms and conditions'); return; }
-
+  const handleJoin = async () => {
+    if (!userId) {
+      setError("User ID not found. Please complete registration first.");
+      return;
+    }
+    if (!hasBalance) {
+      setError(
+        `Insufficient coins! You need ${tournament.entryFee.toString()} coins but have ${(balance ?? BigInt(0)).toString()}. Go to Dashboard → Wallet to add coins.`
+      );
+      return;
+    }
+    setError("");
     try {
-      const arrayBuffer = await screenshot.arrayBuffer();
-      const bytes = new Uint8Array(arrayBuffer);
-      const blob = ExternalBlob.fromBytes(bytes).withUploadProgress((pct) => setUploadProgress(pct));
-      await registerMutation.mutateAsync({ tournamentId: tournament.id, paymentScreenshotBlob: blob });
+      await registerWithCoins.mutateAsync({
+        tournamentId: tournament.id,
+        playerId: userId,
+      });
       setSuccess(true);
-    } catch (err: any) {
-      setError(err?.message || 'Registration failed. Please try again.');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      setError(
+        msg.includes("Insufficient")
+          ? "Insufficient coins to join this tournament."
+          : msg.includes("already")
+            ? "You are already registered for this tournament."
+            : "Failed to join tournament. Please try again."
+      );
     }
   };
 
-  const qrUrl = tournament.qrCodeBlob ? tournament.qrCodeBlob.getDirectURL() : null;
-
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
-      <div className="bg-brand-dark border border-brand-red/30 rounded-2xl w-full max-w-md shadow-2xl max-h-[90vh] overflow-y-auto">
+      <div className="bg-[#1a1a1a] border border-white/10 rounded-2xl w-full max-w-md shadow-2xl">
         {/* Header */}
         <div className="flex items-center justify-between p-5 border-b border-white/10">
           <div>
-            <h2 className="font-orbitron font-bold text-white text-base">Register for Tournament</h2>
+            <h2 className="font-orbitron font-bold text-white text-base">
+              Join Tournament
+            </h2>
             <p className="text-gray-400 text-xs mt-0.5">{tournament.name}</p>
           </div>
-          <button onClick={onClose} className="p-1.5 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition-all">
+          <button
+            onClick={onClose}
+            className="p-1.5 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition-all"
+          >
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -66,9 +82,12 @@ export default function PaymentModal({ tournament, onClose }: PaymentModalProps)
             <div className="w-16 h-16 rounded-full bg-green-500/20 flex items-center justify-center mx-auto mb-4">
               <CheckCircle className="w-8 h-8 text-green-400" />
             </div>
-            <h3 className="font-orbitron font-bold text-white text-lg mb-2">Registration Submitted!</h3>
+            <h3 className="font-orbitron font-bold text-white text-lg mb-2">
+              Successfully Joined!
+            </h3>
             <p className="text-gray-400 text-sm mb-5">
-              Your registration is pending admin approval. You'll be notified once approved.
+              You have joined <strong className="text-white">{tournament.name}</strong>.{" "}
+              {tournament.entryFee.toString()} coins have been deducted from your wallet.
             </p>
             <button
               onClick={onClose}
@@ -78,115 +97,101 @@ export default function PaymentModal({ tournament, onClose }: PaymentModalProps)
             </button>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="p-5 space-y-5">
+          <div className="p-5 space-y-5">
             {/* Tournament Info */}
             <div className="grid grid-cols-2 gap-3">
               <div className="bg-white/5 rounded-lg p-3">
                 <p className="text-xs text-gray-500">Entry Fee</p>
-                <p className="text-brand-orange font-bold">₹{tournament.entryFee.toString()}</p>
+                <p className="text-brand-orange font-bold">
+                  🪙 {tournament.entryFee.toString()} Coins
+                </p>
               </div>
               <div className="bg-white/5 rounded-lg p-3">
                 <p className="text-xs text-gray-500">Prize Pool</p>
-                <p className="text-green-400 font-bold">₹{tournament.prizePool.toString()}</p>
+                <p className="text-green-400 font-bold">
+                  🪙 {tournament.prizePool.toString()} Coins
+                </p>
               </div>
             </div>
 
-            {/* UPI Details */}
-            <div className="bg-brand-red/10 border border-brand-red/30 rounded-xl p-4">
-              <h3 className="text-white font-semibold text-sm mb-3">Payment Details</h3>
-              <div className="flex gap-4 items-start">
-                {qrUrl ? (
-                  <img src={qrUrl} alt="QR Code" className="w-24 h-24 rounded-lg object-cover border border-white/10" />
-                ) : (
-                  <div className="w-24 h-24 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center">
-                    <span className="text-gray-500 text-xs text-center">No QR</span>
-                  </div>
-                )}
-                <div className="flex-1">
-                  <p className="text-xs text-gray-400 mb-1">UPI ID</p>
-                  <p className="text-white font-mono text-sm bg-white/5 rounded-lg px-3 py-2 break-all">
-                    {tournament.upiId || 'Not set'}
-                  </p>
-                  <p className="text-xs text-gray-500 mt-2">
-                    Pay ₹{tournament.entryFee.toString()} and upload screenshot below
-                  </p>
+            {/* Wallet Balance */}
+            <div
+              className={`rounded-xl p-4 border ${
+                hasBalance
+                  ? "bg-green-900/20 border-green-500/20"
+                  : "bg-red-900/20 border-red-500/20"
+              }`}
+            >
+              <div className="flex items-center gap-2 mb-2">
+                <Coins
+                  className={`w-4 h-4 ${hasBalance ? "text-green-400" : "text-red-400"}`}
+                />
+                <span className="text-sm font-semibold text-white">
+                  Your Wallet
+                </span>
+              </div>
+              <div className="space-y-1 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-gray-400">Current Balance</span>
+                  <span className="text-yellow-400 font-bold">
+                    🪙 {(balance ?? BigInt(0)).toString()} Coins
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-400">Entry Fee</span>
+                  <span className="text-red-400 font-bold">
+                    - 🪙 {tournament.entryFee.toString()} Coins
+                  </span>
+                </div>
+                <div className="flex justify-between border-t border-white/10 pt-1 mt-1">
+                  <span className="text-gray-400">After Joining</span>
+                  <span
+                    className={`font-bold ${hasBalance ? "text-green-400" : "text-red-400"}`}
+                  >
+                    🪙 {hasBalance ? balanceAfter.toString() : "—"} Coins
+                  </span>
                 </div>
               </div>
             </div>
 
-            {/* Screenshot Upload */}
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">Payment Screenshot</label>
-              <div
-                onClick={() => fileInputRef.current?.click()}
-                className="border-2 border-dashed border-white/20 rounded-xl p-4 text-center cursor-pointer hover:border-brand-red/50 transition-all"
-              >
-                {screenshotPreview ? (
-                  <img src={screenshotPreview} alt="Screenshot" className="max-h-32 mx-auto rounded-lg object-contain" />
-                ) : (
-                  <div className="py-4">
-                    <Upload className="w-8 h-8 text-gray-500 mx-auto mb-2" />
-                    <p className="text-gray-400 text-sm">Click to upload payment screenshot</p>
-                    <p className="text-gray-600 text-xs mt-1">PNG, JPG up to 5MB</p>
-                  </div>
-                )}
+            {!hasBalance && (
+              <div className="bg-yellow-900/20 border border-yellow-500/20 rounded-lg p-3 text-yellow-400 text-xs">
+                <strong>Insufficient coins!</strong> Go to{" "}
+                <strong>Dashboard → Wallet</strong> to add coins by uploading a
+                payment proof.
               </div>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                onChange={handleFileChange}
-                className="hidden"
-              />
-              {registerMutation.isPending && uploadProgress > 0 && (
-                <div className="mt-2">
-                  <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-gradient-to-r from-brand-red to-brand-orange transition-all"
-                      style={{ width: `${uploadProgress}%` }}
-                    />
-                  </div>
-                  <p className="text-xs text-gray-500 mt-1">Uploading... {uploadProgress}%</p>
-                </div>
-              )}
-            </div>
-
-            {/* Terms */}
-            <label className="flex items-start gap-3 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={termsAccepted}
-                onChange={(e) => setTermsAccepted(e.target.checked)}
-                className="mt-0.5 w-4 h-4 accent-brand-red"
-              />
-              <span className="text-sm text-gray-400">
-                I accept the{' '}
-                <a href="/terms" target="_blank" className="text-brand-orange hover:underline">
-                  Terms & Conditions
-                </a>{' '}
-                and confirm that the payment has been made.
-              </span>
-            </label>
+            )}
 
             {error && (
-              <div className="flex items-center gap-2 bg-red-500/10 border border-red-500/30 rounded-lg px-3 py-2 text-red-400 text-sm">
-                <AlertCircle className="w-4 h-4 flex-shrink-0" />
+              <div className="flex items-start gap-2 bg-red-500/10 border border-red-500/30 rounded-lg px-3 py-2 text-red-400 text-sm">
+                <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
                 {error}
               </div>
             )}
 
-            <button
-              type="submit"
-              disabled={registerMutation.isPending}
-              className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-brand-red to-brand-orange text-white font-bold py-3 rounded-xl hover:opacity-90 transition-opacity disabled:opacity-60 shadow-lg shadow-brand-red/20"
-            >
-              {registerMutation.isPending ? (
-                <><Loader2 className="w-4 h-4 animate-spin" /> Submitting...</>
-              ) : (
-                <><CheckCircle className="w-4 h-4" /> Submit Registration</>
-              )}
-            </button>
-          </form>
+            <div className="flex gap-3">
+              <button
+                onClick={handleJoin}
+                disabled={registerWithCoins.isPending || !hasBalance}
+                className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-brand-red to-brand-orange text-white font-bold py-3 rounded-xl hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {registerWithCoins.isPending ? (
+                  "Joining..."
+                ) : (
+                  <>
+                    <Coins className="w-4 h-4" />
+                    Pay with Coins
+                  </>
+                )}
+              </button>
+              <button
+                onClick={onClose}
+                className="px-4 py-3 bg-white/10 text-white rounded-xl hover:bg-white/20 transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
         )}
       </div>
     </div>

@@ -1,30 +1,23 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Remove OTP from Registration and Replace with Internet Identity Authentication",
+  "title": "Fix Registration Flow: Details Form → Internet Identity Step",
   "requirements": [
     {
       "id": "REQ-1",
-      "summary": "Refactor RegisterPage to a 2-step flow: Step 1 collects Display Name, Mobile Number, and BGMI Player ID with a Continue button; Step 2 shows an Internet Identity authentication prompt instead of OTP verification. Remove all OTP-related UI and logic.",
+      "summary": "Fix the multi-step registration flow so that Step 1 collects Name, Phone Number, and BGMI Player ID, then Step 2 renders the Internet Identity login/authentication button to complete registration.",
       "acceptanceCriteria": [
-        "Registration page shows only 2 steps in the stepper: 'Details' and 'Done'",
-        "Step 1 contains Display Name, Mobile Number, and BGMI Player ID fields with a Continue button",
-        "Step 2 shows an Internet Identity login button (no OTP input, no OTP banner)",
-        "Clicking the Internet Identity button triggers the Internet Identity authentication popup",
-        "After successful Internet Identity authentication, the player profile is registered on-chain using the authenticated identity",
-        "No 'Demo OTP: 1234' banner or OTP input field exists anywhere in the registration flow",
-        "The 'Unauthorized: Only authenticated users can register as a player' error no longer appears because Internet Identity is authenticated before the registerPlayer call is made"
+        "Step 1 of registration shows Name, Phone Number, and BGMI Player ID fields",
+        "After submitting Step 1, the page transitions to Step 2 which displays the Internet Identity login button",
+        "Internet Identity button is fully visible and clickable in Step 2",
+        "After successful Internet Identity authentication, the player is registered and redirected to the player dashboard",
+        "The step indicator clearly shows progress (Step 1 → Step 2 → Success)"
       ],
       "file_operations": [
         {
           "path": "frontend/src/pages/RegisterPage.tsx",
           "operation": "modify",
-          "description": "Refactor the RegisterPage component to implement a 2-step registration flow. Step 1: Collect Display Name, Mobile Number, and BGMI Player ID with a 'Continue' button that advances to Step 2. Step 2: Display an Internet Identity authentication button using the existing useInternetIdentity hook. Remove the entire OTP verification step (Step 2 'Verify OTP'), including the OTP input field, the 'Demo OTP: 1234' banner, and all calls to generateOtp and verifyOtp mutations. Update the stepper UI to show only 2 steps labeled 'Details' and 'Done'. After successful Internet Identity authentication in Step 2, call the registerPlayer backend capability with the collected user details and the authenticated identity. Handle the registration success by logging the user into the player session (via AuthContext) and navigating to the player dashboard. Remove all OTP-related state variables, mutation hooks (useGenerateOtp, useVerifyOtp), and conditional rendering logic related to OTP. Ensure error handling displays appropriate messages if Internet Identity authentication fails or if registerPlayer returns an error. Use the authorization component to ensure the user is authenticated before calling registerPlayer, preventing the 'Unauthorized: Only authenticated users can register as a player' error."
-        },
-        {
-          "path": "frontend/src/hooks/useQueries.ts",
-          "operation": "modify",
-          "description": "Remove the useGenerateOtp and useVerifyOtp mutation hooks from this file, as they are no longer needed after removing OTP-based registration. Ensure all other query and mutation hooks remain intact and functional. This cleanup prevents unused backend capabilities from being exposed in the frontend codebase."
+          "description": "Refactor the registration page to properly implement a two-step flow: Step 1 collects displayName, mobile, and bgmiPlayerId via a form with validation; on Step 1 submit, store the form data in component state and advance to Step 2. Step 2 renders a prominent Internet Identity login button with clear instructions. Wire the Internet Identity authentication flow (using useInternetIdentity hook) to trigger after the user clicks the button in Step 2. After successful Internet Identity authentication, call the registerPlayer backend mutation with the stored form data from Step 1, then redirect to the player dashboard. Update the step indicator UI to clearly show Step 1 → Step 2 → Success transitions. Preserve existing styling and brand theme. Ensure the Internet Identity button is fully visible and clickable in Step 2."
         }
       ]
     }

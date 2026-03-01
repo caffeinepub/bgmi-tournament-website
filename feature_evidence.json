@@ -2,10 +2,9 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-refactor-the-registerpage-to-a-2-step-flow-step-1-collects-display-name-mobile-number-and-bgmi-player-id-with-a-continue-button-step-2-shows-an-internet-identity-authentication-prompt-using-the-existing-useinternetidentity-hook-instead-of-otp-verification-remove-the-entire-otp-step-step-2-verify-otp-including-the-otp-input-field-demo-otp-1234-banner-and-all-otp-generation-verification-logic-the-stepper-ui-should-update-to-show-only-2-steps-details-and-done",
-      "featureTitle": "Refactor the RegisterPage to a 2-step flow: Step 1 collects Display Name, Mobile Number, and BGMI Player ID with a Continue button; Step 2 shows an Internet Identity authentication prompt (using the existing useInternetIdentity hook) instead of OTP verification. Remove the entire OTP step (Step 2 'Verify OTP'), including the OTP input field, 'Demo OTP: 1234' banner, and all OTP generation/verification logic. The stepper UI should update to show only 2 steps: 'Details' and 'Done'.",
+      "featureId": "feature-fix-the-multi-step-registration-flow-on-registerpage-so-that-step-1-collects-name-phone-number-and-bgmi-player-id-after-the-user-submits-step-1-step-2-renders-the-internet-identity-login-authentication-button-so-the-user-can-complete-registration-via-internet-identity-the-internet-identity-step-must-be-clearly-visible-and-functional-after-step-1-form-submission",
+      "featureTitle": "Fix the multi-step registration flow on RegisterPage so that: Step 1 collects Name, Phone Number, and BGMI Player ID; after the user submits Step 1, Step 2 renders the Internet Identity login/authentication button so the user can complete registration via Internet Identity. The Internet Identity step must be clearly visible and functional after Step 1 form submission.",
       "files": [
-        "frontend/src/hooks/useQueries.ts",
         "frontend/src/pages/RegisterPage.tsx"
       ],
       "components": [

@@ -1,558 +1,533 @@
-import React, { useState, useRef } from 'react';
-import { useNavigate } from '@tanstack/react-router';
-import { useAdminAuth } from '../context/AdminAuthContext';
+import React, { useState } from "react";
+import { useNavigate } from "@tanstack/react-router";
+import {
+  Trophy,
+  Users,
+  FileText,
+  MessageSquare,
+  Link,
+  ClipboardList,
+  LogOut,
+  X,
+  Menu,
+  Search,
+  Check,
+  XCircle,
+  CreditCard,
+  Wallet,
+  Gift,
+} from "lucide-react";
+import { useAdminAuth } from "../context/AdminAuthContext";
 import {
   useGetAllTournaments,
-  useGetAllRegistrations,
-  useGetRegistrationsForTournament,
-  useGetAllPlayers,
-  useGetAllSupportTickets,
-  useGetTermsAndConditions,
-  useGetSocialLinks,
   useCreateTournament,
   useUpdateTournamentStatus,
-  useUpdateTournamentQrCode,
   useUpdateTournamentRoomDetails,
+  useGetRegistrationsForTournament,
   useUpdateRegistrationStatus,
-  useUpdateTermsAndConditions,
-  useUpdateSocialLinks,
+  useGetAllVerifiedUsers,
+  useGetAllSupportTickets,
   useReplyToSupportTicket,
   useCloseSupportTicket,
-} from '../hooks/useQueries';
-import { TournamentStatus, RegistrationStatus, Tournament, TournamentRegistration, SupportTicket, Player, TicketStatus } from '../backend';
-import { ExternalBlob } from '../backend';
-import {
-  Trophy, Users, ClipboardList, FileText, MessageSquare, Link2,
-  LogOut, Menu, X, Plus, Eye, Check, XCircle, Loader2,
-  ChevronDown, ChevronUp, Shield, Send, RefreshCw, Upload
-} from 'lucide-react';
+  useGetSocialLinks,
+  useUpdateSocialLinks,
+  useGetTermsAndConditions,
+  useUpdateTermsAndConditions,
+  useGetAllPaymentProofs,
+  useApprovePaymentProof,
+  useRejectPaymentProof,
+  useGetAllWithdrawalRequests,
+  useMarkWithdrawalProcessed,
+  useRejectWithdrawalRequest,
+  useDistributePrizeCoins,
+} from "../hooks/useQueries";
+import type { TournamentStatus } from "../backend";
 
-type AdminTab = 'tournaments' | 'registrations' | 'players' | 'terms' | 'support' | 'social';
+const NAV_ITEMS = [
+  { key: "tournaments", label: "Tournaments", icon: Trophy },
+  { key: "registrations", label: "Registrations", icon: ClipboardList },
+  { key: "players", label: "Players", icon: Users },
+  { key: "paymentProofs", label: "Payment Proofs", icon: CreditCard },
+  { key: "withdrawals", label: "Withdrawals", icon: Wallet },
+  { key: "terms", label: "Terms & Conditions", icon: FileText },
+  { key: "support", label: "Support Tickets", icon: MessageSquare },
+  { key: "social", label: "Social Links", icon: Link },
+];
+
+function formatDate(ts: bigint) {
+  return new Date(Number(ts) / 1_000_000).toLocaleString("en-IN");
+}
 
 export default function AdminDashboardPage() {
   const navigate = useNavigate();
   const { logout } = useAdminAuth();
-  const [activeTab, setActiveTab] = useState<AdminTab>('tournaments');
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState("tournaments");
+  const [sidebarOpen, setSidebarOpen] = useState(true);
 
   const handleLogout = () => {
     logout();
-    navigate({ to: '/admin' });
+    navigate({ to: "/admin" });
   };
 
-  const tabs: { id: AdminTab; label: string; icon: React.ReactNode }[] = [
-    { id: 'tournaments', label: 'Tournaments', icon: <Trophy className="w-4 h-4" /> },
-    { id: 'registrations', label: 'Registrations', icon: <ClipboardList className="w-4 h-4" /> },
-    { id: 'players', label: 'Players', icon: <Users className="w-4 h-4" /> },
-    { id: 'terms', label: 'Terms & Conditions', icon: <FileText className="w-4 h-4" /> },
-    { id: 'support', label: 'Support Tickets', icon: <MessageSquare className="w-4 h-4" /> },
-    { id: 'social', label: 'Social Links', icon: <Link2 className="w-4 h-4" /> },
-  ];
-
   return (
-    <div className="min-h-screen bg-brand-darker flex">
+    <div className="flex h-screen bg-brand-darker text-white overflow-hidden">
       {/* Sidebar */}
       <aside
-        className={`fixed inset-y-0 left-0 z-40 w-64 bg-brand-dark border-r border-brand-red/20 flex flex-col transform transition-transform duration-200 ${
-          sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-        } lg:relative lg:translate-x-0`}
+        className={`${sidebarOpen ? "w-60" : "w-0 overflow-hidden"} transition-all duration-300 bg-[#111] border-r border-white/10 flex flex-col flex-shrink-0`}
       >
-        <div className="flex items-center gap-2 p-5 border-b border-brand-red/20">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-brand-red to-brand-orange flex items-center justify-center flex-shrink-0">
-            <Shield className="w-4 h-4 text-white" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <span className="font-orbitron font-bold text-white text-xs block truncate">ADMIN PANEL</span>
-            <span className="text-gray-500 text-xs block truncate">Raj Empire Esports</span>
+        <div className="flex items-center justify-between p-4 border-b border-white/10">
+          <div>
+            <div className="font-orbitron text-sm font-bold text-brand-orange">
+              ADMIN PANEL
+            </div>
+            <div className="text-xs text-gray-400">Raj Empire Esports</div>
           </div>
           <button
             onClick={() => setSidebarOpen(false)}
-            className="lg:hidden text-gray-400 hover:text-white transition-colors"
+            className="text-gray-400 hover:text-white"
           >
-            <X className="w-4 h-4" />
+            <X size={16} />
           </button>
         </div>
-
         <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
-          {tabs.map((tab) => (
+          {NAV_ITEMS.map(({ key, label, icon: Icon }) => (
             <button
-              key={tab.id}
-              onClick={() => { setActiveTab(tab.id); setSidebarOpen(false); }}
-              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all text-left ${
-                activeTab === tab.id
-                  ? 'bg-gradient-to-r from-brand-red to-brand-orange text-white shadow-md'
-                  : 'text-gray-400 hover:text-white hover:bg-white/5'
+              key={key}
+              onClick={() => setActiveTab(key)}
+              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors ${
+                activeTab === key
+                  ? "bg-brand-orange text-white font-semibold"
+                  : "text-gray-300 hover:bg-white/10"
               }`}
             >
-              {tab.icon}
-              {tab.label}
+              <Icon size={16} />
+              {label}
             </button>
           ))}
         </nav>
-
-        <div className="p-3 border-t border-brand-red/20">
+        <div className="p-3 border-t border-white/10">
           <button
             onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-all"
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 hover:bg-red-900/30 hover:text-red-400 transition-colors"
           >
-            <LogOut className="w-4 h-4" />
+            <LogOut size={16} />
             Logout
           </button>
         </div>
       </aside>
 
-      {/* Overlay */}
-      {sidebarOpen && (
-        <div
-          className="fixed inset-0 z-30 bg-black/50 lg:hidden"
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
-
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col min-w-0">
-        {/* Top Bar */}
-        <header className="bg-brand-dark border-b border-brand-red/20 px-4 sm:px-6 py-4 flex items-center gap-3 sticky top-0 z-20">
+      {/* Main */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <header className="flex items-center justify-between px-6 py-3 border-b border-white/10 bg-[#0d0d0d]">
           <button
             onClick={() => setSidebarOpen(true)}
-            className="lg:hidden p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition-all"
+            className={`text-gray-400 hover:text-white ${sidebarOpen ? "opacity-0 pointer-events-none" : ""}`}
           >
-            <Menu className="w-5 h-5" />
+            <Menu size={20} />
           </button>
-          <div className="flex-1">
-            <h1 className="font-orbitron font-bold text-white text-base sm:text-lg">
-              {tabs.find((t) => t.id === activeTab)?.label}
-            </h1>
-            <p className="text-gray-500 text-xs">Admin Dashboard</p>
+          <div className="font-orbitron text-brand-orange text-sm font-bold">
+            {NAV_ITEMS.find((n) => n.key === activeTab)?.label}
           </div>
           <button
             onClick={handleLogout}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 text-sm transition-all"
+            className="flex items-center gap-2 text-sm text-gray-400 hover:text-red-400 transition-colors"
           >
-            <LogOut className="w-3.5 h-3.5" />
-            <span className="hidden sm:block">Logout</span>
+            <LogOut size={16} />
+            Logout
           </button>
         </header>
 
-        <main className="flex-1 p-4 sm:p-6 overflow-auto">
-          {activeTab === 'tournaments' && <TournamentsTab />}
-          {activeTab === 'registrations' && <RegistrationsTab />}
-          {activeTab === 'players' && <PlayersTab />}
-          {activeTab === 'terms' && <TermsTab />}
-          {activeTab === 'support' && <SupportTab />}
-          {activeTab === 'social' && <SocialTab />}
+        <main className="flex-1 overflow-y-auto p-6">
+          {activeTab === "tournaments" && <TournamentsTab />}
+          {activeTab === "registrations" && <RegistrationsTab />}
+          {activeTab === "players" && <PlayersTab />}
+          {activeTab === "paymentProofs" && <PaymentProofsTab />}
+          {activeTab === "withdrawals" && <WithdrawalsTab />}
+          {activeTab === "terms" && <TermsTab />}
+          {activeTab === "support" && <SupportTab />}
+          {activeTab === "social" && <SocialTab />}
         </main>
       </div>
     </div>
   );
 }
 
-// ─── Status Badge ──────────────────────────────────────────────────────────────
-function TournamentStatusBadge({ status }: { status: TournamentStatus }) {
-  const map: Record<TournamentStatus, { label: string; cls: string }> = {
-    [TournamentStatus.upcoming]: { label: 'Upcoming', cls: 'bg-blue-500/20 text-blue-400 border-blue-500/30' },
-    [TournamentStatus.ongoing]: { label: 'Live', cls: 'bg-green-500/20 text-green-400 border-green-500/30' },
-    [TournamentStatus.closed]: { label: 'Closed', cls: 'bg-gray-500/20 text-gray-400 border-gray-500/30' },
-    [TournamentStatus.completed]: { label: 'Completed', cls: 'bg-purple-500/20 text-purple-400 border-purple-500/30' },
-  };
-  const s = map[status] || map[TournamentStatus.upcoming];
-  return (
-    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${s.cls}`}>
-      {s.label}
-    </span>
-  );
-}
+// ─── Tournaments Tab ─────────────────────────────────────────────────────────
 
-function RegStatusBadge({ status }: { status: RegistrationStatus }) {
-  const map: Record<RegistrationStatus, { label: string; cls: string }> = {
-    [RegistrationStatus.pending]: { label: 'Pending', cls: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30' },
-    [RegistrationStatus.approved]: { label: 'Approved', cls: 'bg-green-500/20 text-green-400 border-green-500/30' },
-    [RegistrationStatus.rejected]: { label: 'Rejected', cls: 'bg-red-500/20 text-red-400 border-red-500/30' },
-  };
-  const s = map[status] || map[RegistrationStatus.pending];
-  return (
-    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${s.cls}`}>
-      {s.label}
-    </span>
-  );
-}
-
-// ─── Tournaments Tab ───────────────────────────────────────────────────────────
 function TournamentsTab() {
-  const { data: tournaments = [], isLoading, refetch } = useGetAllTournaments();
+  const { data: tournaments = [], isLoading } = useGetAllTournaments();
   const createTournament = useCreateTournament();
   const updateStatus = useUpdateTournamentStatus();
   const updateRoom = useUpdateTournamentRoomDetails();
-  const updateQr = useUpdateTournamentQrCode();
+  const distributePrize = useDistributePrizeCoins();
 
   const [showForm, setShowForm] = useState(false);
-  const [tournamentType, setTournamentType] = useState<'daily' | 'mega'>('daily');
   const [form, setForm] = useState({
-    name: '', entryFee: '', prizePool: '', map: 'Erangel',
-    totalSlots: '100', upiId: '', matchRules: '', squadSize: 'Squad',
+    name: "",
+    dateTime: "",
+    entryFee: "",
+    prizePool: "",
+    map: "Erangel",
+    totalSlots: "100",
+    upiId: "",
+    matchRules: "",
   });
-  const [qrFile, setQrFile] = useState<File | null>(null);
-  const [posterFile, setPosterFile] = useState<File | null>(null);
-  const [formError, setFormError] = useState('');
-  const [expandedId, setExpandedId] = useState<string | null>(null);
-  const [roomForm, setRoomForm] = useState<Record<string, { roomId: string; roomPassword: string }>>({});
-  const qrRef = useRef<HTMLInputElement>(null);
-  const posterRef = useRef<HTMLInputElement>(null);
+  const [roomForms, setRoomForms] = useState<
+    Record<string, { roomId: string; roomPassword: string }>
+  >({});
+  const [prizeForm, setPrizeForm] = useState<
+    Record<string, { winnerUserId: string; prizeAmount: string }>
+  >({});
+  const [formError, setFormError] = useState("");
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
-    setFormError('');
-    if (!form.name.trim()) { setFormError('Tournament name is required'); return; }
-    if (!form.entryFee || isNaN(Number(form.entryFee))) { setFormError('Valid entry fee is required'); return; }
+    setFormError("");
     try {
-      const tournamentId = await createTournament.mutateAsync({
-        name: tournamentType === 'mega' ? `[MEGA] ${form.name}` : form.name,
-        dateTime: BigInt(Date.now()) * BigInt(1_000_000),
-        entryFee: BigInt(form.entryFee),
-        prizePool: BigInt(form.prizePool || '0'),
-        map: tournamentType === 'mega' ? form.squadSize : form.map,
-        totalSlots: BigInt(form.totalSlots || '100'),
+      await createTournament.mutateAsync({
+        name: form.name,
+        dateTime: BigInt(
+          new Date(form.dateTime || Date.now()).getTime() * 1_000_000
+        ),
+        entryFee: BigInt(form.entryFee || "0"),
+        prizePool: BigInt(form.prizePool || "0"),
+        map: form.map,
+        totalSlots: BigInt(form.totalSlots || "100"),
         upiId: form.upiId,
         matchRules: form.matchRules,
       });
-
-      const fileToUpload = tournamentType === 'daily' ? qrFile : posterFile;
-      if (fileToUpload && tournamentId) {
-        const bytes = new Uint8Array(await fileToUpload.arrayBuffer());
-        const blob = ExternalBlob.fromBytes(bytes);
-        await updateQr.mutateAsync({ tournamentId, qrCodeBlob: blob });
-      }
-
       setShowForm(false);
-      setForm({ name: '', entryFee: '', prizePool: '', map: 'Erangel', totalSlots: '100', upiId: '', matchRules: '', squadSize: 'Squad' });
-      setQrFile(null);
-      setPosterFile(null);
-    } catch (err: any) {
-      setFormError(err?.message || 'Failed to create tournament');
+      setForm({
+        name: "",
+        dateTime: "",
+        entryFee: "",
+        prizePool: "",
+        map: "Erangel",
+        totalSlots: "100",
+        upiId: "",
+        matchRules: "",
+      });
+    } catch (err: unknown) {
+      setFormError(
+        err instanceof Error ? err.message : "Failed to create tournament"
+      );
     }
   };
 
-  const handleRoomUpdate = async (tournamentId: string) => {
-    const r = roomForm[tournamentId];
-    if (!r?.roomId || !r?.roomPassword) return;
-    try {
-      await updateRoom.mutateAsync({ tournamentId, roomId: r.roomId, roomPassword: r.roomPassword });
-    } catch (err: any) {
-      alert(err?.message || 'Failed to update room');
-    }
+  const statusColors: Record<string, string> = {
+    upcoming: "bg-blue-500/20 text-blue-400",
+    ongoing: "bg-green-500/20 text-green-400",
+    closed: "bg-gray-500/20 text-gray-400",
+    completed: "bg-purple-500/20 text-purple-400",
   };
-
-  const handleQrUpload = async (tournamentId: string, file: File) => {
-    try {
-      const bytes = new Uint8Array(await file.arrayBuffer());
-      const blob = ExternalBlob.fromBytes(bytes);
-      await updateQr.mutateAsync({ tournamentId, qrCodeBlob: blob });
-    } catch (err: any) {
-      alert(err?.message || 'Failed to upload QR');
-    }
-  };
-
-  const inputCls = 'w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:border-brand-red/60 transition-all text-sm';
-  const labelCls = 'block text-sm font-medium text-gray-300 mb-1.5';
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="font-orbitron font-bold text-white text-base">Manage Tournaments</h2>
-        <div className="flex gap-2">
-          <button
-            onClick={() => refetch()}
-            className="p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition-all"
-          >
-            <RefreshCw className="w-4 h-4" />
-          </button>
-          <button
-            onClick={() => setShowForm(!showForm)}
-            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-brand-red to-brand-orange text-white text-sm font-bold rounded-xl hover:opacity-90 transition-opacity"
-          >
-            <Plus className="w-4 h-4" />
-            New Tournament
-          </button>
-        </div>
+        <h2 className="text-xl font-bold font-orbitron text-brand-orange">
+          Tournaments
+        </h2>
+        <button
+          onClick={() => setShowForm(!showForm)}
+          className="px-4 py-2 bg-brand-orange text-white rounded-lg text-sm font-semibold hover:bg-orange-600 transition-colors"
+        >
+          + Create Tournament
+        </button>
       </div>
 
-      {/* Create Form */}
       {showForm && (
-        <div className="bg-brand-dark border border-brand-red/20 rounded-xl p-5">
-          {/* Type Toggle */}
-          <div className="flex gap-2 mb-5">
-            <button
-              type="button"
-              onClick={() => setTournamentType('daily')}
-              className={`flex-1 py-2 rounded-lg text-sm font-bold transition-all ${
-                tournamentType === 'daily'
-                  ? 'bg-gradient-to-r from-brand-red to-brand-orange text-white'
-                  : 'bg-white/5 text-gray-400 hover:text-white'
-              }`}
+        <form
+          onSubmit={handleCreate}
+          className="bg-[#1a1a1a] rounded-xl p-5 border border-white/10 grid grid-cols-2 gap-4"
+        >
+          <div className="col-span-2">
+            <label className="text-xs text-gray-400 mb-1 block">
+              Tournament Name
+            </label>
+            <input
+              className="w-full bg-[#222] border border-white/10 rounded-lg px-3 py-2 text-sm text-white"
+              value={form.name}
+              onChange={(e) => setForm({ ...form, name: e.target.value })}
+              required
+            />
+          </div>
+          <div>
+            <label className="text-xs text-gray-400 mb-1 block">
+              Date & Time
+            </label>
+            <input
+              type="datetime-local"
+              className="w-full bg-[#222] border border-white/10 rounded-lg px-3 py-2 text-sm text-white"
+              value={form.dateTime}
+              onChange={(e) => setForm({ ...form, dateTime: e.target.value })}
+            />
+          </div>
+          <div>
+            <label className="text-xs text-gray-400 mb-1 block">Map</label>
+            <select
+              className="w-full bg-[#222] border border-white/10 rounded-lg px-3 py-2 text-sm text-white"
+              value={form.map}
+              onChange={(e) => setForm({ ...form, map: e.target.value })}
             >
-              Daily Tournament
+              {["Erangel", "Miramar", "Sanhok", "Vikendi", "Livik"].map(
+                (m) => (
+                  <option key={m} value={m}>
+                    {m}
+                  </option>
+                )
+              )}
+            </select>
+          </div>
+          <div>
+            <label className="text-xs text-gray-400 mb-1 block">
+              Entry Fee (Coins)
+            </label>
+            <input
+              type="number"
+              className="w-full bg-[#222] border border-white/10 rounded-lg px-3 py-2 text-sm text-white"
+              value={form.entryFee}
+              onChange={(e) => setForm({ ...form, entryFee: e.target.value })}
+              required
+            />
+          </div>
+          <div>
+            <label className="text-xs text-gray-400 mb-1 block">
+              Prize Pool (Coins)
+            </label>
+            <input
+              type="number"
+              className="w-full bg-[#222] border border-white/10 rounded-lg px-3 py-2 text-sm text-white"
+              value={form.prizePool}
+              onChange={(e) => setForm({ ...form, prizePool: e.target.value })}
+              required
+            />
+          </div>
+          <div>
+            <label className="text-xs text-gray-400 mb-1 block">
+              Total Slots
+            </label>
+            <input
+              type="number"
+              className="w-full bg-[#222] border border-white/10 rounded-lg px-3 py-2 text-sm text-white"
+              value={form.totalSlots}
+              onChange={(e) =>
+                setForm({ ...form, totalSlots: e.target.value })
+              }
+              required
+            />
+          </div>
+          <div>
+            <label className="text-xs text-gray-400 mb-1 block">UPI ID</label>
+            <input
+              className="w-full bg-[#222] border border-white/10 rounded-lg px-3 py-2 text-sm text-white"
+              value={form.upiId}
+              onChange={(e) => setForm({ ...form, upiId: e.target.value })}
+            />
+          </div>
+          <div className="col-span-2">
+            <label className="text-xs text-gray-400 mb-1 block">
+              Match Rules
+            </label>
+            <textarea
+              className="w-full bg-[#222] border border-white/10 rounded-lg px-3 py-2 text-sm text-white h-20 resize-none"
+              value={form.matchRules}
+              onChange={(e) =>
+                setForm({ ...form, matchRules: e.target.value })
+              }
+            />
+          </div>
+          {formError && (
+            <div className="col-span-2 text-red-400 text-sm">{formError}</div>
+          )}
+          <div className="col-span-2 flex gap-3">
+            <button
+              type="submit"
+              disabled={createTournament.isPending}
+              className="px-5 py-2 bg-brand-orange text-white rounded-lg text-sm font-semibold hover:bg-orange-600 disabled:opacity-50"
+            >
+              {createTournament.isPending ? "Creating..." : "Create"}
             </button>
             <button
               type="button"
-              onClick={() => setTournamentType('mega')}
-              className={`flex-1 py-2 rounded-lg text-sm font-bold transition-all ${
-                tournamentType === 'mega'
-                  ? 'bg-gradient-to-r from-brand-red to-brand-orange text-white'
-                  : 'bg-white/5 text-gray-400 hover:text-white'
-              }`}
+              onClick={() => setShowForm(false)}
+              className="px-5 py-2 bg-white/10 text-white rounded-lg text-sm hover:bg-white/20"
             >
-              Mega Tournament
+              Cancel
             </button>
           </div>
-
-          <form onSubmit={handleCreate} className="space-y-4">
-            {tournamentType === 'daily' ? (
-              /* Daily Tournament Fields */
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="sm:col-span-2">
-                  <label className={labelCls}>Tournament Name</label>
-                  <input type="text" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="e.g. BGMI Squad Battle" className={inputCls} />
-                </div>
-                <div>
-                  <label className={labelCls}>Entry Fee (₹)</label>
-                  <input type="number" value={form.entryFee} onChange={(e) => setForm({ ...form, entryFee: e.target.value })} placeholder="100" className={inputCls} />
-                </div>
-                <div>
-                  <label className={labelCls}>Prize Pool (₹)</label>
-                  <input type="number" value={form.prizePool} onChange={(e) => setForm({ ...form, prizePool: e.target.value })} placeholder="1000" className={inputCls} />
-                </div>
-                <div>
-                  <label className={labelCls}>Map</label>
-                  <input type="text" value={form.map} onChange={(e) => setForm({ ...form, map: e.target.value })} placeholder="Erangel" className={inputCls} />
-                </div>
-                <div>
-                  <label className={labelCls}>Total Slots</label>
-                  <input type="number" value={form.totalSlots} onChange={(e) => setForm({ ...form, totalSlots: e.target.value })} placeholder="100" className={inputCls} />
-                </div>
-                <div>
-                  <label className={labelCls}>UPI ID</label>
-                  <input type="text" value={form.upiId} onChange={(e) => setForm({ ...form, upiId: e.target.value })} placeholder="yourname@upi" className={inputCls} />
-                </div>
-                <div>
-                  <label className={labelCls}>Squad Size</label>
-                  <select value={form.squadSize} onChange={(e) => setForm({ ...form, squadSize: e.target.value })} className={inputCls}>
-                    <option value="Solo">Solo</option>
-                    <option value="Duo">Duo</option>
-                    <option value="Squad">Squad</option>
-                  </select>
-                </div>
-                <div className="sm:col-span-2">
-                  <label className={labelCls}>Match Rules</label>
-                  <textarea value={form.matchRules} onChange={(e) => setForm({ ...form, matchRules: e.target.value })} placeholder="Enter match rules..." rows={3} className={`${inputCls} resize-none`} />
-                </div>
-                <div className="sm:col-span-2">
-                  <label className={labelCls}>QR Code Image</label>
-                  <div
-                    onClick={() => qrRef.current?.click()}
-                    className="border-2 border-dashed border-white/20 rounded-xl p-4 text-center cursor-pointer hover:border-brand-red/50 transition-all"
-                  >
-                    {qrFile ? (
-                      <p className="text-green-400 text-sm">{qrFile.name}</p>
-                    ) : (
-                      <div>
-                        <Upload className="w-6 h-6 text-gray-500 mx-auto mb-1" />
-                        <p className="text-gray-500 text-sm">Click to upload QR code</p>
-                      </div>
-                    )}
-                  </div>
-                  <input ref={qrRef} type="file" accept="image/*" className="hidden" onChange={(e) => setQrFile(e.target.files?.[0] || null)} />
-                </div>
-              </div>
-            ) : (
-              /* Mega Tournament Fields — only poster, entry fee, squad size */
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className={labelCls}>Entry Fee (₹)</label>
-                  <input type="number" value={form.entryFee} onChange={(e) => setForm({ ...form, entryFee: e.target.value })} placeholder="500" className={inputCls} />
-                </div>
-                <div>
-                  <label className={labelCls}>Squad Size</label>
-                  <select value={form.squadSize} onChange={(e) => setForm({ ...form, squadSize: e.target.value })} className={inputCls}>
-                    <option value="Solo">Solo</option>
-                    <option value="Duo">Duo</option>
-                    <option value="Squad">Squad</option>
-                  </select>
-                </div>
-                <div>
-                  <label className={labelCls}>Total Slots</label>
-                  <input type="number" value={form.totalSlots} onChange={(e) => setForm({ ...form, totalSlots: e.target.value })} placeholder="100" className={inputCls} />
-                </div>
-                <div>
-                  <label className={labelCls}>UPI ID</label>
-                  <input type="text" value={form.upiId} onChange={(e) => setForm({ ...form, upiId: e.target.value })} placeholder="yourname@upi" className={inputCls} />
-                </div>
-                <div className="sm:col-span-2">
-                  <label className={labelCls}>Tournament Poster</label>
-                  <div
-                    onClick={() => posterRef.current?.click()}
-                    className="border-2 border-dashed border-white/20 rounded-xl p-6 text-center cursor-pointer hover:border-brand-red/50 transition-all"
-                  >
-                    {posterFile ? (
-                      <div>
-                        <img
-                          src={URL.createObjectURL(posterFile)}
-                          alt="Poster preview"
-                          className="max-h-40 mx-auto rounded-lg object-contain mb-2"
-                        />
-                        <p className="text-green-400 text-sm">{posterFile.name}</p>
-                      </div>
-                    ) : (
-                      <div>
-                        <Upload className="w-8 h-8 text-gray-500 mx-auto mb-2" />
-                        <p className="text-gray-400 text-sm">Click to upload tournament poster</p>
-                        <p className="text-gray-600 text-xs mt-1">PNG, JPG recommended</p>
-                      </div>
-                    )}
-                  </div>
-                  <input ref={posterRef} type="file" accept="image/*" className="hidden" onChange={(e) => {
-                    const file = e.target.files?.[0] || null;
-                    setPosterFile(file);
-                    if (file) setForm({ ...form, name: file.name.replace(/\.[^/.]+$/, '') });
-                  }} />
-                </div>
-              </div>
-            )}
-
-            {formError && (
-              <div className="bg-red-500/10 border border-red-500/30 rounded-lg px-3 py-2 text-red-400 text-sm">
-                {formError}
-              </div>
-            )}
-
-            <div className="flex gap-3">
-              <button
-                type="submit"
-                disabled={createTournament.isPending || updateQr.isPending}
-                className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-brand-red to-brand-orange text-white text-sm font-bold rounded-xl hover:opacity-90 transition-opacity disabled:opacity-60"
-              >
-                {(createTournament.isPending || updateQr.isPending) ? (
-                  <><Loader2 className="w-4 h-4 animate-spin" /> Creating...</>
-                ) : (
-                  <><Plus className="w-4 h-4" /> Create</>
-                )}
-              </button>
-              <button
-                type="button"
-                onClick={() => { setShowForm(false); setFormError(''); }}
-                className="px-5 py-2.5 border border-white/10 text-gray-400 hover:text-white text-sm rounded-xl transition-all"
-              >
-                Cancel
-              </button>
-            </div>
-          </form>
-        </div>
+        </form>
       )}
 
-      {/* Tournament List */}
       {isLoading ? (
-        <div className="flex justify-center py-12">
-          <Loader2 className="w-8 h-8 animate-spin text-brand-red" />
+        <div className="text-center text-gray-400 py-12">
+          Loading tournaments...
         </div>
       ) : tournaments.length === 0 ? (
-        <div className="text-center py-12 text-gray-500">
-          <Trophy className="w-12 h-12 mx-auto mb-3 opacity-20" />
-          <p>No tournaments yet. Create one above!</p>
+        <div className="text-center text-gray-500 py-12">
+          No tournaments created yet
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-4">
           {tournaments.map((t) => (
-            <div key={t.id} className="bg-brand-dark border border-brand-red/20 rounded-xl overflow-hidden">
-              <div
-                className="flex items-center justify-between p-4 cursor-pointer hover:bg-white/5 transition-colors"
-                onClick={() => setExpandedId(expandedId === t.id ? null : t.id)}
-              >
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-brand-red to-brand-orange flex items-center justify-center flex-shrink-0">
-                    <Trophy className="w-4 h-4 text-white" />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="font-orbitron font-bold text-white text-sm truncate">{t.name}</p>
-                    <p className="text-gray-500 text-xs">{t.map} • ₹{t.entryFee.toString()} entry • {t.filledSlots.toString()}/{t.totalSlots.toString()} slots</p>
-                  </div>
+            <div
+              key={t.id}
+              className="bg-[#1a1a1a] rounded-xl p-5 border border-white/10"
+            >
+              <div className="flex items-start justify-between mb-3">
+                <div>
+                  <h3 className="font-bold text-white">{t.name}</h3>
+                  <p className="text-xs text-gray-400">
+                    {formatDate(t.dateTime)} · {t.map}
+                  </p>
                 </div>
-                <div className="flex items-center gap-2 flex-shrink-0 ml-2">
-                  <TournamentStatusBadge status={t.status} />
-                  {expandedId === t.id ? <ChevronUp className="w-4 h-4 text-gray-500" /> : <ChevronDown className="w-4 h-4 text-gray-500" />}
+                <span
+                  className={`text-xs px-2 py-1 rounded-full font-semibold ${statusColors[t.status as string] || "bg-gray-500/20 text-gray-400"}`}
+                >
+                  {t.status as string}
+                </span>
+              </div>
+              <div className="grid grid-cols-4 gap-3 text-sm mb-4">
+                <div className="bg-[#222] rounded-lg p-2 text-center">
+                  <div className="text-brand-orange font-bold">
+                    {t.entryFee.toString()}
+                  </div>
+                  <div className="text-xs text-gray-400">Entry (Coins)</div>
+                </div>
+                <div className="bg-[#222] rounded-lg p-2 text-center">
+                  <div className="text-green-400 font-bold">
+                    {t.prizePool.toString()}
+                  </div>
+                  <div className="text-xs text-gray-400">Prize (Coins)</div>
+                </div>
+                <div className="bg-[#222] rounded-lg p-2 text-center">
+                  <div className="text-white font-bold">
+                    {t.filledSlots.toString()}/{t.totalSlots.toString()}
+                  </div>
+                  <div className="text-xs text-gray-400">Slots</div>
+                </div>
+                <div className="bg-[#222] rounded-lg p-2 text-center">
+                  <div className="text-white font-bold text-xs truncate">
+                    {t.roomId || "—"}
+                  </div>
+                  <div className="text-xs text-gray-400">Room ID</div>
                 </div>
               </div>
 
-              {expandedId === t.id && (
-                <div className="border-t border-white/10 p-4 space-y-4 bg-white/2">
-                  {/* Status */}
-                  <div>
-                    <p className="text-xs font-medium text-gray-400 mb-2">Update Status</p>
-                    <div className="flex flex-wrap gap-2">
-                      {([TournamentStatus.upcoming, TournamentStatus.ongoing, TournamentStatus.closed, TournamentStatus.completed] as TournamentStatus[]).map((s) => (
-                        <button
-                          key={s}
-                          onClick={() => updateStatus.mutate({ tournamentId: t.id, status: s })}
-                          disabled={updateStatus.isPending}
-                          className={`px-3 py-1.5 rounded-lg text-xs font-semibold capitalize transition-all ${
-                            t.status === s
-                              ? 'bg-gradient-to-r from-brand-red to-brand-orange text-white'
-                              : 'bg-white/5 text-gray-400 hover:text-white'
-                          }`}
-                        >
-                          {s}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
+              {/* Status update */}
+              <div className="flex flex-wrap gap-2 mb-3">
+                {(
+                  ["upcoming", "ongoing", "closed", "completed"] as const
+                ).map((s) => (
+                  <button
+                    key={s}
+                    onClick={() =>
+                      updateStatus.mutate({
+                        tournamentId: t.id,
+                        status: s as TournamentStatus,
+                      })
+                    }
+                    className={`text-xs px-3 py-1 rounded-full border transition-colors ${
+                      (t.status as string) === s
+                        ? "border-brand-orange text-brand-orange"
+                        : "border-white/20 text-gray-400 hover:border-white/40"
+                    }`}
+                  >
+                    {s}
+                  </button>
+                ))}
+              </div>
 
-                  {/* Room Details */}
-                  <div>
-                    <p className="text-xs font-medium text-gray-400 mb-2">Room Details</p>
-                    <div className="flex flex-wrap gap-2">
-                      <input
-                        type="text"
-                        placeholder="Room ID"
-                        value={roomForm[t.id]?.roomId ?? t.roomId ?? ''}
-                        onChange={(e) => setRoomForm((rf) => ({ ...rf, [t.id]: { ...rf[t.id], roomId: e.target.value } }))}
-                        className="flex-1 min-w-28 bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-brand-red/60"
-                      />
-                      <input
-                        type="text"
-                        placeholder="Room Password"
-                        value={roomForm[t.id]?.roomPassword ?? t.roomPassword ?? ''}
-                        onChange={(e) => setRoomForm((rf) => ({ ...rf, [t.id]: { ...rf[t.id], roomPassword: e.target.value } }))}
-                        className="flex-1 min-w-28 bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-brand-red/60"
-                      />
-                      <button
-                        onClick={() => handleRoomUpdate(t.id)}
-                        disabled={updateRoom.isPending}
-                        className="px-4 py-2 bg-gradient-to-r from-brand-red to-brand-orange text-white text-sm font-bold rounded-lg hover:opacity-90 transition-opacity disabled:opacity-60"
-                      >
-                        {updateRoom.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Update'}
-                      </button>
-                    </div>
-                  </div>
+              {/* Room details */}
+              <div className="flex gap-2 mb-3">
+                <input
+                  placeholder="Room ID"
+                  className="flex-1 bg-[#222] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
+                  value={roomForms[t.id]?.roomId ?? ""}
+                  onChange={(e) =>
+                    setRoomForms((prev) => ({
+                      ...prev,
+                      [t.id]: {
+                        roomId: e.target.value,
+                        roomPassword: prev[t.id]?.roomPassword ?? "",
+                      },
+                    }))
+                  }
+                />
+                <input
+                  placeholder="Room Password"
+                  className="flex-1 bg-[#222] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
+                  value={roomForms[t.id]?.roomPassword ?? ""}
+                  onChange={(e) =>
+                    setRoomForms((prev) => ({
+                      ...prev,
+                      [t.id]: {
+                        roomId: prev[t.id]?.roomId ?? "",
+                        roomPassword: e.target.value,
+                      },
+                    }))
+                  }
+                />
+                <button
+                  onClick={() =>
+                    updateRoom.mutate({
+                      tournamentId: t.id,
+                      roomId: roomForms[t.id]?.roomId ?? "",
+                      roomPassword: roomForms[t.id]?.roomPassword ?? "",
+                    })
+                  }
+                  className="px-3 py-1.5 bg-brand-orange text-white rounded-lg text-xs hover:bg-orange-600"
+                >
+                  Set Room
+                </button>
+              </div>
 
-                  {/* QR Code */}
-                  <div>
-                    <p className="text-xs font-medium text-gray-400 mb-2">QR Code / Poster</p>
-                    <div className="flex items-center gap-3">
-                      {t.qrCodeBlob && (
-                        <img src={t.qrCodeBlob.getDirectURL()} alt="QR" className="w-16 h-16 rounded-lg object-cover border border-white/10" />
-                      )}
-                      <label className="flex items-center gap-2 px-4 py-2 border border-dashed border-brand-red/40 text-brand-orange text-sm font-medium rounded-lg cursor-pointer hover:bg-brand-red/5 transition-colors">
-                        <Upload className="w-4 h-4" />
-                        {t.qrCodeBlob ? 'Replace' : 'Upload'}
-                        <input
-                          type="file"
-                          accept="image/*"
-                          className="hidden"
-                          onChange={(e) => e.target.files?.[0] && handleQrUpload(t.id, e.target.files[0])}
-                        />
-                      </label>
-                    </div>
-                  </div>
-                </div>
-              )}
+              {/* Prize distribution */}
+              <div className="flex gap-2">
+                <input
+                  placeholder="Winner User ID (REE-001)"
+                  className="flex-1 bg-[#222] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
+                  value={prizeForm[t.id]?.winnerUserId ?? ""}
+                  onChange={(e) =>
+                    setPrizeForm((prev) => ({
+                      ...prev,
+                      [t.id]: {
+                        winnerUserId: e.target.value,
+                        prizeAmount: prev[t.id]?.prizeAmount ?? "",
+                      },
+                    }))
+                  }
+                />
+                <input
+                  type="number"
+                  placeholder="Prize Coins"
+                  className="w-28 bg-[#222] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
+                  value={prizeForm[t.id]?.prizeAmount ?? ""}
+                  onChange={(e) =>
+                    setPrizeForm((prev) => ({
+                      ...prev,
+                      [t.id]: {
+                        winnerUserId: prev[t.id]?.winnerUserId ?? "",
+                        prizeAmount: e.target.value,
+                      },
+                    }))
+                  }
+                />
+                <button
+                  onClick={() =>
+                    distributePrize.mutate({
+                      tournamentId: t.id,
+                      winnerUserId: prizeForm[t.id]?.winnerUserId ?? "",
+                      prizeAmount: BigInt(
+                        prizeForm[t.id]?.prizeAmount || "0"
+                      ),
+                    })
+                  }
+                  className="flex items-center gap-1 px-3 py-1.5 bg-purple-600 text-white rounded-lg text-xs hover:bg-purple-700"
+                >
+                  <Gift size={12} />
+                  Prize
+                </button>
+              </div>
             </div>
           ))}
         </div>
@@ -561,285 +536,550 @@ function TournamentsTab() {
   );
 }
 
-// ─── Registrations Tab ────────────────────────────────────────────────────────
+// ─── Registrations Tab ───────────────────────────────────────────────────────
+
 function RegistrationsTab() {
   const { data: tournaments = [] } = useGetAllTournaments();
-  const [selectedTournamentId, setSelectedTournamentId] = useState('');
-  const { data: registrations = [], isLoading } = useGetRegistrationsForTournament(selectedTournamentId);
+  const [selectedTournamentId, setSelectedTournamentId] = useState("");
+  const { data: registrations = [], isLoading } =
+    useGetRegistrationsForTournament(selectedTournamentId);
   const updateStatus = useUpdateRegistrationStatus();
-  const [viewScreenshot, setViewScreenshot] = useState<string | null>(null);
 
   return (
-    <div className="space-y-5">
-      <h2 className="font-orbitron font-bold text-white text-base">Registrations</h2>
-
+    <div className="space-y-6">
+      <h2 className="text-xl font-bold font-orbitron text-brand-orange">
+        Registrations
+      </h2>
       <div>
-        <label className="block text-sm font-medium text-gray-300 mb-1.5">Select Tournament</label>
+        <label className="text-xs text-gray-400 mb-1 block">
+          Select Tournament
+        </label>
         <select
+          className="bg-[#1a1a1a] border border-white/10 rounded-lg px-3 py-2 text-sm text-white w-full max-w-sm"
           value={selectedTournamentId}
           onChange={(e) => setSelectedTournamentId(e.target.value)}
-          className="w-full sm:w-80 bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-brand-red/60 transition-all text-sm"
         >
-          <option value="">-- Select a tournament --</option>
+          <option value="">-- Select --</option>
           {tournaments.map((t) => (
-            <option key={t.id} value={t.id}>{t.name}</option>
+            <option key={t.id} value={t.id}>
+              {t.name}
+            </option>
           ))}
         </select>
       </div>
 
       {!selectedTournamentId ? (
-        <div className="text-center py-12 text-gray-500">
-          <ClipboardList className="w-12 h-12 mx-auto mb-3 opacity-20" />
-          <p>Select a tournament to view registrations</p>
+        <div className="text-center text-gray-500 py-12">
+          Select a tournament to view registrations
         </div>
       ) : isLoading ? (
-        <div className="flex justify-center py-12">
-          <Loader2 className="w-8 h-8 animate-spin text-brand-red" />
-        </div>
+        <div className="text-center text-gray-400 py-12">Loading...</div>
       ) : registrations.length === 0 ? (
-        <div className="text-center py-12 text-gray-500">
-          <ClipboardList className="w-12 h-12 mx-auto mb-3 opacity-20" />
-          <p>No registrations for this tournament</p>
+        <div className="text-center text-gray-500 py-12">
+          No registrations yet
         </div>
       ) : (
-        <div className="space-y-3">
-          {registrations.map((reg) => (
-            <div key={reg.registrationId} className="bg-brand-dark border border-brand-red/20 rounded-xl p-4">
-              <div className="flex items-start justify-between gap-3 flex-wrap">
-                <div className="min-w-0">
-                  <p className="text-white font-medium text-sm truncate">Player: {reg.playerId}</p>
-                  <p className="text-gray-500 text-xs mt-0.5">ID: {reg.registrationId}</p>
-                </div>
-                <div className="flex items-center gap-2 flex-wrap">
-                  <RegStatusBadge status={reg.status} />
-                  <button
-                    onClick={() => setViewScreenshot(reg.paymentScreenshotBlob.getDirectURL())}
-                    className="flex items-center gap-1.5 px-3 py-1.5 bg-white/5 hover:bg-white/10 text-gray-300 text-xs rounded-lg transition-all"
-                  >
-                    <Eye className="w-3.5 h-3.5" />
-                    Screenshot
-                  </button>
-                  {reg.status === RegistrationStatus.pending && (
-                    <>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-white/10 text-gray-400 text-xs">
+                <th className="text-left py-2 px-3">Registration ID</th>
+                <th className="text-left py-2 px-3">Player ID</th>
+                <th className="text-left py-2 px-3">Status</th>
+                <th className="text-left py-2 px-3">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {registrations.map((r) => (
+                <tr
+                  key={r.registrationId}
+                  className="border-b border-white/5 hover:bg-white/5"
+                >
+                  <td className="py-2 px-3 text-xs text-gray-300 font-mono">
+                    {r.registrationId}
+                  </td>
+                  <td className="py-2 px-3 font-mono text-brand-orange">
+                    {r.playerId}
+                  </td>
+                  <td className="py-2 px-3">
+                    <StatusBadge status={r.status as string} />
+                  </td>
+                  <td className="py-2 px-3">
+                    <div className="flex gap-2">
                       <button
-                        onClick={() => updateStatus.mutate({ registrationId: reg.registrationId, status: RegistrationStatus.approved })}
-                        disabled={updateStatus.isPending}
-                        className="flex items-center gap-1.5 px-3 py-1.5 bg-green-500/20 hover:bg-green-500/30 text-green-400 text-xs rounded-lg transition-all disabled:opacity-60"
+                        onClick={() =>
+                          updateStatus.mutate({
+                            registrationId: r.registrationId,
+                            status: "approved",
+                          })
+                        }
+                        className="text-xs px-2 py-1 bg-green-600/20 text-green-400 rounded hover:bg-green-600/40"
                       >
-                        <Check className="w-3.5 h-3.5" />
                         Approve
                       </button>
                       <button
-                        onClick={() => updateStatus.mutate({ registrationId: reg.registrationId, status: RegistrationStatus.rejected })}
-                        disabled={updateStatus.isPending}
-                        className="flex items-center gap-1.5 px-3 py-1.5 bg-red-500/20 hover:bg-red-500/30 text-red-400 text-xs rounded-lg transition-all disabled:opacity-60"
+                        onClick={() =>
+                          updateStatus.mutate({
+                            registrationId: r.registrationId,
+                            status: "rejected",
+                          })
+                        }
+                        className="text-xs px-2 py-1 bg-red-600/20 text-red-400 rounded hover:bg-red-600/40"
                       >
-                        <XCircle className="w-3.5 h-3.5" />
                         Reject
                       </button>
-                    </>
-                  )}
-                </div>
-              </div>
-            </div>
-          ))}
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       )}
+    </div>
+  );
+}
 
-      {/* Screenshot Modal */}
-      {viewScreenshot && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80" onClick={() => setViewScreenshot(null)}>
-          <div className="relative max-w-lg w-full" onClick={(e) => e.stopPropagation()}>
+// ─── Players Tab ─────────────────────────────────────────────────────────────
+
+function PlayersTab() {
+  const { data: verifiedUsers = [], isLoading } = useGetAllVerifiedUsers();
+  const [search, setSearch] = useState("");
+
+  const filtered = verifiedUsers.filter((u) => {
+    const q = search.toLowerCase();
+    return (
+      u.displayName.toLowerCase().includes(q) ||
+      u.bgmiPlayerId.toLowerCase().includes(q) ||
+      u.id.toLowerCase().includes(q) ||
+      u.mobile.includes(q)
+    );
+  });
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h2 className="text-xl font-bold font-orbitron text-brand-orange">
+          Players ({verifiedUsers.length})
+        </h2>
+      </div>
+
+      <div className="relative max-w-sm">
+        <Search
+          size={14}
+          className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+        />
+        <input
+          placeholder="Search by name, BGMI ID, User ID..."
+          className="w-full bg-[#1a1a1a] border border-white/10 rounded-lg pl-9 pr-3 py-2 text-sm text-white placeholder-gray-500"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+      </div>
+
+      {isLoading ? (
+        <div className="text-center text-gray-400 py-12">
+          Loading players...
+        </div>
+      ) : filtered.length === 0 ? (
+        <div className="text-center text-gray-500 py-12">
+          {verifiedUsers.length === 0
+            ? "No players registered yet"
+            : "No players match your search"}
+        </div>
+      ) : (
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-white/10 text-gray-400 text-xs">
+                <th className="text-left py-2 px-3">User ID</th>
+                <th className="text-left py-2 px-3">Name</th>
+                <th className="text-left py-2 px-3">BGMI ID</th>
+                <th className="text-left py-2 px-3">Mobile</th>
+                <th className="text-left py-2 px-3">Coins</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map((u) => (
+                <tr
+                  key={u.id}
+                  className="border-b border-white/5 hover:bg-white/5"
+                >
+                  <td className="py-2 px-3 font-mono text-brand-orange font-bold">
+                    {u.id}
+                  </td>
+                  <td className="py-2 px-3 text-white">{u.displayName}</td>
+                  <td className="py-2 px-3 text-gray-300">{u.bgmiPlayerId}</td>
+                  <td className="py-2 px-3 text-gray-300">{u.mobile}</td>
+                  <td className="py-2 px-3">
+                    <span className="text-yellow-400 font-bold">
+                      🪙 {u.coinWallet.toString()}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Payment Proofs Tab ──────────────────────────────────────────────────────
+
+function PaymentProofsTab() {
+  const { data: proofs = [], isLoading } = useGetAllPaymentProofs();
+  const approve = useApprovePaymentProof();
+  const reject = useRejectPaymentProof();
+  const [viewImage, setViewImage] = useState<string | null>(null);
+
+  const sorted = [...proofs].sort(
+    (a, b) => Number(b.timestamp) - Number(a.timestamp)
+  );
+
+  return (
+    <div className="space-y-6">
+      <h2 className="text-xl font-bold font-orbitron text-brand-orange">
+        Payment Proofs ({proofs.filter((p) => (p.status as string) === "pending").length}{" "}
+        pending)
+      </h2>
+
+      {viewImage && (
+        <div
+          className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4"
+          onClick={() => setViewImage(null)}
+        >
+          <div className="relative max-w-lg w-full">
+            <img
+              src={viewImage}
+              alt="Payment proof"
+              className="w-full rounded-xl"
+            />
             <button
-              onClick={() => setViewScreenshot(null)}
-              className="absolute -top-3 -right-3 w-8 h-8 bg-brand-red rounded-full flex items-center justify-center text-white z-10"
+              className="absolute top-2 right-2 bg-black/60 text-white rounded-full p-1"
+              onClick={() => setViewImage(null)}
             >
-              <X className="w-4 h-4" />
+              <X size={16} />
             </button>
-            <img src={viewScreenshot} alt="Payment Screenshot" className="w-full rounded-xl border border-white/10" />
           </div>
         </div>
       )}
-    </div>
-  );
-}
-
-// ─── Players Tab ──────────────────────────────────────────────────────────────
-function PlayersTab() {
-  const { data: players = [], isLoading } = useGetAllPlayers();
-
-  return (
-    <div className="space-y-5">
-      <h2 className="font-orbitron font-bold text-white text-base">Players ({players.length})</h2>
 
       {isLoading ? (
-        <div className="flex justify-center py-12">
-          <Loader2 className="w-8 h-8 animate-spin text-brand-red" />
-        </div>
-      ) : players.length === 0 ? (
-        <div className="text-center py-12 text-gray-500">
-          <Users className="w-12 h-12 mx-auto mb-3 opacity-20" />
-          <p>No players registered yet</p>
+        <div className="text-center text-gray-400 py-12">Loading...</div>
+      ) : sorted.length === 0 ? (
+        <div className="text-center text-gray-500 py-12">
+          No payment proofs submitted yet
         </div>
       ) : (
-        <div className="space-y-2">
-          {players.map((player, i) => (
-            <div key={i} className="bg-brand-dark border border-brand-red/20 rounded-xl p-4 flex items-center gap-4">
-              <div className="w-9 h-9 rounded-full bg-gradient-to-br from-brand-red to-brand-orange flex items-center justify-center flex-shrink-0">
-                <span className="text-white font-bold text-sm">{player.displayName.charAt(0).toUpperCase()}</span>
+        <div className="space-y-3">
+          {sorted.map((p) => {
+            const imgSrc = p.imageBase64
+              ? p.imageBase64.startsWith("data:")
+                ? p.imageBase64
+                : `data:image/jpeg;base64,${p.imageBase64}`
+              : null;
+            return (
+              <div
+                key={p.proofId}
+                className="bg-[#1a1a1a] rounded-xl p-4 border border-white/10 flex items-center gap-4"
+              >
+                {imgSrc && (
+                  <button
+                    onClick={() => setViewImage(imgSrc)}
+                    className="flex-shrink-0"
+                  >
+                    <img
+                      src={imgSrc}
+                      alt="proof"
+                      className="w-16 h-16 object-cover rounded-lg border border-white/10 hover:opacity-80 transition-opacity"
+                    />
+                  </button>
+                )}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="font-mono text-brand-orange font-bold text-sm">
+                      {p.userId}
+                    </span>
+                    <StatusBadge status={p.status as string} />
+                  </div>
+                  <div className="text-white font-bold">
+                    ₹{p.amount.toString()} → 🪙 {p.amount.toString()} Coins
+                  </div>
+                  <div className="text-xs text-gray-400">
+                    Ref: {p.transactionRef}
+                  </div>
+                  <div className="text-xs text-gray-500">
+                    {formatDate(p.timestamp)}
+                  </div>
+                </div>
+                {(p.status as string) === "pending" && (
+                  <div className="flex flex-col gap-2">
+                    <button
+                      onClick={() => approve.mutate(p.proofId)}
+                      disabled={approve.isPending}
+                      className="flex items-center gap-1 px-3 py-1.5 bg-green-600/20 text-green-400 rounded-lg text-xs hover:bg-green-600/40 disabled:opacity-50"
+                    >
+                      <Check size={12} />
+                      Approve
+                    </button>
+                    <button
+                      onClick={() => reject.mutate(p.proofId)}
+                      disabled={reject.isPending}
+                      className="flex items-center gap-1 px-3 py-1.5 bg-red-600/20 text-red-400 rounded-lg text-xs hover:bg-red-600/40 disabled:opacity-50"
+                    >
+                      <XCircle size={12} />
+                      Reject
+                    </button>
+                  </div>
+                )}
               </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-white font-medium text-sm">{player.displayName}</p>
-                <p className="text-gray-500 text-xs">Mobile: {player.mobile} • BGMI ID: {player.bgmiPlayerId}</p>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>
   );
 }
 
-// ─── Terms Tab ────────────────────────────────────────────────────────────────
-function TermsTab() {
-  const { data: terms } = useGetTermsAndConditions();
-  const updateTerms = useUpdateTermsAndConditions();
-  const [content, setContent] = useState('');
-  const [saved, setSaved] = useState(false);
+// ─── Withdrawals Tab ─────────────────────────────────────────────────────────
 
-  React.useEffect(() => {
-    if (terms?.content) setContent(terms.content);
-  }, [terms?.content]);
+function WithdrawalsTab() {
+  const { data: requests = [], isLoading } = useGetAllWithdrawalRequests();
+  const markProcessed = useMarkWithdrawalProcessed();
+  const rejectReq = useRejectWithdrawalRequest();
 
-  const handleSave = async () => {
-    try {
-      await updateTerms.mutateAsync(content);
-      setSaved(true);
-      setTimeout(() => setSaved(false), 2000);
-    } catch (err: any) {
-      alert(err?.message || 'Failed to save');
-    }
-  };
+  const sorted = [...requests].sort(
+    (a, b) => Number(b.timestamp) - Number(a.timestamp)
+  );
 
   return (
-    <div className="space-y-5">
-      <h2 className="font-orbitron font-bold text-white text-base">Terms & Conditions</h2>
-      <div className="bg-brand-dark border border-brand-red/20 rounded-xl p-5">
-        <label className="block text-sm font-medium text-gray-300 mb-2">Content</label>
-        <textarea
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
-          rows={16}
-          placeholder="Enter terms and conditions content..."
-          className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-brand-red/60 transition-all text-sm resize-none font-mono"
-        />
-        <div className="mt-3 flex items-center gap-3">
-          <button
-            onClick={handleSave}
-            disabled={updateTerms.isPending}
-            className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-brand-red to-brand-orange text-white text-sm font-bold rounded-xl hover:opacity-90 transition-opacity disabled:opacity-60"
-          >
-            {updateTerms.isPending ? (
-              <><Loader2 className="w-4 h-4 animate-spin" /> Saving...</>
-            ) : saved ? (
-              <><Check className="w-4 h-4" /> Saved!</>
-            ) : (
-              'Save Changes'
-            )}
-          </button>
+    <div className="space-y-6">
+      <h2 className="text-xl font-bold font-orbitron text-brand-orange">
+        Withdrawal Requests (
+        {requests.filter((r) => (r.status as string) === "pending").length}{" "}
+        pending)
+      </h2>
+
+      {isLoading ? (
+        <div className="text-center text-gray-400 py-12">Loading...</div>
+      ) : sorted.length === 0 ? (
+        <div className="text-center text-gray-500 py-12">
+          No withdrawal requests yet
         </div>
-      </div>
+      ) : (
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-white/10 text-gray-400 text-xs">
+                <th className="text-left py-2 px-3">User ID</th>
+                <th className="text-left py-2 px-3">UPI ID</th>
+                <th className="text-left py-2 px-3">Amount (Coins)</th>
+                <th className="text-left py-2 px-3">Date</th>
+                <th className="text-left py-2 px-3">Status</th>
+                <th className="text-left py-2 px-3">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {sorted.map((r) => (
+                <tr
+                  key={r.requestId}
+                  className="border-b border-white/5 hover:bg-white/5"
+                >
+                  <td className="py-2 px-3 font-mono text-brand-orange font-bold">
+                    {r.userId}
+                  </td>
+                  <td className="py-2 px-3 text-white">{r.upiId}</td>
+                  <td className="py-2 px-3 text-yellow-400 font-bold">
+                    🪙 {r.amount.toString()}
+                  </td>
+                  <td className="py-2 px-3 text-xs text-gray-400">
+                    {formatDate(r.timestamp)}
+                  </td>
+                  <td className="py-2 px-3">
+                    <StatusBadge status={r.status as string} />
+                  </td>
+                  <td className="py-2 px-3">
+                    {(r.status as string) === "pending" && (
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => markProcessed.mutate(r.requestId)}
+                          disabled={markProcessed.isPending}
+                          className="flex items-center gap-1 text-xs px-2 py-1 bg-green-600/20 text-green-400 rounded hover:bg-green-600/40 disabled:opacity-50"
+                        >
+                          <Check size={10} />
+                          Processed
+                        </button>
+                        <button
+                          onClick={() => rejectReq.mutate(r.requestId)}
+                          disabled={rejectReq.isPending}
+                          className="flex items-center gap-1 text-xs px-2 py-1 bg-red-600/20 text-red-400 rounded hover:bg-red-600/40 disabled:opacity-50"
+                        >
+                          <XCircle size={10} />
+                          Reject
+                        </button>
+                      </div>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 }
 
-// ─── Support Tab ──────────────────────────────────────────────────────────────
+// ─── Terms Tab ───────────────────────────────────────────────────────────────
+
+function TermsTab() {
+  const { data: terms } = useGetTermsAndConditions();
+  const updateTerms = useUpdateTermsAndConditions();
+  const [content, setContent] = useState("");
+  const [editing, setEditing] = useState(false);
+
+  React.useEffect(() => {
+    if (terms) setContent(terms.content);
+  }, [terms]);
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h2 className="text-xl font-bold font-orbitron text-brand-orange">
+          Terms & Conditions
+        </h2>
+        <button
+          onClick={() => setEditing(!editing)}
+          className="px-4 py-2 bg-brand-orange text-white rounded-lg text-sm font-semibold hover:bg-orange-600"
+        >
+          {editing ? "Cancel" : "Edit"}
+        </button>
+      </div>
+      {editing ? (
+        <div className="space-y-3">
+          <textarea
+            className="w-full bg-[#1a1a1a] border border-white/10 rounded-xl px-4 py-3 text-sm text-white h-64 resize-none"
+            value={content}
+            onChange={(e) => setContent(e.target.value)}
+          />
+          <button
+            onClick={async () => {
+              await updateTerms.mutateAsync(content);
+              setEditing(false);
+            }}
+            disabled={updateTerms.isPending}
+            className="px-5 py-2 bg-brand-orange text-white rounded-lg text-sm font-semibold hover:bg-orange-600 disabled:opacity-50"
+          >
+            {updateTerms.isPending ? "Saving..." : "Save"}
+          </button>
+        </div>
+      ) : (
+        <div className="bg-[#1a1a1a] rounded-xl p-5 border border-white/10 text-sm text-gray-300 whitespace-pre-wrap min-h-32">
+          {content || "No terms set yet."}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Support Tab ─────────────────────────────────────────────────────────────
+
 function SupportTab() {
   const { data: tickets = [], isLoading } = useGetAllSupportTickets();
-  const replyMutation = useReplyToSupportTicket();
-  const closeMutation = useCloseSupportTicket();
-  const [replyForm, setReplyForm] = useState<Record<string, string>>({});
+  const reply = useReplyToSupportTicket();
+  const close = useCloseSupportTicket();
+  const [replyTexts, setReplyTexts] = useState<Record<string, string>>({});
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
-  const handleReply = async (ticketId: string) => {
-    const reply = replyForm[ticketId];
-    if (!reply?.trim()) return;
-    try {
-      await replyMutation.mutateAsync({ ticketId, reply });
-      setReplyForm((f) => ({ ...f, [ticketId]: '' }));
-    } catch (err: any) {
-      alert(err?.message || 'Failed to send reply');
-    }
-  };
-
-  const ticketStatusColor: Record<TicketStatus, string> = {
-    [TicketStatus.open]: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
-    [TicketStatus.replied]: 'bg-green-500/20 text-green-400 border-green-500/30',
-    [TicketStatus.closed]: 'bg-gray-500/20 text-gray-400 border-gray-500/30',
+  const statusColors: Record<string, string> = {
+    open: "bg-blue-500/20 text-blue-400",
+    replied: "bg-green-500/20 text-green-400",
+    closed: "bg-gray-500/20 text-gray-400",
   };
 
   return (
-    <div className="space-y-5">
-      <h2 className="font-orbitron font-bold text-white text-base">Support Tickets ({tickets.length})</h2>
+    <div className="space-y-6">
+      <h2 className="text-xl font-bold font-orbitron text-brand-orange">
+        Support Tickets (
+        {tickets.filter((t) => (t.status as string) === "open").length} open)
+      </h2>
 
       {isLoading ? (
-        <div className="flex justify-center py-12">
-          <Loader2 className="w-8 h-8 animate-spin text-brand-red" />
-        </div>
+        <div className="text-center text-gray-400 py-12">Loading...</div>
       ) : tickets.length === 0 ? (
-        <div className="text-center py-12 text-gray-500">
-          <MessageSquare className="w-12 h-12 mx-auto mb-3 opacity-20" />
-          <p>No support tickets yet</p>
+        <div className="text-center text-gray-500 py-12">
+          No support tickets yet
         </div>
       ) : (
         <div className="space-y-3">
-          {tickets.map((ticket) => (
-            <div key={ticket.ticketId} className="bg-brand-dark border border-brand-red/20 rounded-xl overflow-hidden">
-              <div
-                className="flex items-start justify-between p-4 cursor-pointer hover:bg-white/5 transition-colors"
-                onClick={() => setExpandedId(expandedId === ticket.ticketId ? null : ticket.ticketId)}
+          {tickets.map((t) => (
+            <div
+              key={t.ticketId}
+              className="bg-[#1a1a1a] rounded-xl border border-white/10 overflow-hidden"
+            >
+              <button
+                className="w-full flex items-center justify-between p-4 text-left hover:bg-white/5"
+                onClick={() =>
+                  setExpandedId(
+                    expandedId === t.ticketId ? null : t.ticketId
+                  )
+                }
               >
-                <div className="min-w-0 flex-1">
-                  <p className="text-white font-medium text-sm">{ticket.subject}</p>
-                  <p className="text-gray-500 text-xs mt-0.5">By: {ticket.playerName}</p>
+                <div>
+                  <div className="font-semibold text-white">{t.subject}</div>
+                  <div className="text-xs text-gray-400">
+                    {t.playerName} · {formatDate(t.createdAt)}
+                  </div>
                 </div>
-                <div className="flex items-center gap-2 ml-2 flex-shrink-0">
-                  <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${ticketStatusColor[ticket.status]}`}>
-                    {ticket.status}
-                  </span>
-                  {expandedId === ticket.ticketId ? <ChevronUp className="w-4 h-4 text-gray-500" /> : <ChevronDown className="w-4 h-4 text-gray-500" />}
-                </div>
-              </div>
+                <span
+                  className={`text-xs px-2 py-1 rounded-full font-semibold ${statusColors[t.status as string] || ""}`}
+                >
+                  {t.status as string}
+                </span>
+              </button>
 
-              {expandedId === ticket.ticketId && (
-                <div className="border-t border-white/10 p-4 space-y-3">
-                  <p className="text-gray-300 text-sm">{ticket.description}</p>
-                  {ticket.adminReply && (
-                    <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-3">
-                      <p className="text-xs text-green-400 font-medium mb-1">Admin Reply:</p>
-                      <p className="text-gray-300 text-sm">{ticket.adminReply}</p>
+              {expandedId === t.ticketId && (
+                <div className="px-4 pb-4 space-y-3 border-t border-white/10 pt-3">
+                  <p className="text-sm text-gray-300">{t.description}</p>
+                  {t.adminReply && (
+                    <div className="bg-green-900/20 border border-green-500/20 rounded-lg p-3">
+                      <div className="text-xs text-green-400 font-semibold mb-1">
+                        Admin Reply
+                      </div>
+                      <p className="text-sm text-gray-300">{t.adminReply}</p>
                     </div>
                   )}
-                  {ticket.status !== TicketStatus.closed && (
+                  {(t.status as string) !== "closed" && (
                     <div className="flex gap-2">
                       <input
-                        type="text"
-                        value={replyForm[ticket.ticketId] || ''}
-                        onChange={(e) => setReplyForm((f) => ({ ...f, [ticket.ticketId]: e.target.value }))}
-                        placeholder="Type your reply..."
-                        className="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-brand-red/60"
+                        placeholder="Type reply..."
+                        className="flex-1 bg-[#222] border border-white/10 rounded-lg px-3 py-2 text-sm text-white"
+                        value={replyTexts[t.ticketId] ?? ""}
+                        onChange={(e) =>
+                          setReplyTexts((prev) => ({
+                            ...prev,
+                            [t.ticketId]: e.target.value,
+                          }))
+                        }
                       />
                       <button
-                        onClick={() => handleReply(ticket.ticketId)}
-                        disabled={replyMutation.isPending}
-                        className="flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-brand-red to-brand-orange text-white text-sm font-bold rounded-lg hover:opacity-90 transition-opacity disabled:opacity-60"
+                        onClick={() =>
+                          reply.mutate({
+                            ticketId: t.ticketId,
+                            reply: replyTexts[t.ticketId] ?? "",
+                          })
+                        }
+                        disabled={reply.isPending}
+                        className="px-3 py-2 bg-brand-orange text-white rounded-lg text-sm hover:bg-orange-600 disabled:opacity-50"
                       >
-                        {replyMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                        Reply
                       </button>
                       <button
-                        onClick={() => closeMutation.mutate(ticket.ticketId)}
-                        disabled={closeMutation.isPending}
-                        className="px-3 py-2 bg-white/5 hover:bg-white/10 text-gray-400 text-xs rounded-lg transition-all disabled:opacity-60"
+                        onClick={() => close.mutate(t.ticketId)}
+                        disabled={close.isPending}
+                        className="px-3 py-2 bg-gray-600/30 text-gray-300 rounded-lg text-sm hover:bg-gray-600/50 disabled:opacity-50"
                       >
                         Close
                       </button>
@@ -855,86 +1095,72 @@ function SupportTab() {
   );
 }
 
-// ─── Social Tab ───────────────────────────────────────────────────────────────
+// ─── Social Tab ──────────────────────────────────────────────────────────────
+
 function SocialTab() {
-  const { data: socialLinks } = useGetSocialLinks();
-  const updateSocial = useUpdateSocialLinks();
-  const [form, setForm] = useState({ youtube: '', instagram: '', telegram: '' });
-  const [saved, setSaved] = useState(false);
+  const { data: links } = useGetSocialLinks();
+  const updateLinks = useUpdateSocialLinks();
+  const [form, setForm] = useState({
+    youtube: "",
+    instagram: "",
+    telegram: "",
+  });
 
   React.useEffect(() => {
-    if (socialLinks) {
-      setForm({
-        youtube: socialLinks.youtube || '',
-        instagram: socialLinks.instagram || '',
-        telegram: socialLinks.telegram || '',
-      });
-    }
-  }, [socialLinks]);
-
-  const handleSave = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      await updateSocial.mutateAsync(form);
-      setSaved(true);
-      setTimeout(() => setSaved(false), 2000);
-    } catch (err: any) {
-      alert(err?.message || 'Failed to save');
-    }
-  };
-
-  const inputCls = 'w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:border-brand-red/60 transition-all text-sm';
+    if (links) setForm(links);
+  }, [links]);
 
   return (
-    <div className="space-y-5">
-      <h2 className="font-orbitron font-bold text-white text-base">Social Links</h2>
-      <div className="bg-brand-dark border border-brand-red/20 rounded-xl p-5 max-w-lg">
-        <form onSubmit={handleSave} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1.5">YouTube URL</label>
+    <div className="space-y-6">
+      <h2 className="text-xl font-bold font-orbitron text-brand-orange">
+        Social Links
+      </h2>
+      <div className="bg-[#1a1a1a] rounded-xl p-5 border border-white/10 space-y-4 max-w-md">
+        {(["youtube", "instagram", "telegram"] as const).map((key) => (
+          <div key={key}>
+            <label className="text-xs text-gray-400 mb-1 block capitalize">
+              {key}
+            </label>
             <input
-              type="url"
-              value={form.youtube}
-              onChange={(e) => setForm({ ...form, youtube: e.target.value })}
-              placeholder="https://youtube.com/@channel"
-              className={inputCls}
+              className="w-full bg-[#222] border border-white/10 rounded-lg px-3 py-2 text-sm text-white"
+              value={form[key]}
+              onChange={(e) => setForm({ ...form, [key]: e.target.value })}
+              placeholder={`https://${key}.com/...`}
             />
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1.5">Instagram URL</label>
-            <input
-              type="url"
-              value={form.instagram}
-              onChange={(e) => setForm({ ...form, instagram: e.target.value })}
-              placeholder="https://instagram.com/username"
-              className={inputCls}
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1.5">Telegram URL</label>
-            <input
-              type="url"
-              value={form.telegram}
-              onChange={(e) => setForm({ ...form, telegram: e.target.value })}
-              placeholder="https://t.me/channel"
-              className={inputCls}
-            />
-          </div>
-          <button
-            type="submit"
-            disabled={updateSocial.isPending}
-            className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-brand-red to-brand-orange text-white text-sm font-bold rounded-xl hover:opacity-90 transition-opacity disabled:opacity-60"
-          >
-            {updateSocial.isPending ? (
-              <><Loader2 className="w-4 h-4 animate-spin" /> Saving...</>
-            ) : saved ? (
-              <><Check className="w-4 h-4" /> Saved!</>
-            ) : (
-              'Save Social Links'
-            )}
-          </button>
-        </form>
+        ))}
+        <button
+          onClick={() => updateLinks.mutate(form)}
+          disabled={updateLinks.isPending}
+          className="px-5 py-2 bg-brand-orange text-white rounded-lg text-sm font-semibold hover:bg-orange-600 disabled:opacity-50"
+        >
+          {updateLinks.isPending ? "Saving..." : "Save Links"}
+        </button>
       </div>
     </div>
+  );
+}
+
+// ─── Shared ──────────────────────────────────────────────────────────────────
+
+function StatusBadge({ status }: { status: string }) {
+  const colors: Record<string, string> = {
+    pending: "bg-yellow-500/20 text-yellow-400",
+    approved: "bg-green-500/20 text-green-400",
+    rejected: "bg-red-500/20 text-red-400",
+    open: "bg-blue-500/20 text-blue-400",
+    replied: "bg-green-500/20 text-green-400",
+    closed: "bg-gray-500/20 text-gray-400",
+    upcoming: "bg-blue-500/20 text-blue-400",
+    ongoing: "bg-green-500/20 text-green-400",
+    completed: "bg-purple-500/20 text-purple-400",
+    processed: "bg-green-500/20 text-green-400",
+  };
+  return (
+    <span
+      className={`text-xs px-2 py-0.5 rounded-full font-semibold ${colors[status] || "bg-gray-500/20 text-gray-400"}`}
+    >
+      {status}
+    </span>
   );
 }

@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from '@tanstack/react-router';
 import { useAuth } from '../context/AuthContext';
 import { useInternetIdentity } from '../hooks/useInternetIdentity';
+import { useActor } from '../hooks/useActor';
 import { useRegisterPlayer, useSaveCallerUserProfile } from '../hooks/useQueries';
 import { Gamepad2, Phone, User, Hash, ArrowRight, Loader2, CheckCircle, ShieldCheck } from 'lucide-react';
 
@@ -9,6 +10,7 @@ export default function RegisterPage() {
   const navigate = useNavigate();
   const { login } = useAuth();
   const { login: iiLogin, clear: iiClear, loginStatus, identity, isLoggingIn } = useInternetIdentity();
+  const { actor, isFetching: actorFetching } = useActor();
   const registerPlayer = useRegisterPlayer();
   const saveProfile = useSaveCallerUserProfile();
 
@@ -17,13 +19,24 @@ export default function RegisterPage() {
   const [error, setError] = useState('');
   const [isRegistering, setIsRegistering] = useState(false);
 
-  // When identity becomes available in the 'authenticate' step, complete registration
+  // Track if we've already triggered registration to avoid double-calls
+  const registrationTriggeredRef = useRef(false);
+
+  // When identity becomes available AND actor is ready in the 'authenticate' step, complete registration
   useEffect(() => {
-    if (step === 'authenticate' && identity && !isRegistering) {
+    if (
+      step === 'authenticate' &&
+      identity &&
+      actor &&
+      !actorFetching &&
+      !isRegistering &&
+      !registrationTriggeredRef.current
+    ) {
+      registrationTriggeredRef.current = true;
       handleCompleteRegistration();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [identity, step]);
+  }, [identity, step, actor, actorFetching]);
 
   const handleDetailsSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,6 +44,8 @@ export default function RegisterPage() {
     if (!form.displayName.trim()) { setError('Please enter your display name'); return; }
     if (!form.mobile.trim() || form.mobile.length < 10) { setError('Please enter a valid 10-digit mobile number'); return; }
     if (!form.bgmiPlayerId.trim()) { setError('Please enter your BGMI Player ID'); return; }
+    // Reset the trigger ref when entering authenticate step
+    registrationTriggeredRef.current = false;
     setStep('authenticate');
   };
 
@@ -38,6 +53,7 @@ export default function RegisterPage() {
     setError('');
     try {
       await iiLogin();
+      // After login, the useEffect will pick up the identity change and trigger registration
     } catch (err: any) {
       setError(err?.message || 'Internet Identity authentication failed. Please try again.');
     }
@@ -63,11 +79,12 @@ export default function RegisterPage() {
       setStep('success');
     } catch (err: any) {
       const msg = err?.message || '';
-      if (msg.includes('Player already exists')) {
+      if (msg.includes('Player already exists') || msg.includes('already registered')) {
         login({ mobile: form.mobile, displayName: form.displayName, bgmiPlayerId: form.bgmiPlayerId });
         setStep('success');
       } else {
         setError(msg || 'Registration failed. Please try again.');
+        registrationTriggeredRef.current = false;
         // Clear II identity so user can retry
         await iiClear();
       }
@@ -78,6 +95,10 @@ export default function RegisterPage() {
 
   const steps = ['Details', 'Authenticate', 'Done'];
   const currentStepIdx = step === 'details' ? 0 : step === 'authenticate' ? 1 : 2;
+
+  // Determine the state of the authenticate step
+  const isActorReady = !!actor && !actorFetching;
+  const isWaitingForActor = identity && !isActorReady && step === 'authenticate';
 
   return (
     <div className="min-h-screen bg-brand-darker flex items-center justify-center px-4 py-12">
@@ -207,9 +228,11 @@ export default function RegisterPage() {
                 <div className="bg-red-500/10 border border-red-500/30 rounded-lg px-3 py-2 text-red-400 text-sm">{error}</div>
               )}
 
-              {isRegistering ? (
+              {/* Show loading state while registering or waiting for actor */}
+              {(isRegistering || isWaitingForActor) ? (
                 <div className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-brand-red to-brand-orange text-white font-bold py-3 rounded-xl opacity-80 cursor-not-allowed">
-                  <Loader2 className="w-4 h-4 animate-spin" /> Creating Account...
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  {isWaitingForActor ? 'Connecting...' : 'Creating Account...'}
                 </div>
               ) : (
                 <button
@@ -226,13 +249,15 @@ export default function RegisterPage() {
                 </button>
               )}
 
-              <button
-                type="button"
-                onClick={() => { setStep('details'); setError(''); }}
-                className="w-full text-sm text-gray-500 hover:text-gray-300 transition-colors py-1"
-              >
-                ← Go back
-              </button>
+              {!isRegistering && !isWaitingForActor && (
+                <button
+                  type="button"
+                  onClick={() => { setStep('details'); setError(''); registrationTriggeredRef.current = false; }}
+                  className="w-full text-sm text-gray-500 hover:text-gray-300 transition-colors py-1"
+                >
+                  ← Go back
+                </button>
+              )}
             </div>
           )}
 

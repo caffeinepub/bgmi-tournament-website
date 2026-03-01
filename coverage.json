@@ -1,45 +1,33 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-03-01T15:57:58.112Z",
+  "generatedAt": "2026-03-01T19:57:11.195Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
   },
   "requirements": {
-    "total": 2,
+    "total": 1,
     "implemented": 1,
     "items": [
       {
         "id": "REQ-1",
-        "summary": "Refactor the RegisterPage to a 2-step flow: Step 1 collects Display Name, Mobile Number, and BGMI Player ID with a Continue button; Step 2 shows an Internet Identity authentication prompt (using the existing useInternetIdentity hook) instead of OTP verification. Remove the entire OTP step (Step 2 'Verify OTP'), including the OTP input field, 'Demo OTP: 1234' banner, and all OTP generation/verification logic. The stepper UI should update to show only 2 steps: 'Details' and 'Done'.",
+        "summary": "Fix the multi-step registration flow on RegisterPage so that: Step 1 collects Name, Phone Number, and BGMI Player ID; after the user submits Step 1, Step 2 renders the Internet Identity login/authentication button so the user can complete registration via Internet Identity. The Internet Identity step must be clearly visible and functional after Step 1 form submission.",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/pages/RegisterPage.tsx",
-          "frontend/src/hooks/useQueries.ts"
+          "frontend/src/pages/RegisterPage.tsx"
         ],
         "matchedFiles": [
-          "frontend/src/pages/RegisterPage.tsx",
-          "frontend/src/hooks/useQueries.ts"
+          "frontend/src/pages/RegisterPage.tsx"
         ]
-      },
-      {
-        "id": "REQ-2",
-        "summary": "Update the backend registerPlayer function (or its authorization check in main.mo) to accept calls from Internet Identity-authenticated principals. Ensure that when a player registers after authenticating via Internet Identity, the caller's principal is treated as authenticated and registration succeeds without returning an 'Unauthorized' error.",
-        "status": "unknown",
-        "plannedFiles": [],
-        "matchedFiles": []
       }
     ]
   },
   "changedFiles": [
-    "backend/main.mo",
     "build-request.json",
     "feature_evidence.json",
     "frontend-file-summaries.txt",
     "frontend-implementation-plan.json",
-    "frontend/src/hooks/useQueries.ts",
-    "frontend/src/pages/LoginPage.tsx",
     "frontend/src/pages/RegisterPage.tsx",
     "project_state.json",
     "scratch/component-selection.json",

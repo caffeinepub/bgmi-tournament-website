@@ -11,6 +11,18 @@ import type { IDL } from '@icp-sdk/core/candid';
 import type { Principal } from '@icp-sdk/core/principal';
 
 export type ExternalBlob = Uint8Array;
+export interface PaymentProof {
+  'transactionRef' : string,
+  'status' : PaymentProofStatus,
+  'userId' : string,
+  'imageBase64' : string,
+  'timestamp' : Time,
+  'amount' : bigint,
+  'proofId' : string,
+}
+export type PaymentProofStatus = { 'pending' : null } |
+  { 'approved' : null } |
+  { 'rejected' : null };
 export interface Player {
   'principal' : Principal,
   'displayName' : string,
@@ -77,6 +89,24 @@ export interface UserProfile {
 export type UserRole = { 'admin' : null } |
   { 'user' : null } |
   { 'guest' : null };
+export interface VerifiedUserProfile {
+  'id' : string,
+  'coinWallet' : bigint,
+  'displayName' : string,
+  'bgmiPlayerId' : string,
+  'mobile' : string,
+}
+export interface WithdrawalRequest {
+  'status' : WithdrawalStatus,
+  'requestId' : string,
+  'userId' : string,
+  'timestamp' : Time,
+  'upiId' : string,
+  'amount' : bigint,
+}
+export type WithdrawalStatus = { 'pending' : null } |
+  { 'rejected' : null } |
+  { 'processed' : null };
 export interface _CaffeineStorageCreateCertificateResult {
   'method' : string,
   'blob_hash' : string,
@@ -105,6 +135,9 @@ export interface _SERVICE {
   >,
   '_caffeineStorageUpdateGatewayPrincipals' : ActorMethod<[], undefined>,
   '_initializeAccessControlWithSecret' : ActorMethod<[string], undefined>,
+  'addCoins' : ActorMethod<[string, bigint], undefined>,
+  'addPrizeCoins' : ActorMethod<[string, bigint], undefined>,
+  'approvePaymentProof' : ActorMethod<[string], undefined>,
   'assignCallerUserRole' : ActorMethod<[Principal, UserRole], undefined>,
   'closeSupportTicket' : ActorMethod<[string], undefined>,
   'createSupportTicket' : ActorMethod<
@@ -115,17 +148,25 @@ export interface _SERVICE {
     [string, Time, bigint, bigint, string, bigint, string, string],
     string
   >,
+  'deductCoins' : ActorMethod<[string, bigint], undefined>,
+  'distributePrizeCoins' : ActorMethod<[string, string, bigint], undefined>,
   'findUnusedSlots' : ActorMethod<[], Array<Tournament>>,
   'generateOtp' : ActorMethod<[], string>,
   'getAdminPrincipal' : ActorMethod<[], [] | [Principal]>,
+  'getAllPaymentProofs' : ActorMethod<[], Array<PaymentProof>>,
   'getAllPlayers' : ActorMethod<[], Array<Player>>,
   'getAllSupportTicketsSorted' : ActorMethod<[], Array<SupportTicket>>,
   'getAllTournaments' : ActorMethod<[], Array<Tournament>>,
+  'getAllVerifiedUsers' : ActorMethod<[], Array<VerifiedUserProfile>>,
+  'getAllWithdrawalRequests' : ActorMethod<[], Array<WithdrawalRequest>>,
   'getCallerUserProfile' : ActorMethod<[], [] | [UserProfile]>,
   'getCallerUserRole' : ActorMethod<[], UserRole>,
   'getDomainName' : ActorMethod<[], string>,
+  'getMyPaymentProofs' : ActorMethod<[string], Array<PaymentProof>>,
   'getMyRegistrations' : ActorMethod<[], Array<TournamentRegistration>>,
   'getMySupportTickets' : ActorMethod<[], Array<SupportTicket>>,
+  'getMyUserId' : ActorMethod<[], [] | [string]>,
+  'getMyWithdrawalRequests' : ActorMethod<[string], Array<WithdrawalRequest>>,
   'getRegistrationsForTournament' : ActorMethod<
     [string],
     Array<TournamentRegistration>
@@ -135,11 +176,17 @@ export interface _SERVICE {
   'getTournamentById' : ActorMethod<[string], [] | [Tournament]>,
   'getTournamentsByMap' : ActorMethod<[string], Array<Tournament>>,
   'getUserProfile' : ActorMethod<[Principal], [] | [UserProfile]>,
+  'getUserWalletBalance' : ActorMethod<[string], bigint>,
+  'getWalletBalance' : ActorMethod<[string], bigint>,
   'isAdminPrincipal' : ActorMethod<[Principal], boolean>,
   'isCallerAdmin' : ActorMethod<[], boolean>,
+  'markWithdrawalRequestProcessed' : ActorMethod<[string], undefined>,
   'registerAdminPrincipal' : ActorMethod<[Principal], boolean>,
-  'registerForTournament' : ActorMethod<[string, ExternalBlob], string>,
-  'registerPlayer' : ActorMethod<[string, string, string], undefined>,
+  'registerForTournament' : ActorMethod<[string, string, ExternalBlob], string>,
+  'registerForTournamentWithCoins' : ActorMethod<[string, string], string>,
+  'registerPlayer' : ActorMethod<[string, string, string], string>,
+  'rejectPaymentProof' : ActorMethod<[string], undefined>,
+  'rejectWithdrawalRequest' : ActorMethod<[string], undefined>,
   'replyToSupportTicket' : ActorMethod<[string, string], undefined>,
   'saveCallerUserProfile' : ActorMethod<[UserProfile], undefined>,
   'searchSupportTicketsByPlayerName' : ActorMethod<
@@ -147,6 +194,8 @@ export interface _SERVICE {
     Array<SupportTicket>
   >,
   'setDomainName' : ActorMethod<[string], undefined>,
+  'submitPaymentProof' : ActorMethod<[string, bigint, string, string], string>,
+  'submitWithdrawalRequest' : ActorMethod<[string, bigint, string], string>,
   'updateRegistrationStatus' : ActorMethod<
     [string, RegistrationStatus],
     undefined

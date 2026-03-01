@@ -48,6 +48,20 @@ export const Tournament = IDL.Record({
   'matchRules' : IDL.Text,
   'prizePool' : IDL.Nat,
 });
+export const PaymentProofStatus = IDL.Variant({
+  'pending' : IDL.Null,
+  'approved' : IDL.Null,
+  'rejected' : IDL.Null,
+});
+export const PaymentProof = IDL.Record({
+  'transactionRef' : IDL.Text,
+  'status' : PaymentProofStatus,
+  'userId' : IDL.Text,
+  'imageBase64' : IDL.Text,
+  'timestamp' : Time,
+  'amount' : IDL.Nat,
+  'proofId' : IDL.Text,
+});
 export const Player = IDL.Record({
   'principal' : IDL.Principal,
   'displayName' : IDL.Text,
@@ -70,6 +84,26 @@ export const SupportTicket = IDL.Record({
   'repliedAt' : IDL.Opt(Time),
   'playerName' : IDL.Text,
   'screenshotBlob' : IDL.Opt(ExternalBlob),
+});
+export const VerifiedUserProfile = IDL.Record({
+  'id' : IDL.Text,
+  'coinWallet' : IDL.Nat,
+  'displayName' : IDL.Text,
+  'bgmiPlayerId' : IDL.Text,
+  'mobile' : IDL.Text,
+});
+export const WithdrawalStatus = IDL.Variant({
+  'pending' : IDL.Null,
+  'rejected' : IDL.Null,
+  'processed' : IDL.Null,
+});
+export const WithdrawalRequest = IDL.Record({
+  'status' : WithdrawalStatus,
+  'requestId' : IDL.Text,
+  'userId' : IDL.Text,
+  'timestamp' : Time,
+  'upiId' : IDL.Text,
+  'amount' : IDL.Nat,
 });
 export const UserProfile = IDL.Record({
   'displayName' : IDL.Text,
@@ -123,6 +157,9 @@ export const idlService = IDL.Service({
     ),
   '_caffeineStorageUpdateGatewayPrincipals' : IDL.Func([], [], []),
   '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
+  'addCoins' : IDL.Func([IDL.Text, IDL.Nat], [], []),
+  'addPrizeCoins' : IDL.Func([IDL.Text, IDL.Nat], [], []),
+  'approvePaymentProof' : IDL.Func([IDL.Text], [], []),
   'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
   'closeSupportTicket' : IDL.Func([IDL.Text], [], []),
   'createSupportTicket' : IDL.Func(
@@ -135,9 +172,12 @@ export const idlService = IDL.Service({
       [IDL.Text],
       [],
     ),
+  'deductCoins' : IDL.Func([IDL.Text, IDL.Nat], [], []),
+  'distributePrizeCoins' : IDL.Func([IDL.Text, IDL.Text, IDL.Nat], [], []),
   'findUnusedSlots' : IDL.Func([], [IDL.Vec(Tournament)], ['query']),
   'generateOtp' : IDL.Func([], [IDL.Text], []),
   'getAdminPrincipal' : IDL.Func([], [IDL.Opt(IDL.Principal)], ['query']),
+  'getAllPaymentProofs' : IDL.Func([], [IDL.Vec(PaymentProof)], ['query']),
   'getAllPlayers' : IDL.Func([], [IDL.Vec(Player)], ['query']),
   'getAllSupportTicketsSorted' : IDL.Func(
       [],
@@ -145,15 +185,36 @@ export const idlService = IDL.Service({
       ['query'],
     ),
   'getAllTournaments' : IDL.Func([], [IDL.Vec(Tournament)], ['query']),
+  'getAllVerifiedUsers' : IDL.Func(
+      [],
+      [IDL.Vec(VerifiedUserProfile)],
+      ['query'],
+    ),
+  'getAllWithdrawalRequests' : IDL.Func(
+      [],
+      [IDL.Vec(WithdrawalRequest)],
+      ['query'],
+    ),
   'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
   'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
   'getDomainName' : IDL.Func([], [IDL.Text], ['query']),
+  'getMyPaymentProofs' : IDL.Func(
+      [IDL.Text],
+      [IDL.Vec(PaymentProof)],
+      ['query'],
+    ),
   'getMyRegistrations' : IDL.Func(
       [],
       [IDL.Vec(TournamentRegistration)],
       ['query'],
     ),
   'getMySupportTickets' : IDL.Func([], [IDL.Vec(SupportTicket)], ['query']),
+  'getMyUserId' : IDL.Func([], [IDL.Opt(IDL.Text)], ['query']),
+  'getMyWithdrawalRequests' : IDL.Func(
+      [IDL.Text],
+      [IDL.Vec(WithdrawalRequest)],
+      ['query'],
+    ),
   'getRegistrationsForTournament' : IDL.Func(
       [IDL.Text],
       [IDL.Vec(TournamentRegistration)],
@@ -172,11 +233,25 @@ export const idlService = IDL.Service({
       [IDL.Opt(UserProfile)],
       ['query'],
     ),
+  'getUserWalletBalance' : IDL.Func([IDL.Text], [IDL.Nat], ['query']),
+  'getWalletBalance' : IDL.Func([IDL.Text], [IDL.Nat], ['query']),
   'isAdminPrincipal' : IDL.Func([IDL.Principal], [IDL.Bool], ['query']),
   'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
+  'markWithdrawalRequestProcessed' : IDL.Func([IDL.Text], [], []),
   'registerAdminPrincipal' : IDL.Func([IDL.Principal], [IDL.Bool], []),
-  'registerForTournament' : IDL.Func([IDL.Text, ExternalBlob], [IDL.Text], []),
-  'registerPlayer' : IDL.Func([IDL.Text, IDL.Text, IDL.Text], [], []),
+  'registerForTournament' : IDL.Func(
+      [IDL.Text, IDL.Text, ExternalBlob],
+      [IDL.Text],
+      [],
+    ),
+  'registerForTournamentWithCoins' : IDL.Func(
+      [IDL.Text, IDL.Text],
+      [IDL.Text],
+      [],
+    ),
+  'registerPlayer' : IDL.Func([IDL.Text, IDL.Text, IDL.Text], [IDL.Text], []),
+  'rejectPaymentProof' : IDL.Func([IDL.Text], [], []),
+  'rejectWithdrawalRequest' : IDL.Func([IDL.Text], [], []),
   'replyToSupportTicket' : IDL.Func([IDL.Text, IDL.Text], [], []),
   'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
   'searchSupportTicketsByPlayerName' : IDL.Func(
@@ -185,6 +260,16 @@ export const idlService = IDL.Service({
       ['query'],
     ),
   'setDomainName' : IDL.Func([IDL.Text], [], []),
+  'submitPaymentProof' : IDL.Func(
+      [IDL.Text, IDL.Nat, IDL.Text, IDL.Text],
+      [IDL.Text],
+      [],
+    ),
+  'submitWithdrawalRequest' : IDL.Func(
+      [IDL.Text, IDL.Nat, IDL.Text],
+      [IDL.Text],
+      [],
+    ),
   'updateRegistrationStatus' : IDL.Func([IDL.Text, RegistrationStatus], [], []),
   'updateSocialLinks' : IDL.Func([IDL.Text, IDL.Text, IDL.Text], [], []),
   'updateTermsAndConditions' : IDL.Func([IDL.Text], [], []),
@@ -241,6 +326,20 @@ export const idlFactory = ({ IDL }) => {
     'matchRules' : IDL.Text,
     'prizePool' : IDL.Nat,
   });
+  const PaymentProofStatus = IDL.Variant({
+    'pending' : IDL.Null,
+    'approved' : IDL.Null,
+    'rejected' : IDL.Null,
+  });
+  const PaymentProof = IDL.Record({
+    'transactionRef' : IDL.Text,
+    'status' : PaymentProofStatus,
+    'userId' : IDL.Text,
+    'imageBase64' : IDL.Text,
+    'timestamp' : Time,
+    'amount' : IDL.Nat,
+    'proofId' : IDL.Text,
+  });
   const Player = IDL.Record({
     'principal' : IDL.Principal,
     'displayName' : IDL.Text,
@@ -263,6 +362,26 @@ export const idlFactory = ({ IDL }) => {
     'repliedAt' : IDL.Opt(Time),
     'playerName' : IDL.Text,
     'screenshotBlob' : IDL.Opt(ExternalBlob),
+  });
+  const VerifiedUserProfile = IDL.Record({
+    'id' : IDL.Text,
+    'coinWallet' : IDL.Nat,
+    'displayName' : IDL.Text,
+    'bgmiPlayerId' : IDL.Text,
+    'mobile' : IDL.Text,
+  });
+  const WithdrawalStatus = IDL.Variant({
+    'pending' : IDL.Null,
+    'rejected' : IDL.Null,
+    'processed' : IDL.Null,
+  });
+  const WithdrawalRequest = IDL.Record({
+    'status' : WithdrawalStatus,
+    'requestId' : IDL.Text,
+    'userId' : IDL.Text,
+    'timestamp' : Time,
+    'upiId' : IDL.Text,
+    'amount' : IDL.Nat,
   });
   const UserProfile = IDL.Record({
     'displayName' : IDL.Text,
@@ -316,6 +435,9 @@ export const idlFactory = ({ IDL }) => {
       ),
     '_caffeineStorageUpdateGatewayPrincipals' : IDL.Func([], [], []),
     '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
+    'addCoins' : IDL.Func([IDL.Text, IDL.Nat], [], []),
+    'addPrizeCoins' : IDL.Func([IDL.Text, IDL.Nat], [], []),
+    'approvePaymentProof' : IDL.Func([IDL.Text], [], []),
     'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
     'closeSupportTicket' : IDL.Func([IDL.Text], [], []),
     'createSupportTicket' : IDL.Func(
@@ -337,9 +459,12 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Text],
         [],
       ),
+    'deductCoins' : IDL.Func([IDL.Text, IDL.Nat], [], []),
+    'distributePrizeCoins' : IDL.Func([IDL.Text, IDL.Text, IDL.Nat], [], []),
     'findUnusedSlots' : IDL.Func([], [IDL.Vec(Tournament)], ['query']),
     'generateOtp' : IDL.Func([], [IDL.Text], []),
     'getAdminPrincipal' : IDL.Func([], [IDL.Opt(IDL.Principal)], ['query']),
+    'getAllPaymentProofs' : IDL.Func([], [IDL.Vec(PaymentProof)], ['query']),
     'getAllPlayers' : IDL.Func([], [IDL.Vec(Player)], ['query']),
     'getAllSupportTicketsSorted' : IDL.Func(
         [],
@@ -347,15 +472,36 @@ export const idlFactory = ({ IDL }) => {
         ['query'],
       ),
     'getAllTournaments' : IDL.Func([], [IDL.Vec(Tournament)], ['query']),
+    'getAllVerifiedUsers' : IDL.Func(
+        [],
+        [IDL.Vec(VerifiedUserProfile)],
+        ['query'],
+      ),
+    'getAllWithdrawalRequests' : IDL.Func(
+        [],
+        [IDL.Vec(WithdrawalRequest)],
+        ['query'],
+      ),
     'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
     'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
     'getDomainName' : IDL.Func([], [IDL.Text], ['query']),
+    'getMyPaymentProofs' : IDL.Func(
+        [IDL.Text],
+        [IDL.Vec(PaymentProof)],
+        ['query'],
+      ),
     'getMyRegistrations' : IDL.Func(
         [],
         [IDL.Vec(TournamentRegistration)],
         ['query'],
       ),
     'getMySupportTickets' : IDL.Func([], [IDL.Vec(SupportTicket)], ['query']),
+    'getMyUserId' : IDL.Func([], [IDL.Opt(IDL.Text)], ['query']),
+    'getMyWithdrawalRequests' : IDL.Func(
+        [IDL.Text],
+        [IDL.Vec(WithdrawalRequest)],
+        ['query'],
+      ),
     'getRegistrationsForTournament' : IDL.Func(
         [IDL.Text],
         [IDL.Vec(TournamentRegistration)],
@@ -378,15 +524,25 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Opt(UserProfile)],
         ['query'],
       ),
+    'getUserWalletBalance' : IDL.Func([IDL.Text], [IDL.Nat], ['query']),
+    'getWalletBalance' : IDL.Func([IDL.Text], [IDL.Nat], ['query']),
     'isAdminPrincipal' : IDL.Func([IDL.Principal], [IDL.Bool], ['query']),
     'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
+    'markWithdrawalRequestProcessed' : IDL.Func([IDL.Text], [], []),
     'registerAdminPrincipal' : IDL.Func([IDL.Principal], [IDL.Bool], []),
     'registerForTournament' : IDL.Func(
-        [IDL.Text, ExternalBlob],
+        [IDL.Text, IDL.Text, ExternalBlob],
         [IDL.Text],
         [],
       ),
-    'registerPlayer' : IDL.Func([IDL.Text, IDL.Text, IDL.Text], [], []),
+    'registerForTournamentWithCoins' : IDL.Func(
+        [IDL.Text, IDL.Text],
+        [IDL.Text],
+        [],
+      ),
+    'registerPlayer' : IDL.Func([IDL.Text, IDL.Text, IDL.Text], [IDL.Text], []),
+    'rejectPaymentProof' : IDL.Func([IDL.Text], [], []),
+    'rejectWithdrawalRequest' : IDL.Func([IDL.Text], [], []),
     'replyToSupportTicket' : IDL.Func([IDL.Text, IDL.Text], [], []),
     'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
     'searchSupportTicketsByPlayerName' : IDL.Func(
@@ -395,6 +551,16 @@ export const idlFactory = ({ IDL }) => {
         ['query'],
       ),
     'setDomainName' : IDL.Func([IDL.Text], [], []),
+    'submitPaymentProof' : IDL.Func(
+        [IDL.Text, IDL.Nat, IDL.Text, IDL.Text],
+        [IDL.Text],
+        [],
+      ),
+    'submitWithdrawalRequest' : IDL.Func(
+        [IDL.Text, IDL.Nat, IDL.Text],
+        [IDL.Text],
+        [],
+      ),
     'updateRegistrationStatus' : IDL.Func(
         [IDL.Text, RegistrationStatus],
         [],
