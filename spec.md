@@ -1,14 +1,11 @@
 # Specification
 
 ## Summary
-**Goal:** Fix the OTP authentication error blocking registration/login, redesign all pages with a dark background and orange/white theme, and add domain name management in the Admin Dashboard.
+**Goal:** Apply a red-orange mixed gradient theme across the entire UI for both User and Admin panels, and add a visible Panel Links section on the home page.
 
 **Planned changes:**
-- Fix backend `generateOTP` function to allow unauthenticated (anonymous) callers, removing the "Unauthorized: Only authenticated users can generate OTPs" error on Register and Login pages
-- Redesign all Player Panel pages (Home, Register, Login, Dashboard, Tournaments, Terms) with deep dark backgrounds, vibrant orange accents for buttons/highlights/borders/active states, and white/light gray for text
-- Redesign Admin Panel pages (Admin Login, Admin Dashboard) with the same dark background and orange/white theme
-- Apply the consistent orange/white/dark theme to all cards, forms, modals, headers, footers, and navigation across both panels
-- Add a persistent `domainName` field to backend state defaulting to 'Raj-Empire-Esports', with `getDomainName` (public query) and `setDomainName` (admin-only update) functions
-- Add a 'Domain Settings' section in the Admin Dashboard showing the current domain name in an editable input field with a Save button, styled in the orange/white/dark theme
+- Replace all blue, purple, and neutral accent colors in both the User panel (`/`) and Admin panel (`/admin`) with a red-orange gradient palette using deep reds (`#DC2626`, `#B91C1C`) and vibrant oranges (`#EA580C`, `#F97316`)
+- Update all headers, navigation bars, sidebars, buttons (primary and secondary), backgrounds, cards, badges, tabs, modals, and hover/active states to use the red-orange gradient theme
+- Add a dedicated "Panel Links" section on `HomePage.tsx` with clearly labeled, clickable links to the User Panel (`/`) and Admin Panel (`/admin`), styled with the red-orange gradient theme
 
-**User-visible outcome:** Players can register and log in without OTP errors; all pages display a cohesive dark background with orange and white styling; admins can view and update the domain name directly from the Admin Dashboard.
+**User-visible outcome:** The entire application UI consistently displays a red-orange gradient theme, and visitors can easily navigate to either the User or Admin panel via a clearly visible links section on the home page.

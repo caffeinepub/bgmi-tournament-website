@@ -1,113 +1,102 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Orange/White Dark UI Redesign & Domain Settings Frontend",
+  "title": "Apply Red-Orange Mixed Gradient Theme Across Entire UI + Visible Panel Links Section",
   "requirements": [
     {
-      "id": "REQ-2",
-      "summary": "Redesign the entire frontend UI with a dark background base and a mixed orange & white color theme across all pages",
+      "id": "REQ-1",
+      "summary": "Apply a red and orange mixed gradient theme consistently across the entire frontend UI for both User panel (/) and Admin panel (/admin)",
       "acceptanceCriteria": [
-        "All pages (Home, Register, Login, Dashboard, Tournaments, Terms, Admin Login, Admin Dashboard) have a dark background.",
-        "Orange is used consistently as the primary accent color for buttons, active nav links, step indicators, badges, and highlights.",
-        "White or light gray is used for body text, headings, input text, and secondary UI elements.",
-        "No white/light backgrounds remain on any page or major component.",
-        "The orange/white/dark theme is cohesive and consistent across Player Panel and Admin Panel.",
-        "The Raj Empire Esports logo and branding remain intact."
+        "All primary buttons display a red-to-orange gradient background",
+        "Header and navigation bar use red-orange gradient styling",
+        "Sidebar (admin panel) uses the red-orange color scheme",
+        "Card components, badges, and tabs reflect the red-orange theme",
+        "Hover and active states deepen to darker red tones",
+        "No blue or purple accent colors remain in either panel",
+        "Both User panel (/) and Admin panel (/admin) consistently use the new theme"
       ],
       "file_operations": [
         {
           "path": "frontend/src/index.css",
           "operation": "modify",
-          "description": "Update the global Tailwind CSS stylesheet to define dark background tokens and orange/white accent colors. Set --background to a near-black or very dark gray OKLCH value, --primary to vibrant orange, --foreground to white or light gray, and adjust other color tokens (card, popover, muted, accent, destructive, border, input, ring) to support the dark orange/white theme. Update body background to use the dark background token."
+          "description": "Replace existing OKLCH-based color tokens with red-orange gradient theme colors. Update CSS custom properties to use deep reds (#DC2626, #B91C1C) and vibrant oranges (#EA580C, #F97316). Replace primary, accent, and other color variables to reflect the red-orange palette. Ensure hover and active states use darker red tones. Remove any blue or purple color definitions."
         },
         {
           "path": "frontend/tailwind.config.js",
           "operation": "modify",
-          "description": "Extend the Tailwind theme to apply the orange/white/dark color palette defined in index.css. Ensure primary, background, foreground, and other semantic color tokens map to the dark orange/white scheme. Verify border radius and font configurations remain intact for the Raj Empire Esports brand."
-        },
-        {
-          "path": "frontend/src/pages/HomePage.tsx",
-          "operation": "modify",
-          "description": "Apply the dark background and orange/white theme to the HomePage. Update hero section, feature cards, and navigation links to use dark backgrounds, orange buttons/highlights, and white text. Ensure the Raj Empire Esports logo remains visible and social links use the orange accent color."
-        },
-        {
-          "path": "frontend/src/pages/RegisterPage.tsx",
-          "operation": "modify",
-          "description": "Apply the dark background and orange/white theme to the RegisterPage. Update the multi-step registration form (mobile → OTP → profile) to use dark card backgrounds, orange step indicators and active states, white form labels/inputs, and orange buttons. Ensure error messages are visible against the dark background."
-        },
-        {
-          "path": "frontend/src/pages/LoginPage.tsx",
-          "operation": "modify",
-          "description": "Apply the dark background and orange/white theme to the LoginPage. Update the two-step login form (mobile number → OTP verification) to use dark card backgrounds, orange step indicators and active states, white form labels/inputs, and orange buttons. Ensure error messages are visible."
-        },
-        {
-          "path": "frontend/src/pages/DashboardPage.tsx",
-          "operation": "modify",
-          "description": "Apply the dark background and orange/white theme to the DashboardPage. Update the tabbed sections (tournaments, registrations, profile) to use dark card backgrounds, orange tab highlights and active states, white text, and orange buttons. Ensure the PaymentModal trigger button uses the orange accent color."
-        },
-        {
-          "path": "frontend/src/pages/TournamentsPage.tsx",
-          "operation": "modify",
-          "description": "Apply the dark background and orange/white theme to the TournamentsPage. Update tournament cards to use dark backgrounds, orange status badges, white text, and orange register buttons. Ensure the PaymentModal uses the dark orange/white theme."
-        },
-        {
-          "path": "frontend/src/pages/TermsPage.tsx",
-          "operation": "modify",
-          "description": "Apply the dark background and orange/white theme to the TermsPage. Update the terms content container to use a dark background, white text, and orange section headings or highlights. Ensure the loading spinner is visible against the dark background."
-        },
-        {
-          "path": "frontend/src/pages/AdminLoginPage.tsx",
-          "operation": "modify",
-          "description": "Apply the dark background and orange/white theme to the AdminLoginPage. Update the admin login form to use a dark card background, white input labels/text, and an orange submit button. Ensure error messages are visible against the dark background."
-        },
-        {
-          "path": "frontend/src/pages/AdminDashboardPage.tsx",
-          "operation": "modify",
-          "description": "Apply the dark background and orange/white theme to the AdminDashboardPage. Update all tabbed sections (tournaments, registrations, players, support tickets, terms, social links) to use dark card backgrounds, orange tab highlights and active states, white text, and orange buttons. Ensure table headers, rows, and form inputs use the dark orange/white scheme."
+          "description": "Update the Tailwind theme configuration to replace OKLCH-based color tokens with red-orange gradient colors. Define custom colors using deep reds (#DC2626, #B91C1C) and vibrant oranges (#EA580C, #F97316) for primary, accent, and background colors. Configure gradient color stops for from-red-600 to-orange-500 style gradients. Remove blue and purple color definitions from the extended theme."
         },
         {
           "path": "frontend/src/components/Header.tsx",
           "operation": "modify",
-          "description": "Apply the dark background and orange/white theme to the Header component. Update the sticky navigation bar to use a dark background, orange active nav link highlights, and white text. Ensure the logo remains visible and the mobile hamburger menu uses the dark orange/white theme."
+          "description": "Update the Header component to use the red-orange gradient theme. Apply gradient backgrounds to the header bar using from-red-600 to-orange-500 or similar red-orange gradients. Update navigation button styles to use the red-orange color scheme. Ensure login/logout buttons display red-to-orange gradient backgrounds. Update hover states to deepen to darker red tones."
         },
         {
           "path": "frontend/src/components/Footer.tsx",
           "operation": "modify",
-          "description": "Apply the dark background and orange/white theme to the Footer component. Update the footer to use a dark background, orange social media icons/links, and white text. Ensure the logo and navigation buttons use the dark orange/white scheme."
+          "description": "Update the Footer component to use the red-orange gradient theme. Apply red-orange gradient backgrounds or borders. Update navigation button styles and social media link icons to use the red-orange color scheme. Ensure consistency with the overall theme."
         },
         {
-          "path": "frontend/src/components/PaymentModal.tsx",
+          "path": "frontend/src/pages/HomePage.tsx",
           "operation": "modify",
-          "description": "Apply the dark background and orange/white theme to the PaymentModal component. Update the modal dialog to use a dark background, white text, orange buttons (upload, submit), and dark form inputs. Ensure the terms checkbox and error messages are visible."
+          "description": "Update the HomePage hero section and feature highlights to use the red-orange gradient theme. Apply gradient backgrounds to hero sections, feature cards, and call-to-action buttons using from-red-600 to-orange-500 or similar gradients. Update text colors and hover states to align with the red-orange palette. Replace any existing blue or purple accents."
         },
         {
-          "path": "frontend/src/components/Layout.tsx",
+          "path": "frontend/src/pages/DashboardPage.tsx",
           "operation": "modify",
-          "description": "Apply the dark background to the Layout component. Ensure the root layout wrapper uses the dark background token and that the Header, Outlet, and Footer are rendered with the dark orange/white theme applied globally."
-        }
-      ]
-    },
-    {
-      "id": "REQ-4",
-      "summary": "Add a 'Domain Settings' section in the Admin Dashboard page to display and update the domain name",
-      "acceptanceCriteria": [
-        "Admin Dashboard has a 'Domain Settings' tab or section.",
-        "The current domain name is fetched from the backend and displayed in an editable input field.",
-        "The input field is pre-populated with 'Raj-Empire-Esports' by default.",
-        "Admin can type a new domain name and click Save to update it via the backend.",
-        "A success or error message is shown after saving.",
-        "The domain settings section matches the orange/white/dark theme."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/hooks/useQueries.ts",
-          "operation": "modify",
-          "description": "Add two React Query hooks: useGetDomainName (query hook fetching the current domain name via actor.getDomainName) and useSetDomainName (mutation hook updating the domain name via actor.setDomainName). Ensure useSetDomainName invalidates the 'domainName' query key on success to refetch the updated value."
+          "description": "Update the DashboardPage tabs, cards, and buttons to use the red-orange gradient theme. Apply red-orange gradients to tab backgrounds and active states. Update tournament cards, registration cards, and profile cards with red-orange borders and backgrounds. Ensure all buttons (registration, edit, etc.) use red-to-orange gradient backgrounds. Update hover and active states to deepen to darker red tones."
         },
         {
           "path": "frontend/src/pages/AdminDashboardPage.tsx",
           "operation": "modify",
-          "description": "Add a 'Domain Settings' tab to the AdminDashboardPage. Include a section that fetches the current domain name using useGetDomainName and displays it in a controlled text input field. Add a Save button that triggers useSetDomainName with the new domain name value. Show a success toast on successful save and an error message if the mutation fails. Apply the dark orange/white theme to the domain settings section (dark background, white text, orange Save button)."
+          "description": "Update the AdminDashboardPage interface to use the red-orange gradient theme. Apply red-orange gradients to the sidebar, tab navigation, and admin panel headers. Update all data tables, cards, badges (pending, approved, rejected, tournament statuses), and buttons (create, update, delete actions) with the red-orange color scheme. Ensure form inputs, modals, and action buttons display red-to-orange gradient backgrounds. Update hover and active states to deepen to darker red tones."
+        },
+        {
+          "path": "frontend/src/pages/TournamentsPage.tsx",
+          "operation": "modify",
+          "description": "Update the TournamentsPage to use the red-orange gradient theme. Apply red-orange gradients to tournament cards, status badges (upcoming, ongoing, completed, closed), and registration buttons. Ensure card backgrounds, borders, and hover effects use the red-orange palette. Update the registration prompt for unauthenticated users with red-orange styling."
+        },
+        {
+          "path": "frontend/src/pages/LoginPage.tsx",
+          "operation": "modify",
+          "description": "Update the LoginPage to use the red-orange gradient theme. Apply red-orange gradients to the login form container, input borders, and submit buttons. Update step indicators and OTP input fields with red-orange styling. Ensure error messages and validation states use appropriate red tones."
+        },
+        {
+          "path": "frontend/src/pages/RegisterPage.tsx",
+          "operation": "modify",
+          "description": "Update the RegisterPage to use the red-orange gradient theme. Apply red-orange gradients to the multi-step registration form, step indicators, input fields, and submit buttons. Update progress indicators and validation feedback with red-orange styling. Ensure consistency with the overall theme."
+        },
+        {
+          "path": "frontend/src/pages/AdminLoginPage.tsx",
+          "operation": "modify",
+          "description": "Update the AdminLoginPage to use the red-orange gradient theme. Apply red-orange gradients to the login form container, input fields, and submit button. Update the admin login branding with red-orange styling to match the overall theme."
+        },
+        {
+          "path": "frontend/src/pages/TermsPage.tsx",
+          "operation": "modify",
+          "description": "Update the TermsPage to use the red-orange gradient theme. Replace the existing colorful cycling styles with red-orange gradient styles for headings, bullets, and paragraphs. Apply red-orange tones to the content container and ensure readability with the new color scheme."
+        },
+        {
+          "path": "frontend/src/components/PaymentModal.tsx",
+          "operation": "modify",
+          "description": "Update the PaymentModal to use the red-orange gradient theme. Apply red-orange gradients to the modal header, input fields, upload button, and submit button. Update progress indicators and validation feedback with red-orange styling. Ensure the modal overlay and borders use the red-orange palette."
+        }
+      ]
+    },
+    {
+      "id": "REQ-2",
+      "summary": "Add a clearly visible 'Panel Links' section on the home page displaying direct clickable links to both User Panel (/) and Admin Panel (/admin)",
+      "acceptanceCriteria": [
+        "HomePage displays a dedicated section with links to both User Panel (/) and Admin Panel (/admin)",
+        "Both links are clearly labeled and visually distinct",
+        "Section is styled with the red-orange gradient theme",
+        "Links are clickable and navigate to the correct routes"
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/pages/HomePage.tsx",
+          "operation": "modify",
+          "description": "Add a new 'Panel Links' section to the HomePage that displays two prominent, clearly labeled cards or buttons linking to the User Panel at the root URL (/) and the Admin Panel at /admin. Position this section prominently (e.g., below the hero section or as part of the feature highlights). Style both links with the red-orange gradient theme using from-red-600 to-orange-500 or similar gradients. Include recognizable icons (e.g., user icon for User Panel, shield or admin icon for Admin Panel) and descriptive labels such as 'User Panel' and 'Admin Panel'. Ensure both links are clickable and use React Router's Link or navigate to the correct routes. Make the section visually distinct and easy to locate for visitors."
         }
       ]
     }

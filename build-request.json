@@ -1,107 +1,67 @@
 {
   "kind": "build_request",
-  "title": "Fix OTP Auth Error, Orange/White Dark UI Redesign & Domain Settings",
+  "title": "Apply Red-Orange Mixed Gradient Theme Across Entire UI + Visible Panel Links Section",
   "projectName": "Raj Empire Esports",
-  "priority": "high",
+  "priority": "normal",
   "requirements": [
     {
       "id": "REQ-1",
-      "text": "Fix the OTP generation error 'Unauthorized: Only authenticated users can generate OTPs' in the backend. The `generateOTP` function must allow unauthenticated (anonymous) callers so that new players can register and existing players can log in without needing a prior authenticated session.",
-      "target": "backend",
+      "text": "Apply a red and orange mixed gradient theme consistently across the entire frontend UI — including all headers, sidebars, navigation bars, buttons (primary and secondary), backgrounds, cards, badges, tabs, modals, and hover/active states — for both the User panel (/) and Admin panel (/admin). Use a cohesive palette of deep reds (#DC2626, #B91C1C), vibrant oranges (#EA580C, #F97316), and red-orange gradients (e.g., from-red-600 to-orange-500). Replace any existing blue, purple, or neutral accent colors with this red-orange scheme.",
+      "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-4",
-          "msg-6"
+          "msg-1",
+          "msg-2",
+          "msg-3"
         ],
         "quotes": [
-          "Unauthorized: Only authenticated users can generate OTPs",
-          "ye dono me aa raha h admine me bhi or user me bhi"
+          "pura ui panel me karo mix color red or orenge ka",
+          "पूरे UI में Red & Orange mixed gradient theme (buttons, headers, sidebar, backgrounds, hover effects सब)"
         ]
       },
       "acceptanceCriteria": [
-        "Clicking 'Send OTP' on the Register page no longer shows 'Unauthorized: Only authenticated users can generate OTPs'.",
-        "Clicking 'Send OTP' on the Login page no longer shows the unauthorized error.",
-        "OTP is generated and returned successfully for any caller (anonymous or authenticated).",
-        "Admin panel OTP-related flows also work without the authorization error."
+        "All primary buttons display a red-to-orange gradient background",
+        "Header and navigation bar use red-orange gradient styling",
+        "Sidebar (admin panel) uses the red-orange color scheme",
+        "Card components, badges, and tabs reflect the red-orange theme",
+        "Hover and active states deepen to darker red tones",
+        "No blue or purple accent colors remain in either panel",
+        "Both User panel (/) and Admin panel (/admin) consistently use the new theme"
       ]
     },
     {
       "id": "REQ-2",
-      "text": "Redesign the entire frontend UI — both the Player Panel (Register, Login, Dashboard, Home, Tournaments, Terms pages) and the Admin Panel (Admin Login, Admin Dashboard) — with a dark background base and a mixed orange & white color theme. Use deep dark backgrounds (near-black or very dark gray), vibrant orange as the primary accent color for buttons, highlights, borders, and active states, and white/light gray for primary text and secondary elements. Apply this consistently across all pages, cards, forms, modals, headers, footers, and navigation.",
+      "text": "Add a clearly visible 'Panel Links' section on the home page (HomePage.tsx) that displays direct clickable links to both panels: User Panel at the root URL (/) and Admin Panel at /admin. This section should be styled with the red-orange theme, use recognizable icons or labels, and make it easy for visitors to navigate to either panel.",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-4",
-          "msg-6"
+          "msg-2",
+          "msg-3"
         ],
         "quotes": [
-          "color orrange with white mix color or dark background dono me karna admin or user me bhi"
+          "Admin panel का URL — deploy होने के बाद दोनों panel के links clearly दिखाए जाएं",
+          "दोनों के links clearly visible section में दिखाए जाएंगे"
         ]
       },
       "acceptanceCriteria": [
-        "All pages (Home, Register, Login, Dashboard, Tournaments, Terms, Admin Login, Admin Dashboard) have a dark background.",
-        "Orange is used consistently as the primary accent color for buttons, active nav links, step indicators, badges, and highlights.",
-        "White or light gray is used for body text, headings, input text, and secondary UI elements.",
-        "No white/light backgrounds remain on any page or major component.",
-        "The orange/white/dark theme is cohesive and consistent across Player Panel and Admin Panel.",
-        "The Raj Empire Esports logo and branding remain intact."
-      ]
-    },
-    {
-      "id": "REQ-3",
-      "text": "Add a persistent `domainName` field to the backend actor state with a default value of 'Raj-Empire-Esports'. Expose `getDomainName` (public query) and `setDomainName` (admin-only update) functions.",
-      "target": "backend",
-      "source": {
-        "messageIds": [
-          "msg-4",
-          "msg-6"
-        ],
-        "quotes": [
-          "mujhe domain wala optione ana chahiye taki me khud se domain change kar sakun",
-          "domain me tum Raj-Empire-Esports ye rakh do"
-        ]
-      },
-      "acceptanceCriteria": [
-        "Backend has a stable `domainName` variable initialized to 'Raj-Empire-Esports'.",
-        "`getDomainName` returns the current domain name to any caller.",
-        "`setDomainName` updates the domain name and persists across upgrades."
-      ]
-    },
-    {
-      "id": "REQ-4",
-      "text": "Add a 'Domain Settings' section in the Admin Dashboard page. It must display the current domain name fetched from the backend and provide a text input field with a Save button that allows the admin to update the domain name. The default value shown must be 'Raj-Empire-Esports'.",
-      "target": "frontend",
-      "source": {
-        "messageIds": [
-          "msg-4",
-          "msg-6"
-        ],
-        "quotes": [
-          "mujhe domain wala optione ana chahiye taki me khud se domain change kar sakun",
-          "domain me tum Raj-Empire-Esports ye rakh do"
-        ]
-      },
-      "acceptanceCriteria": [
-        "Admin Dashboard has a 'Domain Settings' tab or section.",
-        "The current domain name is fetched from the backend and displayed in an editable input field.",
-        "The input field is pre-populated with 'Raj-Empire-Esports' by default.",
-        "Admin can type a new domain name and click Save to update it via the backend.",
-        "A success or error message is shown after saving.",
-        "The domain settings section matches the orange/white/dark theme."
+        "HomePage displays a dedicated section with links to both User Panel (/) and Admin Panel (/admin)",
+        "Both links are clearly labeled and visually distinct",
+        "Section is styled with the red-orange gradient theme",
+        "Links are clickable and navigate to the correct routes"
       ]
     }
   ],
   "constraints": [
-    "Do not remove or break existing tournament, registration, player profile, support ticket, or social links functionality.",
-    "The Raj Empire Esports logo must remain visible and intact across all pages.",
-    "Do not modify frontend/src/hooks/useInternetIdentity.ts, frontend/src/hooks/useActor.ts, frontend/src/main.tsx, or frontend/src/components/ui.",
-    "Admin authentication remains hardcoded via AdminAuthContext — do not change the admin auth mechanism."
+    "Do not modify files under frontend/src/hooks/useInternetIdentity.ts, frontend/src/hooks/useActor.ts, frontend/src/main.tsx, or frontend/src/components/ui",
+    "Do not change backend logic or data models",
+    "Admin panel must remain accessible at the /admin route",
+    "User panel must remain accessible at the / route"
   ],
   "nonGoals": [
-    "Changing the app's routing structure or adding new pages beyond what is specified.",
-    "Implementing real SMS OTP delivery — OTP logic stays within the canister.",
-    "Adding new tournament or payment features.",
-    "Internet Identity integration changes."
+    "Adding new features or pages beyond the theme change and links section",
+    "Changing authentication logic or backend APIs",
+    "Modifying font families or typography settings",
+    "Adding new backend endpoints"
   ],
   "imageRequirements": {
     "required": [],

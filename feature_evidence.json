@@ -1,4 +1,55 @@
 {
   "kind": "feature_evidence_report",
-  "features": []
+  "features": [
+    {
+      "featureId": "feature-apply-a-red-and-orange-mixed-gradient-theme-consistently-across-the-entire-frontend-ui-including-all-headers-sidebars-navigation-bars-buttons-primary-and-secondary-backgrounds-cards-badges-tabs-modals-and-hover-active-states-for-both-the-user-panel-and-admin-panel-admin-use-a-cohesive-palette-of-deep-reds-dc2626-b91c1c-vibrant-oranges-ea580c-f97316-and-red-orange-gradients-e-g-from-red-600-to-orange-500-replace-any-existing-blue-purple-or-neutral-accent-colors-with-this-red-orange-scheme",
+      "featureTitle": "Apply a red and orange mixed gradient theme consistently across the entire frontend UI — including all headers, sidebars, navigation bars, buttons (primary and secondary), backgrounds, cards, badges, tabs, modals, and hover/active states — for both the User panel (/) and Admin panel (/admin). Use a cohesive palette of deep reds (#DC2626, #B91C1C), vibrant oranges (#EA580C, #F97316), and red-orange gradients (e.g., from-red-600 to-orange-500). Replace any existing blue, purple, or neutral accent colors with this red-orange scheme.",
+      "files": [
+        "frontend/src/components/Footer.tsx",
+        "frontend/src/components/Header.tsx",
+        "frontend/src/index.css",
+        "frontend/src/pages/AdminDashboardPage.tsx",
+        "frontend/src/pages/AdminLoginPage.tsx",
+        "frontend/src/pages/HomePage.tsx",
+        "frontend/src/pages/LoginPage.tsx",
+        "frontend/src/pages/RegisterPage.tsx",
+        "frontend/src/pages/TermsPage.tsx",
+        "frontend/src/pages/TournamentsPage.tsx",
+        "frontend/tailwind.config.js"
+      ],
+      "components": [
+        "blob-storage@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0",
+        "authorization@4.0.0"
+      ],
+      "testIds": [
+        "REQ-1"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-add-a-clearly-visible-panel-links-section-on-the-home-page-homepage-tsx-that-displays-direct-clickable-links-to-both-panels-user-panel-at-the-root-url-and-admin-panel-at-admin-this-section-should-be-styled-with-the-red-orange-theme-use-recognizable-icons-or-labels-and-make-it-easy-for-visitors-to-navigate-to-either-panel",
+      "featureTitle": "Add a clearly visible 'Panel Links' section on the home page (HomePage.tsx) that displays direct clickable links to both panels: User Panel at the root URL (/) and Admin Panel at /admin. This section should be styled with the red-orange theme, use recognizable icons or labels, and make it easy for visitors to navigate to either panel.",
+      "files": [
+        "frontend/src/pages/HomePage.tsx"
+      ],
+      "components": [
+        "blob-storage@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0",
+        "authorization@4.0.0"
+      ],
+      "testIds": [
+        "REQ-2"
+      ],
+      "confidence": "high"
+    }
+  ]
 }

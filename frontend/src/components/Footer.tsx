@@ -1,108 +1,113 @@
 import React from 'react';
 import { useNavigate } from '@tanstack/react-router';
+import { Heart, Youtube, Instagram, Send, Gamepad2 } from 'lucide-react';
 import { useGetSocialLinks } from '../hooks/useQueries';
-import { SiYoutube, SiInstagram, SiTelegram } from 'react-icons/si';
-import { Heart } from 'lucide-react';
 
 export default function Footer() {
   const navigate = useNavigate();
   const { data: socialLinks } = useGetSocialLinks();
-  const appId = typeof window !== 'undefined' ? encodeURIComponent(window.location.hostname) : 'unknown-app';
+  const year = new Date().getFullYear();
+  const appId = encodeURIComponent(window.location.hostname || 'raj-empire-esports');
 
   return (
-    <footer style={{ background: 'oklch(0.08 0 0)', borderTop: '1px solid oklch(0.65 0.22 45 / 0.3)' }}>
-      <div className="container mx-auto px-4 py-8">
-        <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+    <footer className="bg-brand-gradient text-white">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {/* Brand */}
-          <div className="flex flex-col items-center md:items-start gap-2">
-            <img
-              src="/assets/generated/raj-empire-esports-logo.dim_400x120.png"
-              alt="Raj Empire Esports"
-              className="h-8 w-auto object-contain"
-            />
-            <p className="font-saira text-xs tracking-widest uppercase" style={{ color: 'oklch(0.45 0.02 60)' }}>
-              Battle Royale Tournament Platform
+          <div>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center">
+                <Gamepad2 size={22} className="text-white" />
+              </div>
+              <div>
+                <span className="font-heading font-bold text-lg block">Raj Empire</span>
+                <span className="text-white/70 text-xs uppercase tracking-wider">Esports</span>
+              </div>
+            </div>
+            <p className="text-white/70 text-sm leading-relaxed">
+              Your ultimate destination for BGMI tournaments. Compete, win, and rise to the top!
             </p>
           </div>
 
-          {/* Nav Links */}
-          <div className="flex items-center gap-6">
-            <button
-              onClick={() => navigate({ to: '/' })}
-              className="font-saira text-xs tracking-widest uppercase transition-colors"
-              style={{ color: 'oklch(0.55 0.02 60)' }}
-            >
-              Tournaments
-            </button>
-            <button
-              onClick={() => navigate({ to: '/terms' })}
-              className="font-saira text-xs tracking-widest uppercase transition-colors"
-              style={{ color: 'oklch(0.55 0.02 60)' }}
-            >
-              Terms
-            </button>
-            <button
-              onClick={() => navigate({ to: '/player/login' })}
-              className="font-saira text-xs tracking-widest uppercase transition-colors"
-              style={{ color: 'oklch(0.55 0.02 60)' }}
-            >
-              Login
-            </button>
+          {/* Quick Links */}
+          <div>
+            <h3 className="font-heading font-bold text-lg mb-4 text-white">Quick Links</h3>
+            <ul className="space-y-2">
+              <li>
+                <button onClick={() => navigate({ to: '/' })} className="text-white/70 hover:text-white text-sm transition-colors hover:underline">
+                  Home
+                </button>
+              </li>
+              <li>
+                <button onClick={() => navigate({ to: '/player/dashboard' })} className="text-white/70 hover:text-white text-sm transition-colors hover:underline">
+                  Dashboard
+                </button>
+              </li>
+              <li>
+                <button onClick={() => navigate({ to: '/terms' })} className="text-white/70 hover:text-white text-sm transition-colors hover:underline">
+                  Terms &amp; Conditions
+                </button>
+              </li>
+              <li>
+                <button onClick={() => navigate({ to: '/admin' })} className="text-white/70 hover:text-white text-sm transition-colors hover:underline">
+                  Admin Panel
+                </button>
+              </li>
+            </ul>
           </div>
 
           {/* Social Links */}
-          <div className="flex items-center gap-4">
-            {socialLinks?.youtube && (
-              <a
-                href={socialLinks.youtube}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="transition-colors hover:text-red-500"
-                style={{ color: 'oklch(0.55 0.02 60)' }}
-                aria-label="YouTube"
-              >
-                <SiYoutube className="w-5 h-5" />
-              </a>
-            )}
-            {socialLinks?.instagram && (
-              <a
-                href={socialLinks.instagram}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="transition-colors"
-                style={{ color: 'oklch(0.55 0.02 60)' }}
-                aria-label="Instagram"
-              >
-                <SiInstagram className="w-5 h-5" />
-              </a>
-            )}
-            {socialLinks?.telegram && (
-              <a
-                href={socialLinks.telegram}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="transition-colors hover:text-blue-400"
-                style={{ color: 'oklch(0.55 0.02 60)' }}
-                aria-label="Telegram"
-              >
-                <SiTelegram className="w-5 h-5" />
-              </a>
-            )}
+          <div>
+            <h3 className="font-heading font-bold text-lg mb-4 text-white">Follow Us</h3>
+            <div className="flex gap-3">
+              {socialLinks?.youtube && (
+                <a
+                  href={socialLinks.youtube}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-10 h-10 rounded-lg bg-white/20 hover:bg-white/30 flex items-center justify-center transition-colors"
+                >
+                  <Youtube size={18} className="text-white" />
+                </a>
+              )}
+              {socialLinks?.instagram && (
+                <a
+                  href={socialLinks.instagram}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-10 h-10 rounded-lg bg-white/20 hover:bg-white/30 flex items-center justify-center transition-colors"
+                >
+                  <Instagram size={18} className="text-white" />
+                </a>
+              )}
+              {socialLinks?.telegram && (
+                <a
+                  href={socialLinks.telegram}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-10 h-10 rounded-lg bg-white/20 hover:bg-white/30 flex items-center justify-center transition-colors"
+                >
+                  <Send size={18} className="text-white" />
+                </a>
+              )}
+              {!socialLinks?.youtube && !socialLinks?.instagram && !socialLinks?.telegram && (
+                <p className="text-white/50 text-sm">Social links coming soon</p>
+              )}
+            </div>
           </div>
         </div>
 
-        <div className="mt-6 pt-4 flex flex-col md:flex-row items-center justify-between gap-2" style={{ borderTop: '1px solid oklch(0.20 0 0)' }}>
-          <p className="font-rajdhani text-xs" style={{ color: 'oklch(0.40 0.02 60)' }}>
-            © {new Date().getFullYear()} Raj Empire Esports. All rights reserved.
+        <div className="mt-8 pt-6 border-t border-white/20 flex flex-col sm:flex-row items-center justify-between gap-3">
+          <p className="text-white/60 text-sm">
+            © {year} Raj Empire Esports. All rights reserved.
           </p>
-          <p className="font-rajdhani text-xs flex items-center gap-1" style={{ color: 'oklch(0.40 0.02 60)' }}>
-            Built with <Heart className="w-3 h-3 inline" style={{ color: 'oklch(0.65 0.22 45)' }} /> using{' '}
+          <p className="text-white/60 text-sm flex items-center gap-1">
+            Built with <Heart size={14} className="text-white fill-white" /> using{' '}
             <a
               href={`https://caffeine.ai/?utm_source=Caffeine-footer&utm_medium=referral&utm_content=${appId}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="hover:underline"
-              style={{ color: 'oklch(0.65 0.22 45)' }}
+              className="text-white hover:text-white/80 font-semibold underline"
             >
               caffeine.ai
             </a>

@@ -1,65 +1,42 @@
 {
   "schemaVersion": "1.0.0",
   "projectStateVersion": 3,
-  "summary": "Raj Empire Esports - A gaming platform with Player Panel and Admin Panel. Current work involves fixing OTP authentication error, redesigning UI with dark background and orange/white theme, and adding domain settings in Admin Panel.",
+  "summary": "A web application with Admin and User panels featuring a red-orange mixed gradient theme. Admin panel at /admin route, User panel at / route, with visible links section showing both panel URLs.",
   "architectural_notes": [
-    "Project has two panels: Player Panel (/player) and Admin Panel (/admin)",
-    "Brand name: Raj Empire Esports — to be used consistently across the app"
+    "Admin panel is served at /admin route, User panel at / route",
+    "Both panels share a unified red-orange mixed gradient theme"
   ],
-  "known_issues": [
-    "OTP generation fails with 'Unauthorized: Only authenticated users can generate OTPs' in both User and Admin panels"
+  "known_issues": [],
+  "isFixRequest": false,
+  "existing_features": [
+    {
+      "id": "feature-apply-a-red-and-orange-mixed-gradient-theme-consistently-across-the-entire-frontend-ui-including-all-headers-sidebars-navigation-bars-buttons-primary-and-secondary-backgrounds-cards-badges-tabs-modals-and-hover-active-states-for-both-the-user-panel-and-admin-panel-admin-use-a-cohesive-palette-of-deep-reds-dc2626-b91c1c-vibrant-oranges-ea580c-f97316-and-red-orange-gradients-e-g-from-red-600-to-orange-500-replace-any-existing-blue-purple-or-neutral-accent-colors-with-this-red-orange-scheme",
+      "title": "Apply a red and orange mixed gradient theme consistently across the entire frontend UI — including all headers, sidebars, navigation bars, buttons (primary and secondary), backgrounds, cards, badges, tabs, modals, and hover/active states — for both the User panel (/) and Admin panel (/admin). Use a cohesive palette of deep reds (#DC2626, #B91C1C), vibrant oranges (#EA580C, #F97316), and red-orange gradients (e.g., from-red-600 to-orange-500). Replace any existing blue, purple, or neutral accent colors with this red-orange scheme.",
+      "reqIds": [
+        "REQ-1"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-a-clearly-visible-panel-links-section-on-the-home-page-homepage-tsx-that-displays-direct-clickable-links-to-both-panels-user-panel-at-the-root-url-and-admin-panel-at-admin-this-section-should-be-styled-with-the-red-orange-theme-use-recognizable-icons-or-labels-and-make-it-easy-for-visitors-to-navigate-to-either-panel",
+      "title": "Add a clearly visible 'Panel Links' section on the home page (HomePage.tsx) that displays direct clickable links to both panels: User Panel at the root URL (/) and Admin Panel at /admin. This section should be styled with the red-orange theme, use recognizable icons or labels, and make it easy for visitors to navigate to either panel.",
+      "reqIds": [
+        "REQ-2"
+      ],
+      "version": 1
+    }
   ],
-  "isFixRequest": true,
-  "existing_features": [],
   "new_feature_requests": [
     {
       "id": "AR-1",
-      "summary": "Fix OTP error 'Unauthorized: Only authenticated users can generate OTPs' in both User and Admin panels",
+      "summary": "Apply red and orange mixed gradient theme across the entire UI (buttons, headers, sidebar, backgrounds, hover effects) for both Admin and User panels",
       "reqIds": [],
       "status": "pending"
     },
     {
       "id": "AR-2",
-      "summary": "UI Redesign with dark background and orange & white mix theme for both User Panel and Admin Panel",
+      "summary": "Add a visible links section that clearly shows both Admin panel (/admin) and User panel (/) URLs after deployment",
       "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-3",
-      "summary": "Add domain settings option in Admin Panel with default value 'Raj-Empire-Esports' that admin can change",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-4",
-      "summary": "Fix the OTP generation error 'Unauthorized: Only authenticated users can generate OTPs' in the backend. The `generateOTP` function must allow unauthenticated (anonymous) callers so that new players can register and existing players can log in without needing a prior authenticated session.",
-      "reqIds": [
-        "REQ-1"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-5",
-      "summary": "Redesign the entire frontend UI — both the Player Panel (Register, Login, Dashboard, Home, Tournaments, Terms pages) and the Admin Panel (Admin Login, Admin Dashboard) — with a dark background base and a mixed orange & white color theme. Use deep dark backgrounds (near-black or very dark gray), vibrant orange as the primary accent color for buttons, highlights, borders, and active states, and white/light gray for primary text and secondary elements. Apply this consistently across all pages, cards, forms, modals, headers, footers, and navigation.",
-      "reqIds": [
-        "REQ-2"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-6",
-      "summary": "Add a persistent `domainName` field to the backend actor state with a default value of 'Raj-Empire-Esports'. Expose `getDomainName` (public query) and `setDomainName` (admin-only update) functions.",
-      "reqIds": [
-        "REQ-3"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-7",
-      "summary": "Add a 'Domain Settings' section in the Admin Dashboard page. It must display the current domain name fetched from the backend and provide a text input field with a Save button that allows the admin to update the domain name. The default value shown must be 'Raj-Empire-Esports'.",
-      "reqIds": [
-        "REQ-4"
-      ],
       "status": "pending"
     }
   ],

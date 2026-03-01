@@ -1,72 +1,77 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-03-01T05:51:54.079Z",
+  "generatedAt": "2026-03-01T07:07:03.786Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
   },
   "requirements": {
-    "total": 4,
-    "implemented": 0,
+    "total": 2,
+    "implemented": 2,
     "items": [
       {
         "id": "REQ-1",
-        "summary": "Fix the OTP generation error 'Unauthorized: Only authenticated users can generate OTPs' in the backend. The `generateOTP` function must allow unauthenticated (anonymous) callers so that new players can register and existing players can log in without needing a prior authenticated session.",
-        "status": "unknown",
-        "plannedFiles": [],
-        "matchedFiles": []
-      },
-      {
-        "id": "REQ-2",
-        "summary": "Redesign the entire frontend UI — both the Player Panel (Register, Login, Dashboard, Home, Tournaments, Terms pages) and the Admin Panel (Admin Login, Admin Dashboard) — with a dark background base and a mixed orange & white color theme. Use deep dark backgrounds (near-black or very dark gray), vibrant orange as the primary accent color for buttons, highlights, borders, and active states, and white/light gray for primary text and secondary elements. Apply this consistently across all pages, cards, forms, modals, headers, footers, and navigation.",
-        "status": "missing",
+        "summary": "Apply a red and orange mixed gradient theme consistently across the entire frontend UI — including all headers, sidebars, navigation bars, buttons (primary and secondary), backgrounds, cards, badges, tabs, modals, and hover/active states — for both the User panel (/) and Admin panel (/admin). Use a cohesive palette of deep reds (#DC2626, #B91C1C), vibrant oranges (#EA580C, #F97316), and red-orange gradients (e.g., from-red-600 to-orange-500). Replace any existing blue, purple, or neutral accent colors with this red-orange scheme.",
+        "status": "implemented",
         "plannedFiles": [
           "frontend/src/index.css",
           "frontend/tailwind.config.js",
-          "frontend/src/pages/HomePage.tsx",
-          "frontend/src/pages/RegisterPage.tsx",
-          "frontend/src/pages/LoginPage.tsx",
-          "frontend/src/pages/DashboardPage.tsx",
-          "frontend/src/pages/TournamentsPage.tsx",
-          "frontend/src/pages/TermsPage.tsx",
-          "frontend/src/pages/AdminLoginPage.tsx",
-          "frontend/src/pages/AdminDashboardPage.tsx",
           "frontend/src/components/Header.tsx",
           "frontend/src/components/Footer.tsx",
-          "frontend/src/components/PaymentModal.tsx",
-          "frontend/src/components/Layout.tsx"
+          "frontend/src/pages/HomePage.tsx",
+          "frontend/src/pages/DashboardPage.tsx",
+          "frontend/src/pages/AdminDashboardPage.tsx",
+          "frontend/src/pages/TournamentsPage.tsx",
+          "frontend/src/pages/LoginPage.tsx",
+          "frontend/src/pages/RegisterPage.tsx",
+          "frontend/src/pages/AdminLoginPage.tsx",
+          "frontend/src/pages/TermsPage.tsx",
+          "frontend/src/components/PaymentModal.tsx"
         ],
-        "matchedFiles": []
+        "matchedFiles": [
+          "frontend/src/index.css",
+          "frontend/tailwind.config.js",
+          "frontend/src/components/Header.tsx",
+          "frontend/src/components/Footer.tsx",
+          "frontend/src/pages/HomePage.tsx",
+          "frontend/src/pages/AdminDashboardPage.tsx",
+          "frontend/src/pages/TournamentsPage.tsx",
+          "frontend/src/pages/LoginPage.tsx",
+          "frontend/src/pages/RegisterPage.tsx",
+          "frontend/src/pages/AdminLoginPage.tsx",
+          "frontend/src/pages/TermsPage.tsx"
+        ]
       },
       {
-        "id": "REQ-3",
-        "summary": "Add a persistent `domainName` field to the backend actor state with a default value of 'Raj-Empire-Esports'. Expose `getDomainName` (public query) and `setDomainName` (admin-only update) functions.",
-        "status": "unknown",
-        "plannedFiles": [],
-        "matchedFiles": []
-      },
-      {
-        "id": "REQ-4",
-        "summary": "Add a 'Domain Settings' section in the Admin Dashboard page. It must display the current domain name fetched from the backend and provide a text input field with a Save button that allows the admin to update the domain name. The default value shown must be 'Raj-Empire-Esports'.",
-        "status": "missing",
+        "id": "REQ-2",
+        "summary": "Add a clearly visible 'Panel Links' section on the home page (HomePage.tsx) that displays direct clickable links to both panels: User Panel at the root URL (/) and Admin Panel at /admin. This section should be styled with the red-orange theme, use recognizable icons or labels, and make it easy for visitors to navigate to either panel.",
+        "status": "implemented",
         "plannedFiles": [
-          "frontend/src/hooks/useQueries.ts",
-          "frontend/src/pages/AdminDashboardPage.tsx"
+          "frontend/src/pages/HomePage.tsx"
         ],
-        "matchedFiles": []
+        "matchedFiles": [
+          "frontend/src/pages/HomePage.tsx"
+        ]
       }
     ]
   },
   "changedFiles": [
-    "backend/main.mo",
     "build-request.json",
     "feature_evidence.json",
+    "frontend-file-summaries.txt",
     "frontend-implementation-plan.json",
-    "frontend/src/backend.d.ts",
-    "frontend/src/backend.ts",
-    "frontend/src/declarations/backend.did.d.ts",
-    "frontend/src/declarations/backend.did.js",
+    "frontend/src/components/Footer.tsx",
+    "frontend/src/components/Header.tsx",
+    "frontend/src/index.css",
+    "frontend/src/pages/AdminDashboardPage.tsx",
+    "frontend/src/pages/AdminLoginPage.tsx",
+    "frontend/src/pages/HomePage.tsx",
+    "frontend/src/pages/LoginPage.tsx",
+    "frontend/src/pages/RegisterPage.tsx",
+    "frontend/src/pages/TermsPage.tsx",
+    "frontend/src/pages/TournamentsPage.tsx",
+    "frontend/tailwind.config.js",
     "project_state.json",
     "scratch/component-selection.json",
     "spec.md",

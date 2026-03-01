@@ -1,250 +1,223 @@
 import React, { useState } from 'react';
 import { useNavigate } from '@tanstack/react-router';
+import { Loader2, User, Phone, Gamepad2, ArrowRight, CheckCircle } from 'lucide-react';
+import { useRegisterPlayer } from '../hooks/useQueries';
 import { useAuth } from '../context/AuthContext';
 import { useActor } from '../hooks/useActor';
-import { Loader2, ArrowLeft, CheckCircle } from 'lucide-react';
 
-type Step = 'mobile' | 'otp' | 'profile';
+type Step = 'details' | 'otp' | 'success';
 
 export default function RegisterPage() {
   const navigate = useNavigate();
   const { login } = useAuth();
   const { actor } = useActor();
-
-  const [step, setStep] = useState<Step>('mobile');
-  const [mobile, setMobile] = useState('');
+  const [step, setStep] = useState<Step>('details');
+  const [form, setForm] = useState({ displayName: '', mobile: '', bgmiPlayerId: '' });
   const [otp, setOtp] = useState('');
   const [generatedOtp, setGeneratedOtp] = useState('');
-  const [displayName, setDisplayName] = useState('');
-  const [bgmiPlayerId, setBgmiPlayerId] = useState('');
-  const [termsAccepted, setTermsAccepted] = useState(false);
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [otpLoading, setOtpLoading] = useState(false);
+  const [verifyLoading, setVerifyLoading] = useState(false);
 
-  const handleSendOtp = async () => {
-    if (!mobile || mobile.length < 10) {
-      setError('Please enter a valid 10-digit mobile number');
-      return;
-    }
+  const registerPlayer = useRegisterPlayer();
+
+  const handleDetails = async (e: React.FormEvent) => {
+    e.preventDefault();
     setError('');
-    setLoading(true);
+    if (!form.displayName.trim()) { setError('Display name is required'); return; }
+    if (!form.mobile || form.mobile.length < 10) { setError('Valid 10-digit mobile number required'); return; }
+    if (!form.bgmiPlayerId.trim()) { setError('BGMI Player ID is required'); return; }
+    setOtpLoading(true);
     try {
       if (!actor) throw new Error('Not connected');
       const otpVal = await actor.generateOtp();
       setGeneratedOtp(otpVal);
       setStep('otp');
-      // In production OTP would be sent via SMS; here we show it for demo
-    } catch (e: any) {
-      setError(e.message || 'Failed to send OTP');
+    } catch (err: any) {
+      setError(err.message || 'Failed to send OTP');
     } finally {
-      setLoading(false);
+      setOtpLoading(false);
     }
   };
 
-  const handleVerifyOtp = async () => {
-    if (!otp || otp.length < 4) {
-      setError('Please enter the OTP');
-      return;
-    }
+  const handleOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
     setError('');
-    setLoading(true);
+    if (!otp || otp.length < 4) { setError('Please enter the OTP'); return; }
+    setVerifyLoading(true);
     try {
       if (!actor) throw new Error('Not connected');
       const valid = await actor.verifyOtp(otp);
-      if (!valid) {
-        setError('Invalid OTP. Please try again.');
-        setLoading(false);
-        return;
-      }
-      setStep('profile');
-    } catch (e: any) {
-      setError(e.message || 'OTP verification failed');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleRegister = async () => {
-    if (!displayName.trim()) { setError('Please enter your display name'); return; }
-    if (!bgmiPlayerId.trim()) { setError('Please enter your BGMI Player ID'); return; }
-    if (!termsAccepted) { setError('Please accept the Terms & Conditions'); return; }
-    setError('');
-    setLoading(true);
-    try {
-      if (!actor) throw new Error('Not connected');
-      await actor.registerPlayer(mobile, bgmiPlayerId, displayName);
-      login({ mobile, displayName, bgmiPlayerId });
-      navigate({ to: '/player/dashboard' });
-    } catch (e: any) {
-      if (e.message?.includes('already exists')) {
+      if (!valid) { setError('Invalid OTP. Please try again.'); setVerifyLoading(false); return; }
+      await registerPlayer.mutateAsync({ mobile: form.mobile, bgmiPlayerId: form.bgmiPlayerId, displayName: form.displayName });
+      login({ mobile: form.mobile, displayName: form.displayName, bgmiPlayerId: form.bgmiPlayerId });
+      setStep('success');
+    } catch (err: any) {
+      if (err.message?.includes('already exists')) {
         setError('This account already exists. Please login instead.');
       } else {
-        setError(e.message || 'Registration failed');
+        setError(err.message || 'Registration failed');
       }
     } finally {
-      setLoading(false);
+      setVerifyLoading(false);
     }
   };
 
+  const steps = ['details', 'otp', 'success'];
+  const stepIdx = steps.indexOf(step);
+
   return (
-    <div className="min-h-screen bg-background flex flex-col">
-      {/* Header */}
-      <header className="border-b border-border/40 bg-background/95 backdrop-blur sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
-          <button onClick={() => navigate({ to: '/' })}>
-            <img src="/assets/generated/raj-empire-esports-logo.dim_400x120.png" alt="Raj Empire Esports" className="h-12 object-contain" />
-          </button>
-          <button onClick={() => navigate({ to: '/player/login' })} className="font-rajdhani font-semibold text-muted-foreground hover:text-primary transition-colors tracking-widest text-sm uppercase">
-            Login
-          </button>
+    <div className="min-h-screen bg-background flex items-center justify-center px-4 py-8">
+      <div className="w-full max-w-md">
+        {/* Logo */}
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-brand-gradient shadow-brand mb-4">
+            <Gamepad2 size={32} className="text-white" />
+          </div>
+          <h1 className="font-heading text-3xl font-bold text-foreground">Create Account</h1>
+          <p className="text-muted-foreground mt-1">Join Raj Empire Esports today</p>
         </div>
-      </header>
 
-      <main className="flex-1 flex items-center justify-center px-4 py-12">
-        <div className="w-full max-w-md">
-          <div className="bg-card border border-border p-8">
-            <div className="mb-8">
-              <h1 className="font-orbitron font-bold text-2xl text-primary uppercase tracking-widest mb-2">
-                {step === 'mobile' ? 'Register' : step === 'otp' ? 'Verify OTP' : 'Complete Profile'}
-              </h1>
-              <p className="font-saira text-muted-foreground text-sm">
-                {step === 'mobile' ? 'Enter your mobile number to get started' :
-                  step === 'otp' ? `OTP sent to +91 ${mobile}` :
-                    'Fill in your gaming profile details'}
-              </p>
-            </div>
-
-            {/* Step indicators */}
-            <div className="flex items-center gap-2 mb-8">
-              {(['mobile', 'otp', 'profile'] as Step[]).map((s, i) => (
-                <React.Fragment key={s}>
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-rajdhani font-bold border-2 transition-colors ${
-                    step === s ? 'border-primary bg-primary text-primary-foreground' :
-                      (['mobile', 'otp', 'profile'].indexOf(step) > i) ? 'border-primary bg-primary/20 text-primary' :
-                        'border-border text-muted-foreground'
-                  }`}>
-                    {(['mobile', 'otp', 'profile'].indexOf(step) > i) ? <CheckCircle className="w-4 h-4" /> : i + 1}
+        <div className="bg-card rounded-2xl border border-border shadow-brand-sm overflow-hidden">
+          {/* Progress Bar */}
+          <div className="bg-brand-gradient p-4">
+            <div className="flex items-center justify-between">
+              {['Player Details', 'Verify OTP', 'Done!'].map((label, i) => (
+                <React.Fragment key={label}>
+                  <div className={`flex items-center gap-2 text-xs font-medium ${i <= stepIdx ? 'text-white' : 'text-white/50'}`}>
+                    <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
+                      i < stepIdx ? 'bg-white text-brand-red' :
+                      i === stepIdx ? 'bg-white text-brand-red' :
+                      'bg-white/20 text-white'
+                    }`}>
+                      {i < stepIdx ? '✓' : i + 1}
+                    </div>
+                    <span className="hidden sm:block">{label}</span>
                   </div>
-                  {i < 2 && <div className={`flex-1 h-0.5 ${(['mobile', 'otp', 'profile'].indexOf(step) > i) ? 'bg-primary' : 'bg-border'}`} />}
+                  {i < 2 && <div className={`flex-1 h-0.5 mx-2 ${i < stepIdx ? 'bg-white' : 'bg-white/30'}`} />}
                 </React.Fragment>
               ))}
             </div>
+          </div>
 
-            {error && (
-              <div className="bg-destructive/10 border border-destructive/50 text-destructive font-saira text-sm px-4 py-3 mb-6">
-                {error}
-              </div>
-            )}
-
-            {step === 'mobile' && (
-              <div className="space-y-4">
+          <div className="p-6">
+            {step === 'details' && (
+              <form onSubmit={handleDetails} className="space-y-4">
                 <div>
-                  <label className="font-rajdhani font-semibold text-foreground text-sm uppercase tracking-wider block mb-2">Mobile Number</label>
-                  <div className="flex">
-                    <span className="bg-muted border border-border border-r-0 px-3 flex items-center font-saira text-muted-foreground text-sm">+91</span>
+                  <label className="block text-sm font-medium text-foreground mb-2">Display Name</label>
+                  <div className="relative">
+                    <User size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
                     <input
-                      type="tel"
-                      value={mobile}
-                      onChange={e => setMobile(e.target.value.replace(/\D/g, '').slice(0, 10))}
-                      placeholder="10-digit mobile number"
-                      className="flex-1 bg-background border border-border px-4 py-3 font-saira text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-colors"
+                      type="text"
+                      value={form.displayName}
+                      onChange={e => setForm(f => ({ ...f, displayName: e.target.value }))}
+                      placeholder="Your in-game name"
+                      className="w-full pl-10 pr-4 py-3 rounded-xl border border-input bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-brand-red/50 focus:border-brand-red transition-colors"
                     />
                   </div>
                 </div>
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-2">Mobile Number</label>
+                  <div className="relative">
+                    <Phone size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                    <input
+                      type="tel"
+                      value={form.mobile}
+                      onChange={e => setForm(f => ({ ...f, mobile: e.target.value.replace(/\D/g, '').slice(0, 10) }))}
+                      placeholder="10-digit mobile number"
+                      maxLength={10}
+                      className="w-full pl-10 pr-4 py-3 rounded-xl border border-input bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-brand-red/50 focus:border-brand-red transition-colors"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-2">BGMI Player ID</label>
+                  <div className="relative">
+                    <Gamepad2 size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                    <input
+                      type="text"
+                      value={form.bgmiPlayerId}
+                      onChange={e => setForm(f => ({ ...f, bgmiPlayerId: e.target.value }))}
+                      placeholder="Your BGMI Player ID"
+                      className="w-full pl-10 pr-4 py-3 rounded-xl border border-input bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-brand-red/50 focus:border-brand-red transition-colors"
+                    />
+                  </div>
+                </div>
+                {error && <p className="text-destructive text-sm bg-destructive/10 rounded-lg px-3 py-2">{error}</p>}
                 <button
-                  onClick={handleSendOtp}
-                  disabled={loading || !actor}
-                  className="w-full bg-primary text-primary-foreground font-rajdhani font-bold py-3 uppercase tracking-widest hover:bg-primary/90 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                  type="submit"
+                  disabled={otpLoading || !actor}
+                  className="w-full py-3 rounded-xl bg-brand-gradient text-white font-bold text-base hover:opacity-90 transition-all shadow-brand disabled:opacity-50 flex items-center justify-center gap-2"
                 >
-                  {loading && <Loader2 className="w-4 h-4 animate-spin" />}
-                  Send OTP
+                  {otpLoading ? <><Loader2 size={18} className="animate-spin" /> Sending OTP...</> : <>Continue <ArrowRight size={18} /></>}
                 </button>
-                <p className="text-center font-saira text-sm text-muted-foreground">
-                  Already have an account?{' '}
-                  <button onClick={() => navigate({ to: '/player/login' })} className="text-primary hover:underline">Login</button>
-                </p>
-              </div>
+              </form>
             )}
 
             {step === 'otp' && (
-              <div className="space-y-4">
+              <form onSubmit={handleOtp} className="space-y-4">
+                <div className="text-center mb-4">
+                  <p className="text-muted-foreground text-sm">OTP sent to <strong>+91 {form.mobile}</strong></p>
+                </div>
                 <div>
-                  <label className="font-rajdhani font-semibold text-foreground text-sm uppercase tracking-wider block mb-2">Enter OTP</label>
+                  <label className="block text-sm font-medium text-foreground mb-2">Enter OTP</label>
                   <input
                     type="text"
                     value={otp}
                     onChange={e => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
                     placeholder="Enter OTP"
-                    className="w-full bg-background border border-border px-4 py-3 font-saira text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-colors text-center text-2xl tracking-widest"
+                    maxLength={6}
+                    className="w-full px-4 py-3 rounded-xl border border-input bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-brand-red/50 focus:border-brand-red transition-colors text-center text-xl tracking-widest font-bold"
                   />
                   {generatedOtp && (
-                    <p className="text-xs font-saira text-muted-foreground mt-2 text-center">
-                      Demo OTP: <span className="text-primary font-bold">{generatedOtp}</span>
+                    <p className="text-xs text-muted-foreground mt-2 text-center">
+                      Demo OTP: <span className="text-brand-red font-bold">{generatedOtp}</span>
                     </p>
                   )}
                 </div>
+                {error && <p className="text-destructive text-sm bg-destructive/10 rounded-lg px-3 py-2">{error}</p>}
                 <button
-                  onClick={handleVerifyOtp}
-                  disabled={loading}
-                  className="w-full bg-primary text-primary-foreground font-rajdhani font-bold py-3 uppercase tracking-widest hover:bg-primary/90 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                  type="submit"
+                  disabled={verifyLoading || registerPlayer.isPending}
+                  className="w-full py-3 rounded-xl bg-brand-gradient text-white font-bold text-base hover:opacity-90 transition-all shadow-brand disabled:opacity-50 flex items-center justify-center gap-2"
                 >
-                  {loading && <Loader2 className="w-4 h-4 animate-spin" />}
-                  Verify OTP
+                  {(verifyLoading || registerPlayer.isPending) ? <><Loader2 size={18} className="animate-spin" /> Registering...</> : <>Complete Registration <ArrowRight size={18} /></>}
                 </button>
-                <button onClick={() => { setStep('mobile'); setOtp(''); setError(''); }} className="w-full flex items-center justify-center gap-2 font-rajdhani text-muted-foreground hover:text-foreground transition-colors text-sm">
-                  <ArrowLeft className="w-4 h-4" /> Change Mobile Number
+                <button type="button" onClick={() => { setStep('details'); setOtp(''); setError(''); }} className="w-full py-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
+                  ← Back to details
+                </button>
+              </form>
+            )}
+
+            {step === 'success' && (
+              <div className="text-center py-6">
+                <div className="w-20 h-20 rounded-full bg-brand-gradient flex items-center justify-center mx-auto mb-4 shadow-brand">
+                  <CheckCircle size={40} className="text-white" />
+                </div>
+                <h3 className="font-heading text-2xl font-bold text-foreground mb-2">Welcome, {form.displayName}!</h3>
+                <p className="text-muted-foreground mb-6">Your account has been created successfully.</p>
+                <button
+                  onClick={() => navigate({ to: '/player/dashboard' })}
+                  className="w-full py-3 rounded-xl bg-brand-gradient text-white font-bold text-base hover:opacity-90 transition-all shadow-brand"
+                >
+                  Go to Dashboard
                 </button>
               </div>
             )}
 
-            {step === 'profile' && (
-              <div className="space-y-4">
-                <div>
-                  <label className="font-rajdhani font-semibold text-foreground text-sm uppercase tracking-wider block mb-2">Display Name</label>
-                  <input
-                    type="text"
-                    value={displayName}
-                    onChange={e => setDisplayName(e.target.value)}
-                    placeholder="Your in-game name"
-                    className="w-full bg-background border border-border px-4 py-3 font-saira text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-colors"
-                  />
-                </div>
-                <div>
-                  <label className="font-rajdhani font-semibold text-foreground text-sm uppercase tracking-wider block mb-2">BGMI Player ID</label>
-                  <input
-                    type="text"
-                    value={bgmiPlayerId}
-                    onChange={e => setBgmiPlayerId(e.target.value)}
-                    placeholder="Your BGMI Player ID"
-                    className="w-full bg-background border border-border px-4 py-3 font-saira text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-colors"
-                  />
-                </div>
-                <div className="flex items-start gap-3">
-                  <input
-                    type="checkbox"
-                    id="terms"
-                    checked={termsAccepted}
-                    onChange={e => setTermsAccepted(e.target.checked)}
-                    className="mt-1 accent-primary"
-                  />
-                  <label htmlFor="terms" className="font-saira text-sm text-muted-foreground cursor-pointer">
-                    I agree to the{' '}
-                    <button onClick={() => navigate({ to: '/terms' })} className="text-primary hover:underline">Terms & Conditions</button>
-                  </label>
-                </div>
-                <button
-                  onClick={handleRegister}
-                  disabled={loading || !termsAccepted}
-                  className="w-full bg-primary text-primary-foreground font-rajdhani font-bold py-3 uppercase tracking-widest hover:bg-primary/90 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
-                >
-                  {loading && <Loader2 className="w-4 h-4 animate-spin" />}
-                  Complete Registration
-                </button>
+            {step !== 'success' && (
+              <div className="mt-6 pt-4 border-t border-border text-center">
+                <p className="text-muted-foreground text-sm">
+                  Already have an account?{' '}
+                  <button onClick={() => navigate({ to: '/player/login' })} className="text-brand-red font-semibold hover:underline">
+                    Login here
+                  </button>
+                </p>
               </div>
             )}
           </div>
         </div>
-      </main>
+      </div>
     </div>
   );
 }
