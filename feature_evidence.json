@@ -1,0 +1,177 @@
+{
+  "kind": "feature_evidence_report",
+  "features": [
+    {
+      "featureId": "feature-build-the-player-registration-page-at-route-register-with-fields-mobile-number-display-name-bgmi-player-id-mandatory-after-entering-mobile-show-a-4-digit-otp-input-step-and-display-the-simulated-otp-on-screen-enforce-one-account-per-mobile-show-a-clear-error-if-mobile-already-exists-include-an-i-agree-to-the-terms-conditions-checkbox-with-a-clickable-link-to-terms-disable-the-submit-button-until-the-checkbox-is-checked-on-success-redirect-to-the-player-dashboard-at-dashboard",
+      "featureTitle": "Build the player registration page at route /register with fields: mobile number, display name, BGMI Player ID (mandatory). After entering mobile, show a 4-digit OTP input step and display the simulated OTP on screen. Enforce one account per mobile — show a clear error if mobile already exists. Include an 'I agree to the Terms & Conditions' checkbox with a clickable link to /terms; disable the submit button until the checkbox is checked. On success, redirect to the player dashboard at /dashboard.",
+      "files": [
+        "frontend/src/App.tsx",
+        "frontend/src/pages/RegisterPage.tsx"
+      ],
+      "components": [
+        "blob-storage@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-49"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-build-the-player-login-page-at-route-login-using-mobile-number-otp-no-password-player-enters-mobile-receives-simulated-otp-displayed-on-screen-enters-it-to-log-in-on-success-redirect-to-the-player-dashboard-at-dashboard",
+      "featureTitle": "Build the player login page at route /login using mobile number + OTP (no password). Player enters mobile, receives simulated OTP displayed on screen, enters it to log in. On success, redirect to the player dashboard at /dashboard.",
+      "files": [
+        "frontend/src/App.tsx",
+        "frontend/src/context/AuthContext.tsx",
+        "frontend/src/main.tsx",
+        "frontend/src/pages/LoginPage.tsx"
+      ],
+      "components": [
+        "blob-storage@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-50"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-build-the-tournament-listing-page-at-route-tournaments-showing-all-active-tournaments-as-cards-each-card-displays-tournament-name-entry-fee-prize-pool-total-slots-filled-slots-map-date-time-and-registration-status-open-full-if-matchrules-is-non-empty-display-it-below-the-card-players-must-be-logged-in-to-register-when-a-tournament-s-slots-are-full-show-it-as-full-and-disable-the-register-button",
+      "featureTitle": "Build the tournament listing page at route /tournaments showing all active tournaments as cards. Each card displays: tournament name, entry fee, prize pool, total slots, filled slots, map, date/time, and registration status (Open/Full). If matchRules is non-empty, display it below the card. Players must be logged in to register. When a tournament's slots are full, show it as 'Full' and disable the Register button.",
+      "files": [
+        "frontend/src/App.tsx",
+        "frontend/src/pages/TournamentsPage.tsx"
+      ],
+      "components": [
+        "blob-storage@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-51"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-implement-the-payment-flow-after-a-player-clicks-register-on-a-tournament-show-a-payment-modal-page-with-the-tournament-s-upi-id-default-empirerajesports-ibl-and-qr-code-image-fallback-to-upi-qr-placeholder-dim-300x300-png-if-no-qr-uploaded-by-admin-player-uploads-a-payment-screenshot-image-file-include-an-i-agree-to-the-terms-conditions-checkbox-on-submission-save-registration-with-status-pending-admin-approval-room-id-and-password-remain-hidden-until-admin-approves",
+      "featureTitle": "Implement the payment flow: after a player clicks Register on a tournament, show a payment modal/page with the tournament's UPI ID (default: empirerajesports@ibl) and QR code image (fallback to upi-qr-placeholder.dim_300x300.png if no QR uploaded by admin). Player uploads a payment screenshot (image file). Include an 'I agree to the Terms & Conditions' checkbox. On submission, save registration with status 'Pending Admin Approval'. Room ID and Password remain hidden until admin approves.",
+      "files": [
+        "frontend/src/components/PaymentModal.tsx",
+        "frontend/src/pages/TournamentsPage.tsx"
+      ],
+      "components": [
+        "blob-storage@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-52"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-build-the-player-dashboard-at-route-dashboard-showing-player-s-display-name-and-bgmi-player-id-their-tournament-registrations-with-status-badges-pending-approved-rejected-for-approved-registrations-display-room-id-and-room-password-include-a-support-section-where-the-player-can-create-new-support-tickets-subject-description-optional-screenshot-upload-view-their-ticket-list-with-status-badges-open-replied-closed-and-click-a-ticket-to-see-full-details-including-admin-reply",
+      "featureTitle": "Build the player dashboard at route /dashboard showing: player's display name and BGMI Player ID, their tournament registrations with status badges (Pending/Approved/Rejected). For Approved registrations, display Room ID and Room Password. Include a Support section where the player can create new support tickets (subject, description, optional screenshot upload), view their ticket list with status badges (Open/Replied/Closed), and click a ticket to see full details including admin reply.",
+      "files": [
+        "frontend/src/App.tsx",
+        "frontend/src/components/ProtectedRoute.tsx",
+        "frontend/src/pages/DashboardPage.tsx"
+      ],
+      "components": [
+        "blob-storage@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-53"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-build-the-admin-dashboard-accessible-via-a-separate-login-page-at-route-admin-with-hardcoded-credentials-username-empire-esports-password-shivam803119-admin-dashboard-must-have-six-sections-1-tournament-management-add-edit-delete-tournaments-with-all-fields-including-matchrules-textarea-upi-id-qr-code-upload-room-id-room-password-2-registrations-list-all-registrations-with-player-info-and-payment-screenshots-approve-or-reject-each-3-player-list-view-all-registered-players-4-terms-conditions-view-and-edit-t-c-content-in-a-textarea-with-a-save-button-5-support-tickets-list-all-tickets-with-player-name-bgmi-id-subject-status-date-click-to-view-detail-with-screenshot-reply-to-ticket-update-ticket-status-via-dropdown-buttons-6-social-links-input-fields-for-youtube-instagram-and-telegram-urls-with-a-save-button",
+      "featureTitle": "Build the admin dashboard accessible via a separate login page at route /admin with hardcoded credentials (username: 'Empire Esports', password: 'Shivam803119&'). Admin dashboard must have six sections: (1) Tournament Management — add/edit/delete tournaments with all fields including matchRules textarea, UPI ID, QR code upload, Room ID, Room Password; (2) Registrations — list all registrations with player info and payment screenshots, approve or reject each; (3) Player List — view all registered players; (4) Terms & Conditions — view and edit T&C content in a textarea with a save button; (5) Support Tickets — list all tickets with player name, BGMI ID, subject, status, date; click to view detail with screenshot; reply to ticket; update ticket status via dropdown/buttons; (6) Social Links — input fields for YouTube, Instagram, and Telegram URLs with a save button.",
+      "files": [
+        "frontend/src/App.tsx",
+        "frontend/src/components/AdminProtectedRoute.tsx",
+        "frontend/src/context/AdminAuthContext.tsx",
+        "frontend/src/main.tsx",
+        "frontend/src/pages/AdminDashboardPage.tsx",
+        "frontend/src/pages/AdminLoginPage.tsx"
+      ],
+      "components": [
+        "blob-storage@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-54"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-add-a-dedicated-terms-conditions-page-at-route-terms-that-fetches-and-displays-the-current-t-c-content-from-the-backend-style-with-the-dark-gaming-theme-consistent-with-raj-empire-esports-branding",
+      "featureTitle": "Add a dedicated Terms & Conditions page at route /terms that fetches and displays the current T&C content from the backend. Style with the dark gaming theme consistent with Raj Empire Esports branding.",
+      "files": [
+        "frontend/src/App.tsx",
+        "frontend/src/pages/TermsPage.tsx"
+      ],
+      "components": [
+        "blob-storage@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-55"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-apply-a-dark-high-energy-battle-royale-gaming-aesthetic-consistently-across-all-pages-use-a-near-black-deep-dark-background-bold-orange-and-gold-accent-colors-sharp-angular-ui-elements-and-military-tactical-typography-brand-all-pages-tab-title-header-and-footer-as-raj-empire-esports-use-raj-empire-esports-logo-dim-400x120-png-as-the-site-header-logo-display-the-social-links-youtube-instagram-telegram-fetched-from-the-backend-in-the-site-footer-as-icon-links",
+      "featureTitle": "Apply a dark, high-energy battle-royale gaming aesthetic consistently across all pages. Use a near-black deep dark background, bold orange and gold accent colors, sharp angular UI elements, and military/tactical typography. Brand all pages, tab title, header, and footer as 'Raj Empire Esports'. Use raj-empire-esports-logo.dim_400x120.png as the site header logo. Display the Social Links (YouTube, Instagram, Telegram) fetched from the backend in the site footer as icon links.",
+      "files": [
+        "frontend/index.html",
+        "frontend/src/App.tsx",
+        "frontend/src/components/Footer.tsx",
+        "frontend/src/components/Header.tsx",
+        "frontend/src/components/Layout.tsx",
+        "frontend/src/index.css",
+        "frontend/tailwind.config.js"
+      ],
+      "components": [
+        "blob-storage@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-56"
+      ],
+      "confidence": "high"
+    }
+  ]
+}

@@ -1,0 +1,97 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+    :root {
+        --radius: 0.25rem;
+        --background: 0.1 0 0;
+        --foreground: 0.95 0.01 80;
+        --card: 0.13 0 0;
+        --card-foreground: 0.95 0.01 80;
+        --popover: 0.15 0 0;
+        --popover-foreground: 0.95 0.01 80;
+        --primary: 0.65 0.22 45;
+        --primary-foreground: 0.08 0 0;
+        --secondary: 0.18 0 0;
+        --secondary-foreground: 0.95 0.01 80;
+        --muted: 0.16 0 0;
+        --muted-foreground: 0.55 0.02 60;
+        --accent: 0.75 0.18 85;
+        --accent-foreground: 0.08 0 0;
+        --destructive: 0.55 0.22 25;
+        --destructive-foreground: 0.95 0 0;
+        --border: 0.22 0.02 50;
+        --input: 0.18 0.01 50;
+        --ring: 0.65 0.22 45;
+        --chart-1: 0.65 0.22 45;
+        --chart-2: 0.75 0.18 85;
+        --chart-3: 0.55 0.15 200;
+        --chart-4: 0.7 0.2 140;
+        --chart-5: 0.6 0.25 30;
+        --sidebar: 0.12 0 0;
+        --sidebar-foreground: 0.95 0.01 80;
+        --sidebar-primary: 0.65 0.22 45;
+        --sidebar-primary-foreground: 0.08 0 0;
+        --sidebar-accent: 0.18 0 0;
+        --sidebar-accent-foreground: 0.95 0.01 80;
+        --sidebar-border: 0.22 0.02 50;
+        --sidebar-ring: 0.65 0.22 45;
+    }
+
+    * {
+        @apply border-border;
+    }
+
+    body {
+        @apply bg-background text-foreground;
+        font-family: 'Rajdhani', sans-serif;
+    }
+
+    h1, h2, h3, h4, h5, h6 {
+        font-family: 'Orbitron', sans-serif;
+    }
+
+    .font-tactical {
+        font-family: 'Saira Condensed', sans-serif;
+    }
+
+    .clip-angular {
+        clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px));
+    }
+
+    .clip-angular-sm {
+        clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px));
+    }
+
+    .border-glow-orange {
+        box-shadow: 0 0 8px oklch(0.65 0.22 45 / 0.4), inset 0 0 8px oklch(0.65 0.22 45 / 0.05);
+    }
+
+    .border-glow-gold {
+        box-shadow: 0 0 8px oklch(0.75 0.18 85 / 0.4), inset 0 0 8px oklch(0.75 0.18 85 / 0.05);
+    }
+
+    .text-gradient-orange {
+        background: linear-gradient(135deg, oklch(0.65 0.22 45), oklch(0.75 0.18 85));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .bg-angular-card {
+        background: linear-gradient(135deg, oklch(0.13 0 0) 0%, oklch(0.15 0.01 50) 100%);
+        border: 1px solid oklch(0.25 0.03 50);
+    }
+
+    .scrollbar-thin::-webkit-scrollbar {
+        width: 4px;
+    }
+    .scrollbar-thin::-webkit-scrollbar-track {
+        background: oklch(0.12 0 0);
+    }
+    .scrollbar-thin::-webkit-scrollbar-thumb {
+        background: oklch(0.65 0.22 45);
+        border-radius: 2px;
+    }
+}

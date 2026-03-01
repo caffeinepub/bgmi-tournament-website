@@ -1,0 +1,7 @@
+{
+  "frontend/src/App.tsx": "Main application entry point that sets up TanStack Router with all routes (home, register, login, tournaments, dashboard, terms, admin login, admin dashboard), wraps the route tree with AuthProvider and AdminAuthProvider contexts, and exports the RouterProvider.",
+  "frontend/src/main.tsx": "Application bootstrap that renders the React app with QueryClientProvider and InternetIdentityProvider wrapping the App component.",
+  "frontend/src/pages/TermsPage.tsx": "Public Terms & Conditions page that fetches and displays T&C content from the backend with dark gaming theme styling and a fallback empty state.",
+  "frontend/src/pages/AdminLoginPage.tsx": "Admin-only login page at /admin with hardcoded credential validation (username: 'Empire Esports', password: 'Shivam803119&'), redirects to /admin/dashboard on success.",
+  "frontend/src/pages/AdminDashboardPage.tsx": "Full admin dashboard with six tabbed sections: Tournament Management (create/view), Registrations, Player List, Terms & Conditions editor, Support Tickets viewer with reply/status controls, and Social Links editor."
+}

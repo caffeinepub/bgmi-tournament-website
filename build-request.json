@@ -1,0 +1,186 @@
+{
+  "kind": "build_request",
+  "title": "Rebuild Raj Empire Esports BGMI Tournament Website (Full Stack)",
+  "projectName": "Raj Empire Esports",
+  "priority": "high",
+  "requirements": [
+    {
+      "id": "REQ-48",
+      "text": "Implement the complete Motoko backend in a single actor with all data models and functions: Player (mobile, bgmiPlayerId, displayName, OTP simulation), Tournament (name, dateTime, entryFee, prizePool, map, totalSlots, filledSlots, upiId, qrCodeBlob, roomId, roomPassword, matchRules, status), TournamentRegistration (registrationId, tournamentId, playerId, paymentScreenshotBlob, status: Pending/Approved/Rejected), TermsAndConditions (content), SupportTicket (ticketId, playerId, playerName, subject, description, screenshotBlob optional, status: Open/Replied/Closed, createdAt, adminReply optional, repliedAt optional), and SocialLinks (youtube, instagram, telegram). Expose all CRUD, query, and mutation functions: OTP generation/verification, tournament slot management (auto-close when filledSlots reaches totalSlots), admin approval of registrations (unlocks roomId/roomPassword for approved player), support ticket create/reply/status-update, T&C get/update, and social links get/update.",
+      "target": "backend",
+      "source": {
+        "messageIds": [
+          "msg-1"
+        ]
+      },
+      "acceptanceCriteria": [
+        "All data models are persisted in stable storage",
+        "OTP is generated and can be verified per mobile number",
+        "One account per mobile number is enforced",
+        "Tournament filledSlots increments on approved registration; status auto-sets to Full when filledSlots equals totalSlots",
+        "Registration status can be updated to Approved/Rejected by admin",
+        "Room ID and Password are only returned to players with Approved registration status",
+        "TermsAndConditions content can be fetched and updated",
+        "SupportTicket CRUD functions work as specified",
+        "SocialLinks can be fetched and updated by admin"
+      ]
+    },
+    {
+      "id": "REQ-49",
+      "text": "Build the player registration page at route /register with fields: mobile number, display name, BGMI Player ID (mandatory). After entering mobile, show a 4-digit OTP input step and display the simulated OTP on screen. Enforce one account per mobile — show a clear error if mobile already exists. Include an 'I agree to the Terms & Conditions' checkbox with a clickable link to /terms; disable the submit button until the checkbox is checked. On success, redirect to the player dashboard at /dashboard.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-1"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Form has mobile number, display name, and BGMI Player ID fields",
+        "After submitting mobile, OTP step is shown with the simulated code displayed on screen",
+        "Duplicate mobile number shows a clear error message",
+        "T&C checkbox is present with a link to /terms",
+        "Submit is disabled until checkbox is checked",
+        "On successful registration, player is redirected to /dashboard"
+      ]
+    },
+    {
+      "id": "REQ-50",
+      "text": "Build the player login page at route /login using mobile number + OTP (no password). Player enters mobile, receives simulated OTP displayed on screen, enters it to log in. On success, redirect to the player dashboard at /dashboard.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-1"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Login page has mobile number input and OTP step",
+        "Simulated OTP is displayed on screen after mobile submission",
+        "Correct OTP entry logs the player in and redirects to /dashboard",
+        "Incorrect OTP shows an error message"
+      ]
+    },
+    {
+      "id": "REQ-51",
+      "text": "Build the tournament listing page at route /tournaments showing all active tournaments as cards. Each card displays: tournament name, entry fee, prize pool, total slots, filled slots, map, date/time, and registration status (Open/Full). If matchRules is non-empty, display it below the card. Players must be logged in to register. When a tournament's slots are full, show it as 'Full' and disable the Register button.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-1"
+        ]
+      },
+      "acceptanceCriteria": [
+        "All active tournaments render as cards with all specified fields",
+        "Match Rules section renders below card only when matchRules is non-empty",
+        "Register button is disabled and shows 'Full' when filledSlots equals totalSlots",
+        "Unauthenticated players are prompted to log in when clicking Register"
+      ]
+    },
+    {
+      "id": "REQ-52",
+      "text": "Implement the payment flow: after a player clicks Register on a tournament, show a payment modal/page with the tournament's UPI ID (default: empirerajesports@ibl) and QR code image (fallback to upi-qr-placeholder.dim_300x300.png if no QR uploaded by admin). Player uploads a payment screenshot (image file). Include an 'I agree to the Terms & Conditions' checkbox. On submission, save registration with status 'Pending Admin Approval'. Room ID and Password remain hidden until admin approves.",
+      "target": "both",
+      "source": {
+        "messageIds": [
+          "msg-1"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Payment modal/page shows UPI ID and QR code image",
+        "Falls back to upi-qr-placeholder.dim_300x300.png when no QR is uploaded",
+        "Player can upload a payment screenshot image file",
+        "T&C checkbox must be checked before submission",
+        "Registration is saved with status Pending Admin Approval",
+        "Room ID and Password are not visible until admin approves"
+      ]
+    },
+    {
+      "id": "REQ-53",
+      "text": "Build the player dashboard at route /dashboard showing: player's display name and BGMI Player ID, their tournament registrations with status badges (Pending/Approved/Rejected). For Approved registrations, display Room ID and Room Password. Include a Support section where the player can create new support tickets (subject, description, optional screenshot upload), view their ticket list with status badges (Open/Replied/Closed), and click a ticket to see full details including admin reply.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-1"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Dashboard shows player display name and BGMI Player ID",
+        "Tournament registrations are listed with correct status badges",
+        "Room ID and Room Password are visible only for Approved registrations",
+        "Support ticket creation form with subject, description, and optional screenshot upload works",
+        "Ticket list shows subject, status badge, and creation date",
+        "Clicking a ticket opens full detail view with admin reply if present"
+      ]
+    },
+    {
+      "id": "REQ-54",
+      "text": "Build the admin dashboard accessible via a separate login page at route /admin with hardcoded credentials (username: 'Empire Esports', password: 'Shivam803119&'). Admin dashboard must have six sections: (1) Tournament Management — add/edit/delete tournaments with all fields including matchRules textarea, UPI ID, QR code upload, Room ID, Room Password; (2) Registrations — list all registrations with player info and payment screenshots, approve or reject each; (3) Player List — view all registered players; (4) Terms & Conditions — view and edit T&C content in a textarea with a save button; (5) Support Tickets — list all tickets with player name, BGMI ID, subject, status, date; click to view detail with screenshot; reply to ticket; update ticket status via dropdown/buttons; (6) Social Links — input fields for YouTube, Instagram, and Telegram URLs with a save button.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-1"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Admin login at /admin accepts only username 'Empire Esports' and password 'Shivam803119&'",
+        "Tournament Management section supports add/edit/delete with all fields including matchRules",
+        "Registrations section lists all registrations with payment screenshots and approve/reject actions",
+        "Player List section shows all registered players",
+        "T&C section shows current content in textarea with a functional save button",
+        "Support Tickets section lists all tickets and allows reply and status update",
+        "Social Links section has YouTube, Instagram, Telegram URL inputs with save"
+      ]
+    },
+    {
+      "id": "REQ-55",
+      "text": "Add a dedicated Terms & Conditions page at route /terms that fetches and displays the current T&C content from the backend. Style with the dark gaming theme consistent with Raj Empire Esports branding.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-1"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Page at /terms fetches and renders T&C content from backend",
+        "Page uses the dark gaming theme with orange/gold accents",
+        "Page is accessible via the link in registration and payment forms"
+      ]
+    },
+    {
+      "id": "REQ-56",
+      "text": "Apply a dark, high-energy battle-royale gaming aesthetic consistently across all pages. Use a near-black deep dark background, bold orange and gold accent colors, sharp angular UI elements, and military/tactical typography. Brand all pages, tab title, header, and footer as 'Raj Empire Esports'. Use raj-empire-esports-logo.dim_400x120.png as the site header logo. Display the Social Links (YouTube, Instagram, Telegram) fetched from the backend in the site footer as icon links.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-1"
+        ]
+      },
+      "acceptanceCriteria": [
+        "All pages use near-black background with orange and gold accents",
+        "Sharp angular UI elements and military/tactical typography are applied throughout",
+        "Tab title, header, and footer all read 'Raj Empire Esports'",
+        "raj-empire-esports-logo.dim_400x120.png is used as the site header logo",
+        "Footer displays YouTube, Instagram, and Telegram icon links fetched from backend"
+      ]
+    }
+  ],
+  "constraints": [
+    "All Motoko logic must remain in a single backend/main.mo actor file",
+    "Admin credentials are hardcoded: username 'Empire Esports', password 'Shivam803119&'",
+    "Default UPI ID is empirerajesports@ibl when no UPI is set for a tournament",
+    "Do not modify any files listed in frontend.immutablePaths"
+  ],
+  "nonGoals": [
+    "Real OTP SMS delivery — OTP is simulated and displayed on screen",
+    "Real payment processing — payment is manual UPI with screenshot upload",
+    "Internet Identity or Web3 wallet authentication",
+    "External database or cloud storage integration",
+    "Real-time features or WebSockets"
+  ],
+  "imageRequirements": {
+    "required": [
+      "Bold tactical lettering logo spelling 'Raj Empire Esports' with orange and gold gradient text on a dark/transparent background, military-style font (raj-empire-esports-logo.dim_400x120.png)",
+      "Stylized dark-themed QR code graphic with orange border accents and 'Scan to Pay' text centered below the QR pattern on a near-black background (upi-qr-placeholder.dim_300x300.png)"
+    ],
+    "edits": []
+  }
+}
