@@ -1,102 +1,283 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Apply Red-Orange Mixed Gradient Theme Across Entire UI + Visible Panel Links Section",
+  "title": "Raj Empire Esports Arena — Frontend Implementation",
   "requirements": [
     {
-      "id": "REQ-1",
-      "summary": "Apply a red and orange mixed gradient theme consistently across the entire frontend UI for both User panel (/) and Admin panel (/admin)",
+      "id": "REQ-2",
+      "summary": "Apply red-orange fire gradient theme matching reference screenshots across all pages",
       "acceptanceCriteria": [
-        "All primary buttons display a red-to-orange gradient background",
-        "Header and navigation bar use red-orange gradient styling",
-        "Sidebar (admin panel) uses the red-orange color scheme",
-        "Card components, badges, and tabs reflect the red-orange theme",
-        "Hover and active states deepen to darker red tones",
-        "No blue or purple accent colors remain in either panel",
-        "Both User panel (/) and Admin panel (/admin) consistently use the new theme"
+        "Hero section shows red-to-orange diagonal gradient matching the screenshot",
+        "All headings use Orbitron or Rajdhani gaming fonts",
+        "Theme is consistent across all pages and components",
+        "Buttons, cards, and badges follow the red-orange brand palette"
       ],
       "file_operations": [
         {
           "path": "frontend/src/index.css",
           "operation": "modify",
-          "description": "Replace existing OKLCH-based color tokens with red-orange gradient theme colors. Update CSS custom properties to use deep reds (#DC2626, #B91C1C) and vibrant oranges (#EA580C, #F97316). Replace primary, accent, and other color variables to reflect the red-orange palette. Ensure hover and active states use darker red tones. Remove any blue or purple color definitions."
+          "description": "Update global styles to include the red-orange fire gradient (#C0100A to #FF6A00) as utility classes and ensure Orbitron/Rajdhani fonts are properly configured for headings. Add brand-gradient utilities and brand color palette tokens matching the deep crimson to bright orange theme. Integrate the generated hero background image at frontend/public/assets/generated/hero-bg.dim_1440x600.png for use in hero sections."
         },
         {
           "path": "frontend/tailwind.config.js",
           "operation": "modify",
-          "description": "Update the Tailwind theme configuration to replace OKLCH-based color tokens with red-orange gradient colors. Define custom colors using deep reds (#DC2626, #B91C1C) and vibrant oranges (#EA580C, #F97316) for primary, accent, and background colors. Configure gradient color stops for from-red-600 to-orange-500 style gradients. Remove blue and purple color definitions from the extended theme."
-        },
-        {
-          "path": "frontend/src/components/Header.tsx",
-          "operation": "modify",
-          "description": "Update the Header component to use the red-orange gradient theme. Apply gradient backgrounds to the header bar using from-red-600 to-orange-500 or similar red-orange gradients. Update navigation button styles to use the red-orange color scheme. Ensure login/logout buttons display red-to-orange gradient backgrounds. Update hover states to deepen to darker red tones."
-        },
-        {
-          "path": "frontend/src/components/Footer.tsx",
-          "operation": "modify",
-          "description": "Update the Footer component to use the red-orange gradient theme. Apply red-orange gradient backgrounds or borders. Update navigation button styles and social media link icons to use the red-orange color scheme. Ensure consistency with the overall theme."
+          "description": "Extend the Tailwind theme with red-orange brand colors (#C0100A, #FF6A00) as custom color tokens. Configure Orbitron and Rajdhani as primary heading fonts. Add gradient utilities for the fire gradient effect. Ensure the configuration supports consistent theming across buttons, cards, and badges."
         },
         {
           "path": "frontend/src/pages/HomePage.tsx",
           "operation": "modify",
-          "description": "Update the HomePage hero section and feature highlights to use the red-orange gradient theme. Apply gradient backgrounds to hero sections, feature cards, and call-to-action buttons using from-red-600 to-orange-500 or similar gradients. Update text colors and hover states to align with the red-orange palette. Replace any existing blue or purple accents."
+          "description": "Apply the red-orange fire gradient background to the hero section using the generated image at frontend/public/assets/generated/hero-bg.dim_1440x600.png. Ensure headings use Orbitron/Rajdhani fonts and that buttons follow the brand palette. Verify the hero section matches the reference screenshot styling."
+        },
+        {
+          "path": "frontend/src/components/Header.tsx",
+          "operation": "modify",
+          "description": "Apply the red-orange gradient styling to the header logo and ensure navigation buttons follow the brand palette. Use brand gradient utilities for visual consistency."
+        },
+        {
+          "path": "frontend/src/components/Footer.tsx",
+          "operation": "modify",
+          "description": "Apply brand color tokens to the footer background, links, and social icons to ensure consistency with the red-orange theme."
         },
         {
           "path": "frontend/src/pages/DashboardPage.tsx",
           "operation": "modify",
-          "description": "Update the DashboardPage tabs, cards, and buttons to use the red-orange gradient theme. Apply red-orange gradients to tab backgrounds and active states. Update tournament cards, registration cards, and profile cards with red-orange borders and backgrounds. Ensure all buttons (registration, edit, etc.) use red-to-orange gradient backgrounds. Update hover and active states to deepen to darker red tones."
+          "description": "Apply red-orange theme to dashboard tabs, tournament cards, and buttons. Ensure headings use Orbitron/Rajdhani fonts and all interactive elements follow the brand palette."
         },
         {
           "path": "frontend/src/pages/AdminDashboardPage.tsx",
           "operation": "modify",
-          "description": "Update the AdminDashboardPage interface to use the red-orange gradient theme. Apply red-orange gradients to the sidebar, tab navigation, and admin panel headers. Update all data tables, cards, badges (pending, approved, rejected, tournament statuses), and buttons (create, update, delete actions) with the red-orange color scheme. Ensure form inputs, modals, and action buttons display red-to-orange gradient backgrounds. Update hover and active states to deepen to darker red tones."
-        },
-        {
-          "path": "frontend/src/pages/TournamentsPage.tsx",
-          "operation": "modify",
-          "description": "Update the TournamentsPage to use the red-orange gradient theme. Apply red-orange gradients to tournament cards, status badges (upcoming, ongoing, completed, closed), and registration buttons. Ensure card backgrounds, borders, and hover effects use the red-orange palette. Update the registration prompt for unauthenticated users with red-orange styling."
+          "description": "Apply red-orange theme to the admin dashboard sidebar, tabbed sections, and form buttons. Ensure consistency with the brand palette and font usage."
         },
         {
           "path": "frontend/src/pages/LoginPage.tsx",
           "operation": "modify",
-          "description": "Update the LoginPage to use the red-orange gradient theme. Apply red-orange gradients to the login form container, input borders, and submit buttons. Update step indicators and OTP input fields with red-orange styling. Ensure error messages and validation states use appropriate red tones."
+          "description": "Apply red-orange gradient styling to the login page background, form buttons, and heading fonts to match the brand theme."
         },
         {
           "path": "frontend/src/pages/RegisterPage.tsx",
           "operation": "modify",
-          "description": "Update the RegisterPage to use the red-orange gradient theme. Apply red-orange gradients to the multi-step registration form, step indicators, input fields, and submit buttons. Update progress indicators and validation feedback with red-orange styling. Ensure consistency with the overall theme."
+          "description": "Apply red-orange theme to the registration page background, step indicators, form buttons, and headings to ensure consistency with the brand."
         },
         {
           "path": "frontend/src/pages/AdminLoginPage.tsx",
           "operation": "modify",
-          "description": "Update the AdminLoginPage to use the red-orange gradient theme. Apply red-orange gradients to the login form container, input fields, and submit button. Update the admin login branding with red-orange styling to match the overall theme."
+          "description": "Apply red-orange theme to the admin login page background, form styling, and buttons to match the overall brand aesthetic."
         },
         {
           "path": "frontend/src/pages/TermsPage.tsx",
           "operation": "modify",
-          "description": "Update the TermsPage to use the red-orange gradient theme. Replace the existing colorful cycling styles with red-orange gradient styles for headings, bullets, and paragraphs. Apply red-orange tones to the content container and ensure readability with the new color scheme."
-        },
-        {
-          "path": "frontend/src/components/PaymentModal.tsx",
-          "operation": "modify",
-          "description": "Update the PaymentModal to use the red-orange gradient theme. Apply red-orange gradients to the modal header, input fields, upload button, and submit button. Update progress indicators and validation feedback with red-orange styling. Ensure the modal overlay and borders use the red-orange palette."
+          "description": "Apply red-orange theme to the Terms & Conditions page, ensuring section headings use brand colors and fonts for consistency."
         }
       ]
     },
     {
-      "id": "REQ-2",
-      "summary": "Add a clearly visible 'Panel Links' section on the home page displaying direct clickable links to both User Panel (/) and Admin Panel (/admin)",
+      "id": "REQ-3",
+      "summary": "Build public Home Page with hero section, feature highlights, navigation links, and footer with backend-fetched social links",
       "acceptanceCriteria": [
-        "HomePage displays a dedicated section with links to both User Panel (/) and Admin Panel (/admin)",
-        "Both links are clearly labeled and visually distinct",
-        "Section is styled with the red-orange gradient theme",
-        "Links are clickable and navigate to the correct routes"
+        "Home page renders hero section exactly matching the reference screenshot",
+        "CTA buttons navigate to tournaments page and registration page respectively",
+        "Footer social links are fetched from backend",
+        "Header shows login/logout/dashboard based on auth state"
       ],
       "file_operations": [
         {
           "path": "frontend/src/pages/HomePage.tsx",
           "operation": "modify",
-          "description": "Add a new 'Panel Links' section to the HomePage that displays two prominent, clearly labeled cards or buttons linking to the User Panel at the root URL (/) and the Admin Panel at /admin. Position this section prominently (e.g., below the hero section or as part of the feature highlights). Style both links with the red-orange gradient theme using from-red-600 to-orange-500 or similar gradients. Include recognizable icons (e.g., user icon for User Panel, shield or admin icon for Admin Panel) and descriptive labels such as 'User Panel' and 'Admin Panel'. Ensure both links are clickable and use React Router's Link or navigate to the correct routes. Make the section visually distinct and easy to locate for visitors."
+          "description": "Implement the hero section with 'India's Premier BGMI Tournament Platform' badge, 'Raj Empire Esports Arena' heading, tagline 'Compete in thrilling BGMI tournaments, win real prizes, and prove you're the best player in the arena.', and two CTA buttons: 'View Tournaments' (navigating to /tournaments) and 'Join Now — Free' (navigating to /register). Add a feature highlights section below the hero. Integrate the generated hero background image at frontend/public/assets/generated/hero-bg.dim_1440x600.png. Ensure the hero section matches the reference screenshot styling exactly. Include links to User Panel (/dashboard) and Admin Panel (/admin) in the navigation or a visible section."
+        },
+        {
+          "path": "frontend/src/components/Header.tsx",
+          "operation": "modify",
+          "description": "Ensure the Header component displays auth-aware navigation: show login button when not authenticated, and show logout/dashboard links when authenticated. Use useAuth hook to determine authentication state. Ensure the header integrates seamlessly with the HomePage."
+        },
+        {
+          "path": "frontend/src/components/Footer.tsx",
+          "operation": "modify",
+          "description": "Ensure the Footer component fetches social links (YouTube, Instagram, Telegram) from the backend using the useGetSocialLinks query hook and displays them as clickable icons. Include quick navigation links to Terms, Tournaments, and Dashboard pages."
+        },
+        {
+          "path": "frontend/src/App.tsx",
+          "operation": "modify",
+          "description": "Ensure the /tournaments route is registered and accessible from the HomePage 'View Tournaments' button. Verify that HomePage is wired into the router and rendered within the Layout component."
+        }
+      ]
+    },
+    {
+      "id": "REQ-4",
+      "summary": "Build Player Registration and Login flow with OTP verification and session persistence",
+      "acceptanceCriteria": [
+        "Player can register with display name, mobile number, and BGMI Player ID",
+        "OTP is generated and verified through backend",
+        "Login persists session in localStorage",
+        "Protected routes redirect to login if not authenticated"
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/pages/RegisterPage.tsx",
+          "operation": "modify",
+          "description": "Implement multi-step registration flow: (1) Collect displayName, mobileNumber, and bgmiPlayerId. (2) Generate OTP via actor.generateOtp() and verify via actor.verifyOtp(). (3) Call actor.registerPlayer() and actor.saveCallerUserProfile() to complete registration. On success, update AuthContext with the new player session and navigate to /dashboard. Use the authorization component to ensure the player profile is persisted. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/pages/LoginPage.tsx",
+          "operation": "modify",
+          "description": "Implement two-step login: (1) Collect mobile number and generate OTP via actor.generateOtp(). (2) Verify OTP via actor.verifyOtp(). On success, fetch the player's profile via actor.getCallerUserProfile() and update AuthContext with the session (mobile, displayName, bgmiPlayerId). Persist the session in localStorage and navigate to /dashboard. Use the authorization component to verify user role and fetch profile. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/context/AuthContext.tsx",
+          "operation": "modify",
+          "description": "Ensure AuthContext persists player session (mobile, displayName, bgmiPlayerId) in localStorage under a consistent key. Expose login and logout functions that update both context state and localStorage. Ensure logout clears all cached data and invalidates React Query cache."
+        },
+        {
+          "path": "frontend/src/components/ProtectedRoute.tsx",
+          "operation": "modify",
+          "description": "Ensure ProtectedRoute checks AuthContext.isAuthenticated and redirects unauthenticated users to /login. Render children only if authenticated."
+        },
+        {
+          "path": "frontend/src/App.tsx",
+          "operation": "modify",
+          "description": "Wrap the /dashboard route with ProtectedRoute to enforce authentication. Ensure /register and /login routes are accessible without authentication."
+        },
+        {
+          "path": "frontend/src/hooks/useQueries.ts",
+          "operation": "modify",
+          "description": "Add React Query hooks for OTP generation (useGenerateOtp), OTP verification (useVerifyOtp), and player registration (useRegisterPlayer). Ensure these hooks call the corresponding actor methods (generateOtp, verifyOtp, registerPlayer, saveCallerUserProfile). Use the authorization component to handle profile persistence. Verify the component's usage instructions before implementing."
+        }
+      ]
+    },
+    {
+      "id": "REQ-5",
+      "summary": "Build Player Dashboard with Tournaments, My Registrations, and Profile tabs",
+      "acceptanceCriteria": [
+        "Player dashboard shows three tabs: Tournaments, My Registrations, Profile",
+        "Tournament cards display entry fee, prize pool, squad size, and slot count",
+        "Player can initiate registration from a tournament card",
+        "My Registrations tab shows registration status for each entry"
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/pages/DashboardPage.tsx",
+          "operation": "modify",
+          "description": "Implement three-tab layout: (1) Tournaments tab — fetch all tournaments via useGetAllTournaments and display status-based filters (Upcoming/Ongoing/Completed). Show tournament cards with entry fee, prize pool, squad size (Solo/Duo/Squad), and available slots (totalSlots - filledSlots). Include a 'Register' button per card that opens the PaymentModal. (2) My Registrations tab — fetch player's registrations via useGetMyRegistrations and display each with tournament details and status badge (pending/approved/rejected). (3) Profile tab — display the player's displayName, mobile, and bgmiPlayerId from AuthContext or fetched via actor.getCallerUserProfile(). Use the authorization component to fetch the user profile. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/components/PaymentModal.tsx",
+          "operation": "modify",
+          "description": "Ensure PaymentModal is wired into DashboardPage and can be triggered from a tournament card. Verify the modal is correctly integrated and accessible from the Tournaments tab."
+        },
+        {
+          "path": "frontend/src/hooks/useQueries.ts",
+          "operation": "modify",
+          "description": "Ensure useGetAllTournaments, useGetMyRegistrations, and useGetCallerUserProfile hooks are available and correctly fetch data from the backend. Use the authorization component for profile fetching. Verify the component's usage instructions before implementing."
+        }
+      ]
+    },
+    {
+      "id": "REQ-6",
+      "summary": "Build Payment Modal for tournament registration with UPI details, screenshot upload, and terms acceptance",
+      "acceptanceCriteria": [
+        "Payment modal shows the specific UPI ID and QR code for the selected tournament",
+        "Player can upload a payment screenshot",
+        "Terms acceptance checkbox must be checked before submission",
+        "Success state is shown after successful submission"
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/components/PaymentModal.tsx",
+          "operation": "modify",
+          "description": "Implement the Payment Modal to: (1) Fetch and display the selected tournament's UPI ID and QR code image (qrCodeBlob) via actor.getTournamentById(). (2) Provide a file input for the player to upload a payment screenshot. Convert the screenshot to ExternalBlob using ExternalBlob.fromBytes(). (3) Include a terms acceptance checkbox that must be checked before submission. (4) On submit, call actor.registerForTournament(tournamentId, paymentScreenshotBlob). (5) On success, display a confirmation state within the modal or close and show a success message. Use the blob-storage component to handle screenshot upload. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/hooks/useQueries.ts",
+          "operation": "modify",
+          "description": "Add or update useRegisterForTournament mutation hook that accepts tournamentId and paymentScreenshotBlob (ExternalBlob) and calls actor.registerForTournament(). Ensure the hook invalidates relevant queries (getMyRegistrations, getAllTournaments) on success. Use the blob-storage component to handle blob operations. Verify the component's usage instructions before implementing."
+        }
+      ]
+    },
+    {
+      "id": "REQ-7",
+      "summary": "Build Admin Login page with username/password form and session persistence",
+      "acceptanceCriteria": [
+        "Admin login page renders with username/password form",
+        "Show/hide password toggle works",
+        "Successful login redirects to admin dashboard",
+        "Failed login shows error message"
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/pages/AdminLoginPage.tsx",
+          "operation": "modify",
+          "description": "Implement admin login form with username and password fields. Add a show/hide password toggle icon. On submit, call AdminAuthContext.login(username, password) with hardcoded credentials. On success, navigate to /admin. On failure, display an error message. Ensure the form follows the red-orange brand theme."
+        },
+        {
+          "path": "frontend/src/context/AdminAuthContext.tsx",
+          "operation": "modify",
+          "description": "Ensure AdminAuthContext persists admin authentication state in localStorage under a consistent key. Expose login and logout functions. Hardcode admin credentials (e.g., username: 'admin', password: 'admin123') and validate them in the login function. Return true on success, false on failure."
+        },
+        {
+          "path": "frontend/src/components/AdminProtectedRoute.tsx",
+          "operation": "modify",
+          "description": "Ensure AdminProtectedRoute checks AdminAuthContext.isAdminAuthenticated and redirects to /admin if not authenticated. Render children only if authenticated."
+        },
+        {
+          "path": "frontend/src/App.tsx",
+          "operation": "modify",
+          "description": "Wrap the /admin route (admin dashboard) with AdminProtectedRoute to enforce admin authentication. Ensure /admin (login page) is accessible without authentication."
+        }
+      ]
+    },
+    {
+      "id": "REQ-8",
+      "summary": "Build Admin Dashboard with sidebar and tabbed sections for managing tournaments, registrations, players, terms, support, and social links",
+      "acceptanceCriteria": [
+        "Admin can create a Daily Tournament with independent entry fee, prize pool, squad size, UPI ID, and QR code per tournament",
+        "Admin can create a Mega Tournament by uploading only a poster image + setting entry fee and squad size",
+        "Mega Tournament creation form does NOT show extra text fields (no title/date/rules text inputs beyond entry fee and squad size)",
+        "Admin can approve or reject player registrations and view payment screenshots",
+        "Admin can edit Terms & Conditions text",
+        "Admin can set social media links",
+        "Admin dashboard is protected by AdminProtectedRoute"
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/pages/AdminDashboardPage.tsx",
+          "operation": "modify",
+          "description": "Implement the Admin Dashboard with a collapsible sidebar and seven tabbed sections: (1) Daily Tournaments — form to create/edit/delete tournaments with fields: title, entryFee, prizePool, squadSize (Solo/Duo/Squad dropdown), totalSlots, upiId, QR code image upload (using blob-storage component), status dropdown. Each daily tournament has independent UPI/QR. Display list of existing daily tournaments with edit/delete actions. (2) Mega Tournaments — form to create/edit/delete mega tournaments with ONLY: poster image upload (using blob-storage component), entryFee, squadSize dropdown, totalSlots, status dropdown. Do NOT include title, date, or rules text fields in this form. Display list of existing mega tournaments with edit/delete actions. (3) Registrations — table of all registrations via useGetAllRegistrations, with columns: player name, tournament name, payment screenshot (view button opens image in modal), status, actions (approve/reject buttons). Use blob-storage component to display payment screenshots. (4) Players — table of all players via useGetAllPlayers. (5) Terms & Conditions — textarea to edit terms content, save button calls useUpdateTermsAndConditions. (6) Support Tickets — table of all tickets via useGetAllSupportTickets, with view/reply functionality. (7) Social Links — form with inputs for YouTube, Instagram, Telegram URLs, save button calls useUpdateSocialLinks. Use blob-storage component for all image uploads (QR codes, posters, payment screenshots). Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/hooks/useQueries.ts",
+          "operation": "modify",
+          "description": "Add or update mutation hooks for: useCreateTournament (accepts all tournament fields including qrCodeBlob as ExternalBlob), useUpdateTournamentQrCode, useUpdateTournamentStatus, useUpdateRegistrationStatus, useGetAllRegistrations, useGetAllPlayers, useUpdateTermsAndConditions, useUpdateSocialLinks, useGetAllSupportTickets, useReplyToSupportTicket. Ensure all blob fields use the blob-storage component's ExternalBlob type. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/App.tsx",
+          "operation": "modify",
+          "description": "Ensure the /admin route (admin dashboard) is wrapped with AdminProtectedRoute and correctly renders AdminDashboardPage. Verify the route is registered in the router."
+        }
+      ]
+    },
+    {
+      "id": "REQ-9",
+      "summary": "Build Terms & Conditions page that fetches content from backend and renders with colored headings",
+      "acceptanceCriteria": [
+        "Terms page fetches content from backend",
+        "Numbered sections render with alternating colored headings",
+        "Hardcoded fallback content displays if backend returns empty"
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/pages/TermsPage.tsx",
+          "operation": "modify",
+          "description": "Fetch Terms & Conditions content via useGetTermsAndConditions query hook. Parse the content into numbered sections and render each with alternating colored headings (use brand red-orange palette). If backend returns empty or null, display a hardcoded fallback terms text. Style the page with a rainbow-bar styled card layout matching the existing design."
+        },
+        {
+          "path": "frontend/src/hooks/useQueries.ts",
+          "operation": "modify",
+          "description": "Ensure useGetTermsAndConditions hook fetches content via actor.getTermsAndConditions() and caches the result. Return the TermsAndConditions object with content field."
+        },
+        {
+          "path": "frontend/src/App.tsx",
+          "operation": "modify",
+          "description": "Ensure the /terms route is registered and renders TermsPage within the Layout component. Verify the route is accessible from the footer and navigation."
         }
       ]
     }

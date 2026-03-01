@@ -1,44 +1,51 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
-
-const ADMIN_USERNAME = 'Empire Esports';
-const ADMIN_PASSWORD = 'Shivam803119&';
+import React, { createContext, useContext, useState, useCallback } from 'react';
 
 interface AdminAuthContextType {
   isAdminAuthenticated: boolean;
-  adminLogin: (username: string, password: string) => boolean;
-  adminLogout: () => void;
+  login: (username: string, password: string) => boolean;
+  logout: () => void;
 }
 
-const AdminAuthContext = createContext<AdminAuthContextType | null>(null);
+const AdminAuthContext = createContext<AdminAuthContextType>({
+  isAdminAuthenticated: false,
+  login: () => false,
+  logout: () => {},
+});
 
-export function AdminAuthProvider({ children }: { children: ReactNode }) {
-  const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(() => {
-    return localStorage.getItem('raj_empire_admin') === 'true';
+const ADMIN_SESSION_KEY = 'raj_empire_admin_session';
+const ADMIN_USERNAME = 'Empire Esports';
+const ADMIN_PASSWORD = 'Shivam803119&';
+
+export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
+  const [isAdminAuthenticated, setIsAdminAuthenticated] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem(ADMIN_SESSION_KEY) === 'true';
+    } catch {
+      return false;
+    }
   });
 
-  const adminLogin = (username: string, password: string): boolean => {
+  const login = useCallback((username: string, password: string): boolean => {
     if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
       setIsAdminAuthenticated(true);
-      localStorage.setItem('raj_empire_admin', 'true');
+      localStorage.setItem(ADMIN_SESSION_KEY, 'true');
       return true;
     }
     return false;
-  };
+  }, []);
 
-  const adminLogout = () => {
+  const logout = useCallback(() => {
     setIsAdminAuthenticated(false);
-    localStorage.removeItem('raj_empire_admin');
-  };
+    localStorage.removeItem(ADMIN_SESSION_KEY);
+  }, []);
 
   return (
-    <AdminAuthContext.Provider value={{ isAdminAuthenticated, adminLogin, adminLogout }}>
+    <AdminAuthContext.Provider value={{ isAdminAuthenticated, login, logout }}>
       {children}
     </AdminAuthContext.Provider>
   );
 }
 
 export function useAdminAuth() {
-  const ctx = useContext(AdminAuthContext);
-  if (!ctx) throw new Error('useAdminAuth must be used within AdminAuthProvider');
-  return ctx;
+  return useContext(AdminAuthContext);
 }

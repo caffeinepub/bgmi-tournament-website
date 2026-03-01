@@ -2,19 +2,19 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-apply-a-red-and-orange-mixed-gradient-theme-consistently-across-the-entire-frontend-ui-including-all-headers-sidebars-navigation-bars-buttons-primary-and-secondary-backgrounds-cards-badges-tabs-modals-and-hover-active-states-for-both-the-user-panel-and-admin-panel-admin-use-a-cohesive-palette-of-deep-reds-dc2626-b91c1c-vibrant-oranges-ea580c-f97316-and-red-orange-gradients-e-g-from-red-600-to-orange-500-replace-any-existing-blue-purple-or-neutral-accent-colors-with-this-red-orange-scheme",
-      "featureTitle": "Apply a red and orange mixed gradient theme consistently across the entire frontend UI — including all headers, sidebars, navigation bars, buttons (primary and secondary), backgrounds, cards, badges, tabs, modals, and hover/active states — for both the User panel (/) and Admin panel (/admin). Use a cohesive palette of deep reds (#DC2626, #B91C1C), vibrant oranges (#EA580C, #F97316), and red-orange gradients (e.g., from-red-600 to-orange-500). Replace any existing blue, purple, or neutral accent colors with this red-orange scheme.",
+      "featureId": "feature-build-a-red-orange-fire-gradient-themed-frontend-matching-the-reference-screenshots-deep-red-c0100a-to-bright-orange-ff6a00-gradient-background-on-hero-and-key-sections-use-orbitron-rajdhani-fonts-for-headings-apply-the-theme-consistently-across-all-pages-home-user-panel-admin-panel-login-registration",
+      "featureTitle": "Build a red-orange fire gradient themed frontend matching the reference screenshots: deep red (#C0100A) to bright orange (#FF6A00) gradient background on hero and key sections. Use Orbitron/Rajdhani fonts for headings. Apply the theme consistently across all pages — home, user panel, admin panel, login, registration.",
       "files": [
         "frontend/src/components/Footer.tsx",
         "frontend/src/components/Header.tsx",
         "frontend/src/index.css",
         "frontend/src/pages/AdminDashboardPage.tsx",
         "frontend/src/pages/AdminLoginPage.tsx",
+        "frontend/src/pages/DashboardPage.tsx",
         "frontend/src/pages/HomePage.tsx",
         "frontend/src/pages/LoginPage.tsx",
         "frontend/src/pages/RegisterPage.tsx",
         "frontend/src/pages/TermsPage.tsx",
-        "frontend/src/pages/TournamentsPage.tsx",
         "frontend/tailwind.config.js"
       ],
       "components": [
@@ -27,14 +27,17 @@
         "authorization@4.0.0"
       ],
       "testIds": [
-        "REQ-1"
+        "REQ-2"
       ],
       "confidence": "high"
     },
     {
-      "featureId": "feature-add-a-clearly-visible-panel-links-section-on-the-home-page-homepage-tsx-that-displays-direct-clickable-links-to-both-panels-user-panel-at-the-root-url-and-admin-panel-at-admin-this-section-should-be-styled-with-the-red-orange-theme-use-recognizable-icons-or-labels-and-make-it-easy-for-visitors-to-navigate-to-either-panel",
-      "featureTitle": "Add a clearly visible 'Panel Links' section on the home page (HomePage.tsx) that displays direct clickable links to both panels: User Panel at the root URL (/) and Admin Panel at /admin. This section should be styled with the red-orange theme, use recognizable icons or labels, and make it easy for visitors to navigate to either panel.",
+      "featureId": "feature-build-the-public-home-page-with-1-hero-section-with-india-s-premier-bgmi-tournament-platform-badge-raj-empire-esports-arena-heading-tagline-compete-in-thrilling-bgmi-tournaments-win-real-prizes-and-prove-you-re-the-best-player-in-the-arena-view-tournaments-and-join-now-free-cta-buttons-2-feature-highlights-section-3-links-to-user-panel-and-admin-panel-4-header-with-navigation-and-auth-aware-actions-5-footer-with-social-links-youtube-instagram-telegram-fetched-from-backend",
+      "featureTitle": "Build the public Home Page with: (1) Hero section with 'India's Premier BGMI Tournament Platform' badge, 'Raj Empire Esports Arena' heading, tagline 'Compete in thrilling BGMI tournaments, win real prizes, and prove you're the best player in the arena.', 'View Tournaments' and 'Join Now — Free' CTA buttons. (2) Feature highlights section. (3) Links to User Panel and Admin Panel. (4) Header with navigation and auth-aware actions. (5) Footer with social links (YouTube, Instagram, Telegram) fetched from backend.",
       "files": [
+        "frontend/src/App.tsx",
+        "frontend/src/components/Footer.tsx",
+        "frontend/src/components/Header.tsx",
         "frontend/src/pages/HomePage.tsx"
       ],
       "components": [
@@ -47,7 +50,142 @@
         "authorization@4.0.0"
       ],
       "testIds": [
-        "REQ-2"
+        "REQ-3"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-build-the-player-registration-and-login-flow-1-multi-step-registration-collecting-displayname-mobilenumber-and-bgmiplayerid-verified-via-otp-2-two-step-login-with-otp-verification-3-session-persisted-in-localstorage-via-authcontext-4-protectedroute-redirects-unauthenticated-users-to-login",
+      "featureTitle": "Build the Player Registration and Login flow: (1) Multi-step registration collecting displayName, mobileNumber, and bgmiPlayerId, verified via OTP. (2) Two-step login with OTP verification. (3) Session persisted in localStorage via AuthContext. (4) ProtectedRoute redirects unauthenticated users to login.",
+      "files": [
+        "frontend/src/App.tsx",
+        "frontend/src/components/ProtectedRoute.tsx",
+        "frontend/src/context/AuthContext.tsx",
+        "frontend/src/hooks/useQueries.ts",
+        "frontend/src/pages/LoginPage.tsx",
+        "frontend/src/pages/RegisterPage.tsx"
+      ],
+      "components": [
+        "blob-storage@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0",
+        "authorization@4.0.0"
+      ],
+      "testIds": [
+        "REQ-4"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-build-the-player-dashboard-with-three-tabs-1-tournaments-tab-lists-all-tournaments-with-status-based-filtering-upcoming-ongoing-completed-shows-entry-fee-prize-pool-squad-size-available-slots-player-can-click-to-register-2-my-registrations-tab-shows-player-s-own-registrations-with-status-pending-approved-rejected-3-profile-tab-shows-player-s-display-name-mobile-bgmi-id",
+      "featureTitle": "Build the Player Dashboard with three tabs: (1) Tournaments tab — lists all tournaments with status-based filtering (Upcoming/Ongoing/Completed), shows entry fee, prize pool, squad size, available slots; player can click to register. (2) My Registrations tab — shows player's own registrations with status (pending/approved/rejected). (3) Profile tab — shows player's display name, mobile, BGMI ID.",
+      "files": [
+        "frontend/src/components/PaymentModal.tsx",
+        "frontend/src/hooks/useQueries.ts",
+        "frontend/src/pages/DashboardPage.tsx"
+      ],
+      "components": [
+        "blob-storage@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0",
+        "authorization@4.0.0"
+      ],
+      "testIds": [
+        "REQ-5"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-build-a-payment-modal-for-tournament-registration-that-shows-the-tournament-s-upi-id-and-qr-code-image-fetched-per-tournament-from-backend-allows-player-to-upload-a-payment-screenshot-requires-terms-acceptance-checkbox-and-submits-the-registration-on-success-shows-a-confirmation-state",
+      "featureTitle": "Build a Payment Modal for tournament registration that: shows the tournament's UPI ID and QR code image (fetched per tournament from backend), allows player to upload a payment screenshot, requires terms acceptance checkbox, and submits the registration. On success shows a confirmation state.",
+      "files": [
+        "frontend/src/components/PaymentModal.tsx",
+        "frontend/src/hooks/useQueries.ts"
+      ],
+      "components": [
+        "blob-storage@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0",
+        "authorization@4.0.0"
+      ],
+      "testIds": [
+        "REQ-6"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-build-the-admin-login-page-with-username-password-form-hardcoded-credentials-show-hide-password-toggle-and-redirect-to-admin-dashboard-on-success-admin-session-persisted-in-localstorage-via-adminauthcontext",
+      "featureTitle": "Build the Admin Login page with username/password form (hardcoded credentials), show/hide password toggle, and redirect to admin dashboard on success. Admin session persisted in localStorage via AdminAuthContext.",
+      "files": [
+        "frontend/src/App.tsx",
+        "frontend/src/components/AdminProtectedRoute.tsx",
+        "frontend/src/context/AdminAuthContext.tsx",
+        "frontend/src/pages/AdminLoginPage.tsx"
+      ],
+      "components": [
+        "blob-storage@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0",
+        "authorization@4.0.0"
+      ],
+      "testIds": [
+        "REQ-7"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-build-the-admin-dashboard-with-a-collapsible-sidebar-and-the-following-tabbed-sections-1-daily-tournaments-admin-can-create-edit-delete-daily-tournaments-setting-title-entryfee-prizepool-squadsize-solo-duo-squad-totalslots-upi-id-qr-code-image-upload-status-each-daily-tournament-has-its-own-independent-upi-qr-2-mega-tournaments-admin-can-create-edit-delete-mega-tournaments-by-uploading-a-poster-image-and-setting-entryfee-squadsize-solo-duo-squad-totalslots-status-no-extra-text-fields-for-poster-3-registrations-view-all-registrations-approve-or-reject-with-status-update-view-payment-screenshots-4-players-view-all-registered-players-5-terms-conditions-edit-and-save-t-c-text-6-support-tickets-view-and-respond-7-social-links-set-youtube-instagram-telegram-urls",
+      "featureTitle": "Build the Admin Dashboard with a collapsible sidebar and the following tabbed sections: (1) Daily Tournaments — admin can create/edit/delete daily tournaments setting: title, entryFee, prizePool, squadSize (Solo/Duo/Squad), totalSlots, UPI ID, QR code image upload, status. Each daily tournament has its own independent UPI/QR. (2) Mega Tournaments — admin can create/edit/delete mega tournaments by uploading a poster image and setting: entryFee, squadSize (Solo/Duo/Squad), totalSlots, status. No extra text fields for poster. (3) Registrations — view all registrations, approve or reject with status update, view payment screenshots. (4) Players — view all registered players. (5) Terms & Conditions — edit and save T&C text. (6) Support Tickets — view and respond. (7) Social Links — set YouTube, Instagram, Telegram URLs.",
+      "files": [
+        "frontend/src/App.tsx",
+        "frontend/src/hooks/useQueries.ts",
+        "frontend/src/pages/AdminDashboardPage.tsx"
+      ],
+      "components": [
+        "blob-storage@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0",
+        "authorization@4.0.0"
+      ],
+      "testIds": [
+        "REQ-8"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-build-the-terms-conditions-page-that-fetches-t-c-content-from-the-backend-and-renders-numbered-sections-with-colored-headings-include-a-hardcoded-fallback-if-backend-returns-empty",
+      "featureTitle": "Build the Terms & Conditions page that fetches T&C content from the backend and renders numbered sections with colored headings. Include a hardcoded fallback if backend returns empty.",
+      "files": [
+        "frontend/src/App.tsx",
+        "frontend/src/hooks/useQueries.ts",
+        "frontend/src/pages/TermsPage.tsx"
+      ],
+      "components": [
+        "blob-storage@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0",
+        "authorization@4.0.0"
+      ],
+      "testIds": [
+        "REQ-9"
       ],
       "confidence": "high"
     }

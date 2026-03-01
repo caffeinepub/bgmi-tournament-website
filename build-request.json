@@ -1,70 +1,199 @@
 {
   "kind": "build_request",
-  "title": "Apply Red-Orange Mixed Gradient Theme Across Entire UI + Visible Panel Links Section",
-  "projectName": "Raj Empire Esports",
-  "priority": "normal",
+  "title": "Rebuild Raj Empire Esports Arena — Full Platform",
+  "projectName": "Raj Empire Esports Arena",
+  "priority": "high",
   "requirements": [
     {
       "id": "REQ-1",
-      "text": "Apply a red and orange mixed gradient theme consistently across the entire frontend UI — including all headers, sidebars, navigation bars, buttons (primary and secondary), backgrounds, cards, badges, tabs, modals, and hover/active states — for both the User panel (/) and Admin panel (/admin). Use a cohesive palette of deep reds (#DC2626, #B91C1C), vibrant oranges (#EA580C, #F97316), and red-orange gradients (e.g., from-red-600 to-orange-500). Replace any existing blue, purple, or neutral accent colors with this red-orange scheme.",
+      "text": "Build the complete backend actor with the following data models and logic: (1) Tournament model with fields: id, type (daily/mega), title, entryFee, prizePool, squadSize (Solo/Duo/Squad), upiId, qrCodeImage (blob), posterImage (blob, mega only), status (upcoming/ongoing/completed), slots, registeredCount, createdAt. (2) Player/User model with fields: id, displayName, mobileNumber, bgmiPlayerId, registeredAt. (3) Registration model with fields: id, tournamentId, playerId, paymentScreenshot (blob), status (pending/approved/rejected), registeredAt. (4) Support ticket model. (5) Social links model. (6) Terms & Conditions model. Expose CRUD functions for all models with admin-only write access.",
+      "target": "backend",
+      "source": {
+        "messageIds": [
+          "msg-1",
+          "msg-2",
+          "msg-3",
+          "msg-4",
+          "msg-5",
+          "msg-6",
+          "msg-7"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Admin can create, update, and delete both Daily and Mega tournaments",
+        "Each tournament stores its own entryFee, prizePool, squadSize, upiId, and qrCodeImage independently",
+        "Mega tournament stores a poster image blob alongside entryFee and squadSize",
+        "Players can register for tournaments with a payment screenshot",
+        "Admin can approve or reject registrations",
+        "Social links, Terms & Conditions, and Support tickets are persisted and retrievable"
+      ]
+    },
+    {
+      "id": "REQ-2",
+      "text": "Build a red-orange fire gradient themed frontend matching the reference screenshots: deep red (#C0100A) to bright orange (#FF6A00) gradient background on hero and key sections. Use Orbitron/Rajdhani fonts for headings. Apply the theme consistently across all pages — home, user panel, admin panel, login, registration.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-1",
+          "msg-2"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Hero section shows red-to-orange diagonal gradient matching the screenshot",
+        "All headings use Orbitron or Rajdhani gaming fonts",
+        "Theme is consistent across all pages and components",
+        "Buttons, cards, and badges follow the red-orange brand palette"
+      ]
+    },
+    {
+      "id": "REQ-3",
+      "text": "Build the public Home Page with: (1) Hero section with 'India's Premier BGMI Tournament Platform' badge, 'Raj Empire Esports Arena' heading, tagline 'Compete in thrilling BGMI tournaments, win real prizes, and prove you're the best player in the arena.', 'View Tournaments' and 'Join Now — Free' CTA buttons. (2) Feature highlights section. (3) Links to User Panel and Admin Panel. (4) Header with navigation and auth-aware actions. (5) Footer with social links (YouTube, Instagram, Telegram) fetched from backend.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-1",
+          "msg-2"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Home page renders hero section exactly matching the reference screenshot",
+        "CTA buttons navigate to tournaments page and registration page respectively",
+        "Footer social links are fetched from backend",
+        "Header shows login/logout/dashboard based on auth state"
+      ]
+    },
+    {
+      "id": "REQ-4",
+      "text": "Build the Player Registration and Login flow: (1) Multi-step registration collecting displayName, mobileNumber, and bgmiPlayerId, verified via OTP. (2) Two-step login with OTP verification. (3) Session persisted in localStorage via AuthContext. (4) ProtectedRoute redirects unauthenticated users to login.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-1",
+          "msg-2"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Player can register with display name, mobile number, and BGMI Player ID",
+        "OTP is generated and verified through backend",
+        "Login persists session in localStorage",
+        "Protected routes redirect to login if not authenticated"
+      ]
+    },
+    {
+      "id": "REQ-5",
+      "text": "Build the Player Dashboard with three tabs: (1) Tournaments tab — lists all tournaments with status-based filtering (Upcoming/Ongoing/Completed), shows entry fee, prize pool, squad size, available slots; player can click to register. (2) My Registrations tab — shows player's own registrations with status (pending/approved/rejected). (3) Profile tab — shows player's display name, mobile, BGMI ID.",
       "target": "frontend",
       "source": {
         "messageIds": [
           "msg-1",
           "msg-2",
-          "msg-3"
-        ],
-        "quotes": [
-          "pura ui panel me karo mix color red or orenge ka",
-          "पूरे UI में Red & Orange mixed gradient theme (buttons, headers, sidebar, backgrounds, hover effects सब)"
+          "msg-3",
+          "msg-4",
+          "msg-5",
+          "msg-6",
+          "msg-7"
         ]
       },
       "acceptanceCriteria": [
-        "All primary buttons display a red-to-orange gradient background",
-        "Header and navigation bar use red-orange gradient styling",
-        "Sidebar (admin panel) uses the red-orange color scheme",
-        "Card components, badges, and tabs reflect the red-orange theme",
-        "Hover and active states deepen to darker red tones",
-        "No blue or purple accent colors remain in either panel",
-        "Both User panel (/) and Admin panel (/admin) consistently use the new theme"
+        "Player dashboard shows three tabs: Tournaments, My Registrations, Profile",
+        "Tournament cards display entry fee, prize pool, squad size, and slot count",
+        "Player can initiate registration from a tournament card",
+        "My Registrations tab shows registration status for each entry"
       ]
     },
     {
-      "id": "REQ-2",
-      "text": "Add a clearly visible 'Panel Links' section on the home page (HomePage.tsx) that displays direct clickable links to both panels: User Panel at the root URL (/) and Admin Panel at /admin. This section should be styled with the red-orange theme, use recognizable icons or labels, and make it easy for visitors to navigate to either panel.",
+      "id": "REQ-6",
+      "text": "Build a Payment Modal for tournament registration that: shows the tournament's UPI ID and QR code image (fetched per tournament from backend), allows player to upload a payment screenshot, requires terms acceptance checkbox, and submits the registration. On success shows a confirmation state.",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-2",
-          "msg-3"
-        ],
-        "quotes": [
-          "Admin panel का URL — deploy होने के बाद दोनों panel के links clearly दिखाए जाएं",
-          "दोनों के links clearly visible section में दिखाए जाएंगे"
+          "msg-3",
+          "msg-4",
+          "msg-5",
+          "msg-6",
+          "msg-7"
         ]
       },
       "acceptanceCriteria": [
-        "HomePage displays a dedicated section with links to both User Panel (/) and Admin Panel (/admin)",
-        "Both links are clearly labeled and visually distinct",
-        "Section is styled with the red-orange gradient theme",
-        "Links are clickable and navigate to the correct routes"
+        "Payment modal shows the specific UPI ID and QR code for the selected tournament",
+        "Player can upload a payment screenshot",
+        "Terms acceptance checkbox must be checked before submission",
+        "Success state is shown after successful submission"
+      ]
+    },
+    {
+      "id": "REQ-7",
+      "text": "Build the Admin Login page with username/password form (hardcoded credentials), show/hide password toggle, and redirect to admin dashboard on success. Admin session persisted in localStorage via AdminAuthContext.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-1",
+          "msg-2"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Admin login page renders with username/password form",
+        "Show/hide password toggle works",
+        "Successful login redirects to admin dashboard",
+        "Failed login shows error message"
+      ]
+    },
+    {
+      "id": "REQ-8",
+      "text": "Build the Admin Dashboard with a collapsible sidebar and the following tabbed sections: (1) Daily Tournaments — admin can create/edit/delete daily tournaments setting: title, entryFee, prizePool, squadSize (Solo/Duo/Squad), totalSlots, UPI ID, QR code image upload, status. Each daily tournament has its own independent UPI/QR. (2) Mega Tournaments — admin can create/edit/delete mega tournaments by uploading a poster image and setting: entryFee, squadSize (Solo/Duo/Squad), totalSlots, status. No extra text fields for poster. (3) Registrations — view all registrations, approve or reject with status update, view payment screenshots. (4) Players — view all registered players. (5) Terms & Conditions — edit and save T&C text. (6) Support Tickets — view and respond. (7) Social Links — set YouTube, Instagram, Telegram URLs.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-3",
+          "msg-4",
+          "msg-5",
+          "msg-6",
+          "msg-7"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Admin can create a Daily Tournament with independent entry fee, prize pool, squad size, UPI ID, and QR code per tournament",
+        "Admin can create a Mega Tournament by uploading only a poster image + setting entry fee and squad size",
+        "Mega Tournament creation form does NOT show extra text fields (no title/date/rules text inputs beyond entry fee and squad size)",
+        "Admin can approve or reject player registrations and view payment screenshots",
+        "Admin can edit Terms & Conditions text",
+        "Admin can set social media links",
+        "Admin dashboard is protected by AdminProtectedRoute"
+      ]
+    },
+    {
+      "id": "REQ-9",
+      "text": "Build the Terms & Conditions page that fetches T&C content from the backend and renders numbered sections with colored headings. Include a hardcoded fallback if backend returns empty.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-1",
+          "msg-2"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Terms page fetches content from backend",
+        "Numbered sections render with alternating colored headings",
+        "Hardcoded fallback content displays if backend returns empty"
       ]
     }
   ],
   "constraints": [
-    "Do not modify files under frontend/src/hooks/useInternetIdentity.ts, frontend/src/hooks/useActor.ts, frontend/src/main.tsx, or frontend/src/components/ui",
-    "Do not change backend logic or data models",
-    "Admin panel must remain accessible at the /admin route",
-    "User panel must remain accessible at the / route"
+    "All Motoko logic must remain in a single backend/main.mo actor file",
+    "Do not edit any files under frontend/src/hooks/useInternetIdentity.ts, frontend/src/hooks/useActor.ts, frontend/src/main.tsx, or frontend/src/components/ui",
+    "Mega Tournament form must NOT include text fields for title, date, rules — only poster image upload, entry fee, and squad size",
+    "Each Daily Tournament must store its own UPI ID and QR code independently (not shared across tournaments)"
   ],
   "nonGoals": [
-    "Adding new features or pages beyond the theme change and links section",
-    "Changing authentication logic or backend APIs",
-    "Modifying font families or typography settings",
-    "Adding new backend endpoints"
+    "Real-time chat or WebSocket features",
+    "Third-party payment gateway integration (UPI QR is display-only for manual payment)",
+    "Email or SMS notifications",
+    "Multiple backend canister architecture"
   ],
   "imageRequirements": {
-    "required": [],
+    "required": [
+      "Red to orange fire gradient hero background for BGMI esports platform, deep crimson red on the left transitioning to bright orange on the right (hero-bg.dim_1440x600.png)"
+    ],
     "edits": []
   }
 }

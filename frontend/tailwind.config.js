@@ -10,6 +10,7 @@ export default {
       fontFamily: {
         sans: ['Exo 2', 'sans-serif'],
         heading: ['Rajdhani', 'sans-serif'],
+        orbitron: ['Orbitron', 'sans-serif'],
       },
       colors: {
         background: "oklch(var(--background) / <alpha-value>)",
@@ -54,11 +55,10 @@ export default {
           foreground: "oklch(var(--warning-foreground) / <alpha-value>)",
         },
         brand: {
-          red: "oklch(0.48 0.24 22)",
-          orange: "oklch(0.65 0.22 52)",
-          crimson: "oklch(0.42 0.24 18)",
-          amber: "oklch(0.68 0.20 55)",
-          coral: "oklch(0.62 0.22 32)",
+          red: '#C0100A',
+          orange: '#FF6A00',
+          dark: '#141418',
+          darker: '#0d0d0f',
         },
       },
       borderRadius: {
@@ -67,15 +67,12 @@ export default {
         sm: "calc(var(--radius) - 4px)",
       },
       backgroundImage: {
-        'brand-gradient': 'linear-gradient(135deg, oklch(0.48 0.24 22), oklch(0.65 0.22 52))',
-        'brand-gradient-dark': 'linear-gradient(135deg, oklch(0.42 0.24 18), oklch(0.58 0.22 48))',
-        'brand-gradient-h': 'linear-gradient(90deg, oklch(0.48 0.24 22), oklch(0.65 0.22 52))',
-        'brand-gradient-v': 'linear-gradient(180deg, oklch(0.48 0.24 22), oklch(0.65 0.22 52))',
+        'brand-gradient': 'linear-gradient(135deg, #C0100A, #FF6A00)',
       },
       boxShadow: {
-        'brand': '0 4px 24px oklch(0.48 0.24 22 / 0.3)',
-        'brand-lg': '0 8px 40px oklch(0.48 0.24 22 / 0.4)',
-        'brand-sm': '0 2px 12px oklch(0.48 0.24 22 / 0.2)',
+        'brand': '0 4px 24px rgba(192, 16, 10, 0.3)',
+        'brand-lg': '0 8px 40px rgba(192, 16, 10, 0.4)',
+        'brand-sm': '0 2px 12px rgba(192, 16, 10, 0.2)',
       },
       keyframes: {
         "accordion-down": {
@@ -86,15 +83,10 @@ export default {
           from: { height: "var(--radix-accordion-content-height)" },
           to: { height: "0" },
         },
-        "pulse-brand": {
-          "0%, 100%": { boxShadow: "0 0 0 0 oklch(0.48 0.24 22 / 0.4)" },
-          "50%": { boxShadow: "0 0 0 8px oklch(0.48 0.24 22 / 0)" },
-        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
-        "pulse-brand": "pulse-brand 2s infinite",
       },
     },
   },

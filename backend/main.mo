@@ -1,11 +1,10 @@
-import Array "mo:core/Array";
-import List "mo:core/List";
 import Map "mo:core/Map";
+import Nat "mo:core/Nat";
 import Text "mo:core/Text";
 import Time "mo:core/Time";
-import Order "mo:core/Order";
 import Iter "mo:core/Iter";
 import Principal "mo:core/Principal";
+import Array "mo:core/Array";
 import Runtime "mo:core/Runtime";
 
 import MixinStorage "blob-storage/Mixin";
@@ -19,10 +18,9 @@ actor {
   let accessControlState = AccessControl.initState();
   include MixinAuthorization(accessControlState);
 
-  // Persistent domain name state
   var domainName : Text = "Raj-Empire-Esports";
 
-  // User profile type required by the frontend
+  // User profile data type required by the frontend
   type UserProfile = {
     displayName : Text;
     mobile : Text;
@@ -59,15 +57,7 @@ actor {
     displayName : Text;
   };
 
-  module Player {
-    public func compare(a : Player, b : Player) : Order.Order {
-      switch (Text.compare(a.displayName, b.displayName)) {
-        case (#less) { #less };
-        case (#greater) { #greater };
-        case (#equal) { Text.compare(a.bgmiPlayerId, b.bgmiPlayerId) };
-      };
-    };
-  };
+  let players = Map.empty<Principal, Player>();
 
   type Tournament = {
     id : Text;
@@ -86,11 +76,7 @@ actor {
     status : TournamentStatus;
   };
 
-  module Tournament {
-    public func compare(a : Tournament, b : Tournament) : Order.Order {
-      Text.compare(a.name, b.name);
-    };
-  };
+  let tournaments = Map.empty<Text, Tournament>();
 
   type TournamentStatus = {
     #upcoming;
@@ -113,9 +99,7 @@ actor {
     #rejected;
   };
 
-  type TermsAndConditions = {
-    content : Text;
-  };
+  let registrations = Map.empty<Text, TournamentRegistration>();
 
   type SupportTicket = {
     ticketId : Text;
@@ -136,23 +120,27 @@ actor {
     #closed;
   };
 
-  type SocialLinks = {
-    youtube : Text;
-    instagram : Text;
-    telegram : Text;
-  };
+  let supportTickets = Map.empty<Text, SupportTicket>();
 
   type OtpEntry = {
     otp : Text;
     timestamp : Time.Time;
   };
 
-  let players = Map.empty<Principal, Player>();
-  let tournaments = Map.empty<Text, Tournament>();
-  let registrations = Map.empty<Text, TournamentRegistration>();
-  let supportTickets = Map.empty<Text, SupportTicket>();
   let otps = Map.empty<Principal, OtpEntry>();
+
+  type TermsAndConditions = {
+    content : Text;
+  };
+
   var termsAndConditions : TermsAndConditions = { content = "" };
+
+  type SocialLinks = {
+    youtube : Text;
+    instagram : Text;
+    telegram : Text;
+  };
+
   var socialLinks : SocialLinks = {
     youtube = "";
     instagram = "";
@@ -160,12 +148,10 @@ actor {
   };
 
   // Domain Name functions
-  // Public query - open to everyone including guests
   public query func getDomainName() : async Text {
     domainName;
   };
 
-  // Setter is admin-only
   public shared ({ caller }) func setDomainName(newName : Text) : async () {
     if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Runtime.trap("Unauthorized: Only admins can set the domain name");
@@ -174,7 +160,6 @@ actor {
   };
 
   // Player functions
-  // Only authenticated users (not guests) can register as a player
   public shared ({ caller }) func registerPlayer(mobile : Text, bgmiPlayerId : Text, displayName : Text) : async () {
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only authenticated users can register as a player");
@@ -215,7 +200,6 @@ actor {
     id;
   };
 
-  // TournamentRegistration functions - authenticated users only
   public shared ({ caller }) func registerForTournament(tournamentId : Text, paymentScreenshotBlob : Storage.ExternalBlob) : async Text {
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only authenticated users can register for tournaments");
@@ -244,7 +228,7 @@ actor {
     };
   };
 
-  // Terms and Conditions - public read, admin-only write
+  // Terms and Conditions
   public query func getTermsAndConditions() : async TermsAndConditions {
     termsAndConditions;
   };
@@ -256,7 +240,7 @@ actor {
     termsAndConditions := { content };
   };
 
-  // Social Links - public read, admin-only write
+  // Social Links
   public query func getSocialLinks() : async SocialLinks {
     socialLinks;
   };
@@ -272,7 +256,7 @@ actor {
     };
   };
 
-  // Support Ticket - authenticated users only
+  // Support Ticket
   public shared ({ caller }) func createSupportTicket(playerName : Text, subject : Text, description : Text, screenshotBlob : ?Storage.ExternalBlob) : async Text {
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only authenticated users can create support tickets");
@@ -295,7 +279,6 @@ actor {
     ticketId;
   };
 
-  // Admin reply to support ticket
   public shared ({ caller }) func replyToSupportTicket(ticketId : Text, reply : Text) : async () {
     if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Runtime.trap("Unauthorized: Only admins can reply to support tickets");
@@ -314,7 +297,6 @@ actor {
     };
   };
 
-  // Close support ticket - admin only
   public shared ({ caller }) func closeSupportTicket(ticketId : Text) : async () {
     if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Runtime.trap("Unauthorized: Only admins can close support tickets");

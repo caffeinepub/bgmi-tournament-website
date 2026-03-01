@@ -1,221 +1,250 @@
 import React, { useState } from 'react';
 import { useNavigate } from '@tanstack/react-router';
-import { Loader2, User, Phone, Gamepad2, ArrowRight, CheckCircle } from 'lucide-react';
-import { useRegisterPlayer } from '../hooks/useQueries';
 import { useAuth } from '../context/AuthContext';
 import { useActor } from '../hooks/useActor';
-
-type Step = 'details' | 'otp' | 'success';
+import { useGenerateOtp, useVerifyOtp, useRegisterPlayer, useSaveCallerUserProfile } from '../hooks/useQueries';
+import { Gamepad2, Phone, KeyRound, User, Hash, ArrowRight, Loader2, CheckCircle } from 'lucide-react';
 
 export default function RegisterPage() {
   const navigate = useNavigate();
   const { login } = useAuth();
   const { actor } = useActor();
-  const [step, setStep] = useState<Step>('details');
+  const generateOtp = useGenerateOtp();
+  const verifyOtp = useVerifyOtp();
+  const registerPlayer = useRegisterPlayer();
+  const saveProfile = useSaveCallerUserProfile();
+
+  const [step, setStep] = useState<'details' | 'otp' | 'success'>('details');
   const [form, setForm] = useState({ displayName: '', mobile: '', bgmiPlayerId: '' });
   const [otp, setOtp] = useState('');
-  const [generatedOtp, setGeneratedOtp] = useState('');
   const [error, setError] = useState('');
-  const [otpLoading, setOtpLoading] = useState(false);
-  const [verifyLoading, setVerifyLoading] = useState(false);
+  const [generatedOtp, setGeneratedOtp] = useState('');
 
-  const registerPlayer = useRegisterPlayer();
-
-  const handleDetails = async (e: React.FormEvent) => {
+  const handleDetailsSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    if (!form.displayName.trim()) { setError('Display name is required'); return; }
-    if (!form.mobile || form.mobile.length < 10) { setError('Valid 10-digit mobile number required'); return; }
-    if (!form.bgmiPlayerId.trim()) { setError('BGMI Player ID is required'); return; }
-    setOtpLoading(true);
+    if (!form.displayName.trim()) { setError('Please enter your display name'); return; }
+    if (!form.mobile.trim() || form.mobile.length < 10) { setError('Please enter a valid 10-digit mobile number'); return; }
+    if (!form.bgmiPlayerId.trim()) { setError('Please enter your BGMI Player ID'); return; }
     try {
-      if (!actor) throw new Error('Not connected');
-      const otpVal = await actor.generateOtp();
+      const otpVal = await generateOtp.mutateAsync();
       setGeneratedOtp(otpVal);
       setStep('otp');
     } catch (err: any) {
-      setError(err.message || 'Failed to send OTP');
-    } finally {
-      setOtpLoading(false);
+      setError(err?.message || 'Failed to send OTP. Please try again.');
     }
   };
 
-  const handleOtp = async (e: React.FormEvent) => {
+  const handleOtpSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    if (!otp || otp.length < 4) { setError('Please enter the OTP'); return; }
-    setVerifyLoading(true);
+    if (!otp.trim()) { setError('Please enter the OTP'); return; }
     try {
-      if (!actor) throw new Error('Not connected');
-      const valid = await actor.verifyOtp(otp);
-      if (!valid) { setError('Invalid OTP. Please try again.'); setVerifyLoading(false); return; }
-      await registerPlayer.mutateAsync({ mobile: form.mobile, bgmiPlayerId: form.bgmiPlayerId, displayName: form.displayName });
+      const isValid = await verifyOtp.mutateAsync(otp);
+      if (!isValid) { setError('Invalid OTP. Please try again.'); return; }
+
+      // Register player
+      await registerPlayer.mutateAsync({
+        mobile: form.mobile,
+        bgmiPlayerId: form.bgmiPlayerId,
+        displayName: form.displayName,
+      });
+
+      // Save profile
+      await saveProfile.mutateAsync({
+        displayName: form.displayName,
+        mobile: form.mobile,
+        bgmiPlayerId: form.bgmiPlayerId,
+      });
+
       login({ mobile: form.mobile, displayName: form.displayName, bgmiPlayerId: form.bgmiPlayerId });
       setStep('success');
     } catch (err: any) {
-      if (err.message?.includes('already exists')) {
-        setError('This account already exists. Please login instead.');
+      const msg = err?.message || '';
+      if (msg.includes('Player already exists')) {
+        // Already registered, just login
+        login({ mobile: form.mobile, displayName: form.displayName, bgmiPlayerId: form.bgmiPlayerId });
+        setStep('success');
       } else {
-        setError(err.message || 'Registration failed');
+        setError(msg || 'Registration failed. Please try again.');
       }
-    } finally {
-      setVerifyLoading(false);
     }
   };
 
-  const steps = ['details', 'otp', 'success'];
-  const stepIdx = steps.indexOf(step);
+  const steps = ['Details', 'Verify OTP', 'Done'];
+  const currentStepIdx = step === 'details' ? 0 : step === 'otp' ? 1 : 2;
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center px-4 py-8">
+    <div className="min-h-screen bg-brand-darker flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-brand-gradient shadow-brand mb-4">
-            <Gamepad2 size={32} className="text-white" />
+          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-brand-red to-brand-orange shadow-lg shadow-brand-red/30 mb-4">
+            <Gamepad2 className="w-7 h-7 text-white" />
           </div>
-          <h1 className="font-heading text-3xl font-bold text-foreground">Create Account</h1>
-          <p className="text-muted-foreground mt-1">Join Raj Empire Esports today</p>
+          <h1 className="font-orbitron font-bold text-white text-2xl">Create Account</h1>
+          <p className="text-gray-400 text-sm mt-1">Join Raj Empire Esports Arena</p>
         </div>
 
-        <div className="bg-card rounded-2xl border border-border shadow-brand-sm overflow-hidden">
-          {/* Progress Bar */}
-          <div className="bg-brand-gradient p-4">
-            <div className="flex items-center justify-between">
-              {['Player Details', 'Verify OTP', 'Done!'].map((label, i) => (
-                <React.Fragment key={label}>
-                  <div className={`flex items-center gap-2 text-xs font-medium ${i <= stepIdx ? 'text-white' : 'text-white/50'}`}>
-                    <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
-                      i < stepIdx ? 'bg-white text-brand-red' :
-                      i === stepIdx ? 'bg-white text-brand-red' :
-                      'bg-white/20 text-white'
-                    }`}>
-                      {i < stepIdx ? '✓' : i + 1}
-                    </div>
-                    <span className="hidden sm:block">{label}</span>
+        <div className="bg-brand-dark border border-brand-red/20 rounded-2xl p-6 shadow-xl">
+          {/* Step indicator */}
+          <div className="flex items-center justify-between mb-6">
+            {steps.map((s, i) => (
+              <React.Fragment key={s}>
+                <div className="flex flex-col items-center gap-1">
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all ${i < currentStepIdx ? 'bg-green-500 text-white' : i === currentStepIdx ? 'bg-brand-red text-white' : 'bg-white/10 text-gray-500'}`}>
+                    {i < currentStepIdx ? <CheckCircle className="w-4 h-4" /> : i + 1}
                   </div>
-                  {i < 2 && <div className={`flex-1 h-0.5 mx-2 ${i < stepIdx ? 'bg-white' : 'bg-white/30'}`} />}
-                </React.Fragment>
-              ))}
-            </div>
+                  <span className={`text-xs ${i === currentStepIdx ? 'text-brand-orange' : 'text-gray-600'}`}>{s}</span>
+                </div>
+                {i < steps.length - 1 && (
+                  <div className="flex-1 h-0.5 mx-2 bg-white/10">
+                    <div className={`h-full bg-brand-red transition-all ${i < currentStepIdx ? 'w-full' : 'w-0'}`} />
+                  </div>
+                )}
+              </React.Fragment>
+            ))}
           </div>
 
-          <div className="p-6">
-            {step === 'details' && (
-              <form onSubmit={handleDetails} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">Display Name</label>
-                  <div className="relative">
-                    <User size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                    <input
-                      type="text"
-                      value={form.displayName}
-                      onChange={e => setForm(f => ({ ...f, displayName: e.target.value }))}
-                      placeholder="Your in-game name"
-                      className="w-full pl-10 pr-4 py-3 rounded-xl border border-input bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-brand-red/50 focus:border-brand-red transition-colors"
-                    />
-                  </div>
+          {step === 'details' && (
+            <form onSubmit={handleDetailsSubmit} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-1.5">Display Name</label>
+                <div className="relative">
+                  <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+                  <input
+                    type="text"
+                    value={form.displayName}
+                    onChange={(e) => setForm({ ...form, displayName: e.target.value })}
+                    placeholder="Your in-game name"
+                    className="w-full bg-white/5 border border-white/10 rounded-xl pl-10 pr-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-brand-red/60 transition-all text-sm"
+                  />
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">Mobile Number</label>
-                  <div className="relative">
-                    <Phone size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                    <input
-                      type="tel"
-                      value={form.mobile}
-                      onChange={e => setForm(f => ({ ...f, mobile: e.target.value.replace(/\D/g, '').slice(0, 10) }))}
-                      placeholder="10-digit mobile number"
-                      maxLength={10}
-                      className="w-full pl-10 pr-4 py-3 rounded-xl border border-input bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-brand-red/50 focus:border-brand-red transition-colors"
-                    />
-                  </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-1.5">Mobile Number</label>
+                <div className="relative">
+                  <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+                  <input
+                    type="tel"
+                    value={form.mobile}
+                    onChange={(e) => setForm({ ...form, mobile: e.target.value })}
+                    placeholder="10-digit mobile number"
+                    className="w-full bg-white/5 border border-white/10 rounded-xl pl-10 pr-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-brand-red/60 transition-all text-sm"
+                    maxLength={10}
+                  />
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">BGMI Player ID</label>
-                  <div className="relative">
-                    <Gamepad2 size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                    <input
-                      type="text"
-                      value={form.bgmiPlayerId}
-                      onChange={e => setForm(f => ({ ...f, bgmiPlayerId: e.target.value }))}
-                      placeholder="Your BGMI Player ID"
-                      className="w-full pl-10 pr-4 py-3 rounded-xl border border-input bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-brand-red/50 focus:border-brand-red transition-colors"
-                    />
-                  </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-1.5">BGMI Player ID</label>
+                <div className="relative">
+                  <Hash className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+                  <input
+                    type="text"
+                    value={form.bgmiPlayerId}
+                    onChange={(e) => setForm({ ...form, bgmiPlayerId: e.target.value })}
+                    placeholder="Your BGMI Player ID"
+                    className="w-full bg-white/5 border border-white/10 rounded-xl pl-10 pr-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-brand-red/60 transition-all text-sm"
+                  />
                 </div>
-                {error && <p className="text-destructive text-sm bg-destructive/10 rounded-lg px-3 py-2">{error}</p>}
-                <button
-                  type="submit"
-                  disabled={otpLoading || !actor}
-                  className="w-full py-3 rounded-xl bg-brand-gradient text-white font-bold text-base hover:opacity-90 transition-all shadow-brand disabled:opacity-50 flex items-center justify-center gap-2"
-                >
-                  {otpLoading ? <><Loader2 size={18} className="animate-spin" /> Sending OTP...</> : <>Continue <ArrowRight size={18} /></>}
-                </button>
-              </form>
-            )}
+              </div>
 
-            {step === 'otp' && (
-              <form onSubmit={handleOtp} className="space-y-4">
-                <div className="text-center mb-4">
-                  <p className="text-muted-foreground text-sm">OTP sent to <strong>+91 {form.mobile}</strong></p>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">Enter OTP</label>
+              {error && (
+                <div className="bg-red-500/10 border border-red-500/30 rounded-lg px-3 py-2 text-red-400 text-sm">{error}</div>
+              )}
+
+              <button
+                type="submit"
+                disabled={generateOtp.isPending}
+                className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-brand-red to-brand-orange text-white font-bold py-3 rounded-xl hover:opacity-90 transition-opacity disabled:opacity-60 shadow-lg shadow-brand-red/20"
+              >
+                {generateOtp.isPending ? (
+                  <><Loader2 className="w-4 h-4 animate-spin" /> Sending OTP...</>
+                ) : (
+                  <><ArrowRight className="w-4 h-4" /> Continue</>
+                )}
+              </button>
+            </form>
+          )}
+
+          {step === 'otp' && (
+            <form onSubmit={handleOtpSubmit} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-1.5">Enter OTP</label>
+                <p className="text-xs text-gray-500 mb-3">OTP sent to +91 {form.mobile}</p>
+                {generatedOtp && (
+                  <div className="bg-brand-orange/10 border border-brand-orange/30 rounded-lg px-3 py-2 text-brand-orange text-sm mb-3">
+                    Demo OTP: <strong>{generatedOtp}</strong>
+                  </div>
+                )}
+                <div className="relative">
+                  <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
                   <input
                     type="text"
                     value={otp}
-                    onChange={e => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                    placeholder="Enter OTP"
-                    maxLength={6}
-                    className="w-full px-4 py-3 rounded-xl border border-input bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-brand-red/50 focus:border-brand-red transition-colors text-center text-xl tracking-widest font-bold"
+                    onChange={(e) => setOtp(e.target.value)}
+                    placeholder="Enter 4-digit OTP"
+                    className="w-full bg-white/5 border border-white/10 rounded-xl pl-10 pr-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-brand-red/60 transition-all text-sm tracking-widest"
+                    maxLength={4}
                   />
-                  {generatedOtp && (
-                    <p className="text-xs text-muted-foreground mt-2 text-center">
-                      Demo OTP: <span className="text-brand-red font-bold">{generatedOtp}</span>
-                    </p>
-                  )}
                 </div>
-                {error && <p className="text-destructive text-sm bg-destructive/10 rounded-lg px-3 py-2">{error}</p>}
-                <button
-                  type="submit"
-                  disabled={verifyLoading || registerPlayer.isPending}
-                  className="w-full py-3 rounded-xl bg-brand-gradient text-white font-bold text-base hover:opacity-90 transition-all shadow-brand disabled:opacity-50 flex items-center justify-center gap-2"
-                >
-                  {(verifyLoading || registerPlayer.isPending) ? <><Loader2 size={18} className="animate-spin" /> Registering...</> : <>Complete Registration <ArrowRight size={18} /></>}
-                </button>
-                <button type="button" onClick={() => { setStep('details'); setOtp(''); setError(''); }} className="w-full py-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
-                  ← Back to details
-                </button>
-              </form>
-            )}
-
-            {step === 'success' && (
-              <div className="text-center py-6">
-                <div className="w-20 h-20 rounded-full bg-brand-gradient flex items-center justify-center mx-auto mb-4 shadow-brand">
-                  <CheckCircle size={40} className="text-white" />
-                </div>
-                <h3 className="font-heading text-2xl font-bold text-foreground mb-2">Welcome, {form.displayName}!</h3>
-                <p className="text-muted-foreground mb-6">Your account has been created successfully.</p>
-                <button
-                  onClick={() => navigate({ to: '/player/dashboard' })}
-                  className="w-full py-3 rounded-xl bg-brand-gradient text-white font-bold text-base hover:opacity-90 transition-all shadow-brand"
-                >
-                  Go to Dashboard
-                </button>
               </div>
-            )}
 
-            {step !== 'success' && (
-              <div className="mt-6 pt-4 border-t border-border text-center">
-                <p className="text-muted-foreground text-sm">
-                  Already have an account?{' '}
-                  <button onClick={() => navigate({ to: '/player/login' })} className="text-brand-red font-semibold hover:underline">
-                    Login here
-                  </button>
-                </p>
+              {error && (
+                <div className="bg-red-500/10 border border-red-500/30 rounded-lg px-3 py-2 text-red-400 text-sm">{error}</div>
+              )}
+
+              <button
+                type="submit"
+                disabled={verifyOtp.isPending || registerPlayer.isPending || saveProfile.isPending}
+                className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-brand-red to-brand-orange text-white font-bold py-3 rounded-xl hover:opacity-90 transition-opacity disabled:opacity-60 shadow-lg shadow-brand-red/20"
+              >
+                {(verifyOtp.isPending || registerPlayer.isPending || saveProfile.isPending) ? (
+                  <><Loader2 className="w-4 h-4 animate-spin" /> Registering...</>
+                ) : (
+                  <><CheckCircle className="w-4 h-4" /> Complete Registration</>
+                )}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => { setStep('details'); setError(''); setOtp(''); }}
+                className="w-full text-sm text-gray-500 hover:text-gray-300 transition-colors py-1"
+              >
+                ← Go back
+              </button>
+            </form>
+          )}
+
+          {step === 'success' && (
+            <div className="text-center py-4">
+              <div className="w-16 h-16 rounded-full bg-green-500/20 flex items-center justify-center mx-auto mb-4">
+                <CheckCircle className="w-8 h-8 text-green-400" />
               </div>
-            )}
-          </div>
+              <h3 className="font-orbitron font-bold text-white text-lg mb-2">Welcome, {form.displayName}!</h3>
+              <p className="text-gray-400 text-sm mb-6">Your account has been created successfully.</p>
+              <button
+                onClick={() => navigate({ to: '/player' })}
+                className="w-full bg-gradient-to-r from-brand-red to-brand-orange text-white font-bold py-3 rounded-xl hover:opacity-90 transition-opacity shadow-lg shadow-brand-red/20"
+              >
+                Go to Dashboard
+              </button>
+            </div>
+          )}
+
+          {step !== 'success' && (
+            <div className="mt-5 pt-4 border-t border-white/5 text-center">
+              <p className="text-sm text-gray-500">
+                Already have an account?{' '}
+                <button
+                  onClick={() => navigate({ to: '/player/login' })}
+                  className="text-brand-orange hover:text-brand-red transition-colors font-medium"
+                >
+                  Login here
+                </button>
+              </p>
+            </div>
+          )}
         </div>
       </div>
     </div>

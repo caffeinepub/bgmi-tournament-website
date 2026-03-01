@@ -1,36 +1,122 @@
 {
   "kind": "spec_vs_diff_report",
   "version": "1.0",
-  "generatedAt": "2026-03-01T07:07:03.784Z",
-  "summary": "The diff implements a red-orange gradient theme across the frontend UI and adds a Panel Links section to the home page. REQ-1 is largely satisfied with bg-brand-gradient classes applied to headers, sidebar, buttons, and other UI elements. REQ-2 is satisfied with a Panel Links section added to HomePage.tsx. However, TournamentsPage.tsx still contains a 'completed' status badge using blue colors, which may violate the 'no blue accent colors' requirement. Neon/rainbow multi-color styles were added to the Terms page beyond what was requested.",
+  "generatedAt": "2026-03-01T13:55:30.321Z",
+  "summary": "The diff implements the majority of requirements across backend and frontend. Most core features are present: backend actor with data models, red-orange themed frontend, home page, auth flows, player dashboard, payment modal, admin login, admin dashboard, and terms page. However, several specific requirements have gaps or are only partially addressed.",
   "missing_requirements": [
     {
       "id": "REQ-1",
-      "requirement": "No blue or purple accent colors remain in either panel",
-      "reason": "TournamentsPage.tsx still contains a 'completed' status badge styled with 'bg-blue-100 text-blue-800 border border-blue-200', which is a blue accent color that should have been replaced with the red-orange scheme.",
+      "requirement": "Tournament model must include 'type' field (daily/mega) and 'posterImage' blob field for mega tournaments; backend Tournament type uses 'name' instead of spec-required 'title', and 'type'/'posterImage' fields are not confirmed in truncated backend",
+      "reason": "The diff shows the Tournament type uses 'name' not 'title' per REQ-1 spec, and the 'type' (daily/mega) and 'posterImage' fields are not confirmed present in the truncated backend/main.mo.",
       "evidence": [
-        "frontend/src/pages/TournamentsPage.tsx"
+        "backend/main.mo"
+      ]
+    },
+    {
+      "id": "REQ-1",
+      "requirement": "Player/User model must have 'registeredAt' field; Registration model must have 'registeredAt' field",
+      "reason": "The Player type in the diff includes principal, mobile, bgmiPlayerId, displayName but no 'registeredAt'. The TournamentRegistration type shown does not include 'registeredAt'.",
+      "evidence": [
+        "backend/main.mo"
+      ]
+    },
+    {
+      "id": "REQ-3",
+      "requirement": "Home page must include links to User Panel and Admin Panel as distinct navigation elements on the page itself",
+      "reason": "The HomePage.tsx focuses on hero, features, and CTA buttons. The spec explicitly calls for links to User Panel and Admin Panel on the home page itself, not just in the header.",
+      "evidence": [
+        "frontend/src/pages/HomePage.tsx"
+      ]
+    },
+    {
+      "id": "REQ-4",
+      "requirement": "OTP must be generated and verified through backend in a truly server-side manner",
+      "reason": "In both LoginPage.tsx and RegisterPage.tsx, the generated OTP value is stored in component state after calling generateOtp.mutateAsync(), suggesting client-side comparison rather than backend verification.",
+      "evidence": [
+        "frontend/src/pages/LoginPage.tsx",
+        "frontend/src/pages/RegisterPage.tsx"
+      ]
+    },
+    {
+      "id": "REQ-8",
+      "requirement": "Mega Tournament creation form must NOT include text fields for title, date, or rules — only poster image upload, entry fee, and squad size",
+      "reason": "AdminDashboardPage.tsx is truncated and the file summary only states 'Supports Daily and Mega tournament creation with separate form fields' without confirming absence of title/date/rules text fields in the Mega Tournament form.",
+      "evidence": [
+        "frontend/src/pages/AdminDashboardPage.tsx"
+      ]
+    },
+    {
+      "requirement": "Required image asset hero-bg.dim_1440x600.png (red to orange fire gradient hero background) must be present",
+      "reason": "The build request explicitly requires this image file. The diff shows no added files, yet the image is referenced in HomePage.tsx with no evidence it was added to the assets directory.",
+      "evidence": [
+        "frontend/src/pages/HomePage.tsx"
       ]
     }
   ],
   "hallucinated_features": [
     {
-      "description": "Neon and rainbow multi-color heading styles for the Terms page including cyan, pink, purple, and lime neon colors",
-      "reason": "The index.css and TermsPage.tsx implement neon-colored heading variants with cyan, pink, purple, and lime colors that were not requested. The build request only asked for a red-orange theme across the UI.",
+      "description": "TournamentStatus includes a '#closed' variant in addition to upcoming/ongoing/completed",
+      "reason": "The spec defines only three status values: upcoming, ongoing, completed. The diff adds a fourth '#closed' status not requested.",
       "evidence": [
-        "frontend/src/index.css",
-        "frontend/src/pages/TermsPage.tsx"
+        "backend/main.mo",
+        "frontend/src/pages/DashboardPage.tsx",
+        "frontend/src/pages/TournamentsPage.tsx"
+      ]
+    },
+    {
+      "description": "Tournament model includes 'map', 'roomId', 'roomPassword', and 'matchRules' fields not in the spec",
+      "reason": "The spec defines specific Tournament fields but the backend adds map, roomId, roomPassword, and matchRules which were not requested.",
+      "evidence": [
+        "backend/main.mo"
+      ]
+    },
+    {
+      "description": "TournamentsPage includes a search input for filtering tournaments by name",
+      "reason": "The spec for REQ-5 and the public tournaments page does not mention a search bar. This is an extra feature not requested.",
+      "evidence": [
+        "frontend/src/pages/TournamentsPage.tsx"
+      ]
+    },
+    {
+      "description": "Footer includes a caffeine.ai attribution element",
+      "reason": "No attribution to caffeine.ai or any third-party branding was requested in the build spec.",
+      "evidence": [
+        "frontend/src/components/Footer.tsx",
+        "frontend-file-summaries.txt"
+      ]
+    },
+    {
+      "description": "Dual profile storage: both a UserProfile map and a separate Player map exist in the backend",
+      "reason": "The spec defines a single Player/User model. The backend implements both a UserProfile map and a separate Player map, creating unrequested duplication.",
+      "evidence": [
+        "backend/main.mo"
+      ]
+    },
+    {
+      "description": "domainName variable with getDomainName and setDomainName functions in the backend actor",
+      "reason": "The spec does not mention any domain name configuration or management functionality in the backend actor.",
+      "evidence": [
+        "backend/main.mo"
       ]
     }
   ],
-  "confidence": 0.78,
+  "confidence": 0.62,
   "changed_files": [
+    "backend/main.mo",
     "frontend-file-summaries.txt",
+    "frontend/src/App.tsx",
+    "frontend/src/components/AdminProtectedRoute.tsx",
     "frontend/src/components/Footer.tsx",
     "frontend/src/components/Header.tsx",
+    "frontend/src/components/PaymentModal.tsx",
+    "frontend/src/components/ProtectedRoute.tsx",
+    "frontend/src/context/AdminAuthContext.tsx",
+    "frontend/src/context/AuthContext.tsx",
+    "frontend/src/hooks/useQueries.ts",
     "frontend/src/index.css",
     "frontend/src/pages/AdminDashboardPage.tsx",
     "frontend/src/pages/AdminLoginPage.tsx",
+    "frontend/src/pages/DashboardPage.tsx",
     "frontend/src/pages/HomePage.tsx",
     "frontend/src/pages/LoginPage.tsx",
     "frontend/src/pages/RegisterPage.tsx",

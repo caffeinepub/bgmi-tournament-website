@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useActor } from './useActor';
-import { Tournament, TournamentRegistration, SupportTicket, SocialLinks, TermsAndConditions, Player, RegistrationStatus, TournamentStatus, ExternalBlob } from '../backend';
+import type { UserProfile, Tournament, TournamentRegistration, SupportTicket, Player, SocialLinks, TermsAndConditions, TournamentStatus, RegistrationStatus } from '../backend';
+import { ExternalBlob } from '../backend';
 
 export function useGetAllTournaments() {
   const { actor, isFetching } = useActor();
@@ -42,6 +43,166 @@ export function useGetMyRegistrations() {
   });
 }
 
+export function useGetCallerUserProfile() {
+  const { actor, isFetching: actorFetching } = useActor();
+  const query = useQuery<UserProfile | null>({
+    queryKey: ['currentUserProfile'],
+    queryFn: async () => {
+      if (!actor) throw new Error('Actor not available');
+      return actor.getCallerUserProfile();
+    },
+    enabled: !!actor && !actorFetching,
+    retry: false,
+  });
+  return {
+    ...query,
+    isLoading: actorFetching || query.isLoading,
+    isFetched: !!actor && query.isFetched,
+  };
+}
+
+export function useGetSocialLinks() {
+  const { actor, isFetching } = useActor();
+  return useQuery<SocialLinks>({
+    queryKey: ['socialLinks'],
+    queryFn: async () => {
+      if (!actor) return { youtube: '', instagram: '', telegram: '' };
+      return actor.getSocialLinks();
+    },
+    enabled: !!actor && !isFetching,
+  });
+}
+
+export function useGetTermsAndConditions() {
+  const { actor, isFetching } = useActor();
+  return useQuery<TermsAndConditions>({
+    queryKey: ['termsAndConditions'],
+    queryFn: async () => {
+      if (!actor) return { content: '' };
+      return actor.getTermsAndConditions();
+    },
+    enabled: !!actor && !isFetching,
+  });
+}
+
+export function useGetAllRegistrations() {
+  const { actor, isFetching } = useActor();
+  return useQuery<TournamentRegistration[]>({
+    queryKey: ['allRegistrations'],
+    queryFn: async () => {
+      if (!actor) return [];
+      try {
+        const tournaments = await actor.getAllTournaments();
+        const allRegs: TournamentRegistration[] = [];
+        for (const t of tournaments) {
+          const regs = await actor.getRegistrationsForTournament(t.id);
+          allRegs.push(...regs);
+        }
+        return allRegs;
+      } catch {
+        return [];
+      }
+    },
+    enabled: !!actor && !isFetching,
+  });
+}
+
+export function useGetRegistrationsForTournament(tournamentId: string) {
+  const { actor, isFetching } = useActor();
+  return useQuery<TournamentRegistration[]>({
+    queryKey: ['registrationsForTournament', tournamentId],
+    queryFn: async () => {
+      if (!actor) return [];
+      try {
+        return await actor.getRegistrationsForTournament(tournamentId);
+      } catch {
+        return [];
+      }
+    },
+    enabled: !!actor && !isFetching && !!tournamentId,
+  });
+}
+
+export function useGetAllPlayers() {
+  const { actor, isFetching } = useActor();
+  return useQuery<Player[]>({
+    queryKey: ['allPlayers'],
+    queryFn: async () => {
+      if (!actor) return [];
+      try {
+        return await actor.getAllPlayers();
+      } catch {
+        return [];
+      }
+    },
+    enabled: !!actor && !isFetching,
+  });
+}
+
+export function useGetAllSupportTickets() {
+  const { actor, isFetching } = useActor();
+  return useQuery<SupportTicket[]>({
+    queryKey: ['allSupportTickets'],
+    queryFn: async () => {
+      if (!actor) return [];
+      try {
+        return await actor.getAllSupportTicketsSorted();
+      } catch {
+        return [];
+      }
+    },
+    enabled: !!actor && !isFetching,
+  });
+}
+
+export function useGenerateOtp() {
+  const { actor } = useActor();
+  return useMutation({
+    mutationFn: async () => {
+      if (!actor) throw new Error('Actor not available');
+      return actor.generateOtp();
+    },
+  });
+}
+
+export function useVerifyOtp() {
+  const { actor } = useActor();
+  return useMutation({
+    mutationFn: async (otp: string) => {
+      if (!actor) throw new Error('Actor not available');
+      return actor.verifyOtp(otp);
+    },
+  });
+}
+
+export function useRegisterPlayer() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ mobile, bgmiPlayerId, displayName }: { mobile: string; bgmiPlayerId: string; displayName: string }) => {
+      if (!actor) throw new Error('Actor not available');
+      await actor.registerPlayer(mobile, bgmiPlayerId, displayName);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['currentUserProfile'] });
+    },
+  });
+}
+
+export function useSaveCallerUserProfile() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (profile: UserProfile) => {
+      if (!actor) throw new Error('Actor not available');
+      await actor.saveCallerUserProfile(profile);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['currentUserProfile'] });
+    },
+  });
+}
+
 export function useRegisterForTournament() {
   const { actor } = useActor();
   const queryClient = useQueryClient();
@@ -51,8 +212,8 @@ export function useRegisterForTournament() {
       return actor.registerForTournament(tournamentId, paymentScreenshotBlob);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['tournaments'] });
       queryClient.invalidateQueries({ queryKey: ['myRegistrations'] });
+      queryClient.invalidateQueries({ queryKey: ['tournaments'] });
     },
   });
 }
@@ -61,7 +222,9 @@ export function useCreateTournament() {
   const { actor } = useActor();
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (data: {
+    mutationFn: async ({
+      name, dateTime, entryFee, prizePool, map, totalSlots, upiId, matchRules,
+    }: {
       name: string;
       dateTime: bigint;
       entryFee: bigint;
@@ -72,7 +235,7 @@ export function useCreateTournament() {
       matchRules: string;
     }) => {
       if (!actor) throw new Error('Actor not available');
-      return actor.createTournament(data.name, data.dateTime, data.entryFee, data.prizePool, data.map, data.totalSlots, data.upiId, data.matchRules);
+      return actor.createTournament(name, dateTime, entryFee, prizePool, map, totalSlots, upiId, matchRules);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tournaments'] });
@@ -122,45 +285,6 @@ export function useUpdateTournamentRoomDetails() {
   });
 }
 
-export function useGetRegistrationsForTournament(tournamentId: string) {
-  const { actor, isFetching } = useActor();
-  return useQuery<TournamentRegistration[]>({
-    queryKey: ['registrations', tournamentId],
-    queryFn: async () => {
-      if (!actor) return [];
-      try {
-        return await actor.getRegistrationsForTournament(tournamentId);
-      } catch {
-        return [];
-      }
-    },
-    enabled: !!actor && !isFetching && !!tournamentId,
-  });
-}
-
-export function useGetAllRegistrations() {
-  const { actor, isFetching } = useActor();
-  return useQuery<TournamentRegistration[]>({
-    queryKey: ['allRegistrations'],
-    queryFn: async () => {
-      if (!actor) return [];
-      try {
-        // Fetch all tournaments first, then get registrations for each
-        const tournaments = await actor.getAllTournaments();
-        const allRegs: TournamentRegistration[] = [];
-        for (const t of tournaments) {
-          const regs = await actor.getRegistrationsForTournament(t.id);
-          allRegs.push(...regs);
-        }
-        return allRegs;
-      } catch {
-        return [];
-      }
-    },
-    enabled: !!actor && !isFetching,
-  });
-}
-
 export function useUpdateRegistrationStatus() {
   const { actor } = useActor();
   const queryClient = useQueryClient();
@@ -171,80 +295,8 @@ export function useUpdateRegistrationStatus() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['allRegistrations'] });
-      queryClient.invalidateQueries({ queryKey: ['registrations'] });
+      queryClient.invalidateQueries({ queryKey: ['registrationsForTournament'] });
     },
-  });
-}
-
-export function useGetAllPlayers() {
-  const { actor, isFetching } = useActor();
-  return useQuery<Player[]>({
-    queryKey: ['allPlayers'],
-    queryFn: async () => {
-      if (!actor) return [];
-      try {
-        return await actor.getAllPlayers();
-      } catch {
-        return [];
-      }
-    },
-    enabled: !!actor && !isFetching,
-  });
-}
-
-export function useGetAllSupportTickets() {
-  const { actor, isFetching } = useActor();
-  return useQuery<SupportTicket[]>({
-    queryKey: ['supportTickets'],
-    queryFn: async () => {
-      if (!actor) return [];
-      try {
-        return await actor.getAllSupportTicketsSorted();
-      } catch {
-        return [];
-      }
-    },
-    enabled: !!actor && !isFetching,
-  });
-}
-
-export function useReplyToSupportTicket() {
-  const { actor } = useActor();
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async ({ ticketId, reply }: { ticketId: string; reply: string }) => {
-      if (!actor) throw new Error('Actor not available');
-      return actor.replyToSupportTicket(ticketId, reply);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['supportTickets'] });
-    },
-  });
-}
-
-export function useCloseSupportTicket() {
-  const { actor } = useActor();
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async (ticketId: string) => {
-      if (!actor) throw new Error('Actor not available');
-      return actor.closeSupportTicket(ticketId);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['supportTickets'] });
-    },
-  });
-}
-
-export function useGetTermsAndConditions() {
-  const { actor, isFetching } = useActor();
-  return useQuery<TermsAndConditions>({
-    queryKey: ['terms'],
-    queryFn: async () => {
-      if (!actor) return { content: '' };
-      return actor.getTermsAndConditions();
-    },
-    enabled: !!actor && !isFetching,
   });
 }
 
@@ -257,20 +309,8 @@ export function useUpdateTermsAndConditions() {
       return actor.updateTermsAndConditions(content);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['terms'] });
+      queryClient.invalidateQueries({ queryKey: ['termsAndConditions'] });
     },
-  });
-}
-
-export function useGetSocialLinks() {
-  const { actor, isFetching } = useActor();
-  return useQuery<SocialLinks>({
-    queryKey: ['socialLinks'],
-    queryFn: async () => {
-      if (!actor) return { youtube: '', instagram: '', telegram: '' };
-      return actor.getSocialLinks();
-    },
-    enabled: !!actor && !isFetching,
   });
 }
 
@@ -288,36 +328,30 @@ export function useUpdateSocialLinks() {
   });
 }
 
-export function useGenerateOtp() {
-  const { actor } = useActor();
-  return useMutation({
-    mutationFn: async () => {
-      if (!actor) throw new Error('Actor not available');
-      return actor.generateOtp();
-    },
-  });
-}
-
-export function useVerifyOtp() {
-  const { actor } = useActor();
-  return useMutation({
-    mutationFn: async (otp: string) => {
-      if (!actor) throw new Error('Actor not available');
-      return actor.verifyOtp(otp);
-    },
-  });
-}
-
-export function useRegisterPlayer() {
+export function useReplyToSupportTicket() {
   const { actor } = useActor();
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ mobile, bgmiPlayerId, displayName }: { mobile: string; bgmiPlayerId: string; displayName: string }) => {
+    mutationFn: async ({ ticketId, reply }: { ticketId: string; reply: string }) => {
       if (!actor) throw new Error('Actor not available');
-      return actor.registerPlayer(mobile, bgmiPlayerId, displayName);
+      return actor.replyToSupportTicket(ticketId, reply);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['allPlayers'] });
+      queryClient.invalidateQueries({ queryKey: ['allSupportTickets'] });
+    },
+  });
+}
+
+export function useCloseSupportTicket() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (ticketId: string) => {
+      if (!actor) throw new Error('Actor not available');
+      return actor.closeSupportTicket(ticketId);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['allSupportTickets'] });
     },
   });
 }
@@ -326,12 +360,17 @@ export function useCreateSupportTicket() {
   const { actor } = useActor();
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ playerName, subject, description, screenshotBlob }: { playerName: string; subject: string; description: string; screenshotBlob: ExternalBlob | null }) => {
+    mutationFn: async ({ playerName, subject, description, screenshotBlob }: {
+      playerName: string;
+      subject: string;
+      description: string;
+      screenshotBlob: ExternalBlob | null;
+    }) => {
       if (!actor) throw new Error('Actor not available');
       return actor.createSupportTicket(playerName, subject, description, screenshotBlob);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['supportTickets'] });
+      queryClient.invalidateQueries({ queryKey: ['allSupportTickets'] });
     },
   });
 }

@@ -1,186 +1,158 @@
 import React, { useState } from 'react';
 import { useNavigate } from '@tanstack/react-router';
-import { Menu, X, Gamepad2, Trophy, Home, Info, LogOut, User, Shield } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { Menu, X, Gamepad2, Trophy, LogOut, User, Shield } from 'lucide-react';
 
 export default function Header() {
+  const { isAuthenticated, player, logout } = useAuth();
   const navigate = useNavigate();
-  const { isAuthenticated, logout, player } = useAuth();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
 
-  const navItems = [
-    { label: 'Home', icon: <Home size={16} />, path: '/' as const },
-    { label: 'Terms', icon: <Info size={16} />, path: '/terms' as const },
-  ];
+  const handleLogout = () => {
+    logout();
+    navigate({ to: '/' });
+    setMobileOpen(false);
+  };
 
   return (
-    <header className="sticky top-0 z-50 shadow-brand">
-      <div className="bg-brand-gradient">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            {/* Logo */}
-            <button
-              onClick={() => navigate({ to: '/' })}
-              className="flex items-center gap-3 group"
-            >
-              <div className="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center group-hover:bg-white/30 transition-colors">
-                <Gamepad2 size={22} className="text-white" />
-              </div>
-              <div className="hidden sm:block">
-                <span className="text-white font-heading font-bold text-lg leading-tight block">
-                  Raj Empire
-                </span>
-                <span className="text-white/80 text-xs font-medium tracking-wider uppercase">
-                  Esports
-                </span>
-              </div>
-            </button>
-
-            {/* Desktop Nav */}
-            <nav className="hidden md:flex items-center gap-1">
-              {navItems.map((item) => (
-                <button
-                  key={item.path}
-                  onClick={() => navigate({ to: item.path })}
-                  className="flex items-center gap-2 px-4 py-2 rounded-lg text-white/90 hover:text-white hover:bg-white/15 transition-all text-sm font-medium"
-                >
-                  {item.icon}
-                  {item.label}
-                </button>
-              ))}
-              <button
-                onClick={() => navigate({ to: '/' })}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg text-white/90 hover:text-white hover:bg-white/15 transition-all text-sm font-medium"
-              >
-                <Trophy size={16} />
-                Tournaments
-              </button>
-            </nav>
-
-            {/* Auth Actions */}
-            <div className="hidden md:flex items-center gap-2">
-              {isAuthenticated ? (
-                <>
-                  <button
-                    onClick={() => navigate({ to: '/player/dashboard' })}
-                    className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white/15 hover:bg-white/25 text-white text-sm font-medium transition-all"
-                  >
-                    <User size={16} />
-                    {player?.displayName || 'Dashboard'}
-                  </button>
-                  <button
-                    onClick={logout}
-                    className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-white text-sm font-medium transition-all"
-                  >
-                    <LogOut size={16} />
-                    Logout
-                  </button>
-                </>
-              ) : (
-                <>
-                  <button
-                    onClick={() => navigate({ to: '/player/login' })}
-                    className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white/15 hover:bg-white/25 text-white text-sm font-medium transition-all"
-                  >
-                    <User size={16} />
-                    Login
-                  </button>
-                  <button
-                    onClick={() => navigate({ to: '/player' })}
-                    className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white text-brand-red hover:bg-white/90 text-sm font-bold transition-all shadow-sm"
-                  >
-                    Register
-                  </button>
-                </>
-              )}
-              <button
-                onClick={() => navigate({ to: '/admin' })}
-                className="flex items-center gap-2 px-3 py-2 rounded-lg bg-black/20 hover:bg-black/30 text-white/80 hover:text-white text-xs font-medium transition-all"
-                title="Admin Panel"
-              >
-                <Shield size={14} />
-                Admin
-              </button>
+    <header className="sticky top-0 z-50 bg-brand-dark/95 backdrop-blur-sm border-b border-brand-red/30 shadow-lg">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-16">
+          {/* Logo */}
+          <button
+            onClick={() => navigate({ to: '/' })}
+            className="flex items-center gap-2 group"
+          >
+            <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-brand-red to-brand-orange flex items-center justify-center shadow-md group-hover:shadow-brand-red/40 transition-shadow">
+              <Gamepad2 className="w-5 h-5 text-white" />
             </div>
+            <div className="hidden sm:block">
+              <span className="font-orbitron font-bold text-white text-sm leading-tight block">RAJ EMPIRE</span>
+              <span className="font-orbitron text-brand-orange text-xs leading-tight block">ESPORTS ARENA</span>
+            </div>
+          </button>
 
-            {/* Mobile Menu Toggle */}
+          {/* Desktop Nav */}
+          <nav className="hidden md:flex items-center gap-1">
             <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden p-2 rounded-lg bg-white/15 hover:bg-white/25 text-white transition-colors"
+              onClick={() => navigate({ to: '/tournaments' })}
+              className="flex items-center gap-1.5 px-4 py-2 text-sm text-gray-300 hover:text-white hover:bg-white/10 rounded-lg transition-all font-medium"
             >
-              {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+              <Trophy className="w-4 h-4" />
+              Tournaments
             </button>
-          </div>
+            <button
+              onClick={() => navigate({ to: '/terms' })}
+              className="px-4 py-2 text-sm text-gray-300 hover:text-white hover:bg-white/10 rounded-lg transition-all font-medium"
+            >
+              Terms
+            </button>
+            {isAuthenticated ? (
+              <>
+                <button
+                  onClick={() => navigate({ to: '/player' })}
+                  className="flex items-center gap-1.5 px-4 py-2 text-sm text-gray-300 hover:text-white hover:bg-white/10 rounded-lg transition-all font-medium"
+                >
+                  <User className="w-4 h-4" />
+                  {player?.displayName || 'Dashboard'}
+                </button>
+                <button
+                  onClick={handleLogout}
+                  className="flex items-center gap-1.5 px-4 py-2 text-sm text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-all font-medium"
+                >
+                  <LogOut className="w-4 h-4" />
+                  Logout
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  onClick={() => navigate({ to: '/player/login' })}
+                  className="px-4 py-2 text-sm text-gray-300 hover:text-white hover:bg-white/10 rounded-lg transition-all font-medium"
+                >
+                  Login
+                </button>
+                <button
+                  onClick={() => navigate({ to: '/player/register' })}
+                  className="px-4 py-2 text-sm font-semibold bg-gradient-to-r from-brand-red to-brand-orange text-white rounded-lg hover:opacity-90 transition-opacity shadow-md"
+                >
+                  Register
+                </button>
+              </>
+            )}
+            <button
+              onClick={() => navigate({ to: '/admin' })}
+              className="flex items-center gap-1.5 px-3 py-2 text-xs text-gray-500 hover:text-gray-300 hover:bg-white/5 rounded-lg transition-all"
+            >
+              <Shield className="w-3.5 h-3.5" />
+              Admin
+            </button>
+          </nav>
+
+          {/* Mobile menu button */}
+          <button
+            onClick={() => setMobileOpen(!mobileOpen)}
+            className="md:hidden p-2 text-gray-300 hover:text-white hover:bg-white/10 rounded-lg transition-all"
+          >
+            {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+          </button>
         </div>
-
-        {/* Mobile Menu */}
-        {mobileMenuOpen && (
-          <div className="md:hidden border-t border-white/20 bg-black/20 backdrop-blur-sm">
-            <div className="px-4 py-3 space-y-1">
-              {navItems.map((item) => (
-                <button
-                  key={item.path}
-                  onClick={() => { navigate({ to: item.path }); setMobileMenuOpen(false); }}
-                  className="flex items-center gap-3 w-full px-4 py-3 rounded-lg text-white/90 hover:text-white hover:bg-white/15 transition-all text-sm font-medium"
-                >
-                  {item.icon}
-                  {item.label}
-                </button>
-              ))}
-              <button
-                onClick={() => { navigate({ to: '/' }); setMobileMenuOpen(false); }}
-                className="flex items-center gap-3 w-full px-4 py-3 rounded-lg text-white/90 hover:text-white hover:bg-white/15 transition-all text-sm font-medium"
-              >
-                <Trophy size={16} />
-                Tournaments
-              </button>
-              <div className="pt-2 border-t border-white/20 space-y-1">
-                {isAuthenticated ? (
-                  <>
-                    <button
-                      onClick={() => { navigate({ to: '/player/dashboard' }); setMobileMenuOpen(false); }}
-                      className="flex items-center gap-3 w-full px-4 py-3 rounded-lg bg-white/15 text-white text-sm font-medium"
-                    >
-                      <User size={16} />
-                      {player?.displayName || 'Dashboard'}
-                    </button>
-                    <button
-                      onClick={() => { logout(); setMobileMenuOpen(false); }}
-                      className="flex items-center gap-3 w-full px-4 py-3 rounded-lg bg-white/10 text-white text-sm font-medium"
-                    >
-                      <LogOut size={16} />
-                      Logout
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <button
-                      onClick={() => { navigate({ to: '/player/login' }); setMobileMenuOpen(false); }}
-                      className="flex items-center gap-3 w-full px-4 py-3 rounded-lg bg-white/15 text-white text-sm font-medium"
-                    >
-                      <User size={16} />
-                      Login
-                    </button>
-                    <button
-                      onClick={() => { navigate({ to: '/player' }); setMobileMenuOpen(false); }}
-                      className="flex items-center gap-3 w-full px-4 py-3 rounded-lg bg-white text-brand-red text-sm font-bold"
-                    >
-                      Register
-                    </button>
-                  </>
-                )}
-                <button
-                  onClick={() => { navigate({ to: '/admin' }); setMobileMenuOpen(false); }}
-                  className="flex items-center gap-3 w-full px-4 py-3 rounded-lg bg-black/20 text-white/80 text-sm font-medium"
-                >
-                  <Shield size={16} />
-                  Admin Panel
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
+
+      {/* Mobile Menu */}
+      {mobileOpen && (
+        <div className="md:hidden bg-brand-dark border-t border-brand-red/20 px-4 py-3 space-y-1">
+          <button
+            onClick={() => { navigate({ to: '/tournaments' }); setMobileOpen(false); }}
+            className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-gray-300 hover:text-white hover:bg-white/10 rounded-lg transition-all text-left"
+          >
+            <Trophy className="w-4 h-4" /> Tournaments
+          </button>
+          <button
+            onClick={() => { navigate({ to: '/terms' }); setMobileOpen(false); }}
+            className="w-full px-3 py-2.5 text-sm text-gray-300 hover:text-white hover:bg-white/10 rounded-lg transition-all text-left"
+          >
+            Terms
+          </button>
+          {isAuthenticated ? (
+            <>
+              <button
+                onClick={() => { navigate({ to: '/player' }); setMobileOpen(false); }}
+                className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-gray-300 hover:text-white hover:bg-white/10 rounded-lg transition-all text-left"
+              >
+                <User className="w-4 h-4" /> {player?.displayName || 'Dashboard'}
+              </button>
+              <button
+                onClick={handleLogout}
+                className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-all text-left"
+              >
+                <LogOut className="w-4 h-4" /> Logout
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                onClick={() => { navigate({ to: '/player/login' }); setMobileOpen(false); }}
+                className="w-full px-3 py-2.5 text-sm text-gray-300 hover:text-white hover:bg-white/10 rounded-lg transition-all text-left"
+              >
+                Login
+              </button>
+              <button
+                onClick={() => { navigate({ to: '/player/register' }); setMobileOpen(false); }}
+                className="w-full px-3 py-2.5 text-sm font-semibold bg-gradient-to-r from-brand-red to-brand-orange text-white rounded-lg hover:opacity-90 transition-opacity text-left"
+              >
+                Register
+              </button>
+            </>
+          )}
+          <button
+            onClick={() => { navigate({ to: '/admin' }); setMobileOpen(false); }}
+            className="w-full flex items-center gap-2 px-3 py-2.5 text-xs text-gray-500 hover:text-gray-300 hover:bg-white/5 rounded-lg transition-all text-left"
+          >
+            <Shield className="w-3.5 h-3.5" /> Admin Panel
+          </button>
+        </div>
+      )}
     </header>
   );
 }

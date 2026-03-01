@@ -1,8 +1,8 @@
 import React, { useState, useRef } from 'react';
-import { X, Upload, Loader2, CheckCircle } from 'lucide-react';
 import { Tournament } from '../backend';
 import { ExternalBlob } from '../backend';
 import { useRegisterForTournament } from '../hooks/useQueries';
+import { X, Upload, CheckCircle, Loader2, AlertCircle } from 'lucide-react';
 
 interface PaymentModalProps {
   tournament: Tournament;
@@ -13,167 +13,180 @@ export default function PaymentModal({ tournament, onClose }: PaymentModalProps)
   const [screenshot, setScreenshot] = useState<File | null>(null);
   const [screenshotPreview, setScreenshotPreview] = useState<string | null>(null);
   const [termsAccepted, setTermsAccepted] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);
   const [success, setSuccess] = useState(false);
+  const [error, setError] = useState('');
+  const [uploadProgress, setUploadProgress] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { mutate: registerForTournament, isPending, error } = useRegisterForTournament();
+  const registerMutation = useRegisterForTournament();
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     setScreenshot(file);
     const reader = new FileReader();
-    reader.onload = ev => setScreenshotPreview(ev.target?.result as string);
+    reader.onload = (ev) => setScreenshotPreview(ev.target?.result as string);
     reader.readAsDataURL(file);
   };
 
-  const handleSubmit = async () => {
-    if (!screenshot) return;
-    if (!termsAccepted) return;
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    if (!screenshot) { setError('Please upload your payment screenshot'); return; }
+    if (!termsAccepted) { setError('Please accept the terms and conditions'); return; }
 
-    const arrayBuffer = await screenshot.arrayBuffer();
-    const bytes = new Uint8Array(arrayBuffer);
-    const blob = ExternalBlob.fromBytes(bytes).withUploadProgress(pct => setUploadProgress(pct));
-
-    registerForTournament(
-      { tournamentId: tournament.id, paymentScreenshotBlob: blob },
-      {
-        onSuccess: () => setSuccess(true),
-      }
-    );
+    try {
+      const arrayBuffer = await screenshot.arrayBuffer();
+      const bytes = new Uint8Array(arrayBuffer);
+      const blob = ExternalBlob.fromBytes(bytes).withUploadProgress((pct) => setUploadProgress(pct));
+      await registerMutation.mutateAsync({ tournamentId: tournament.id, paymentScreenshotBlob: blob });
+      setSuccess(true);
+    } catch (err: any) {
+      setError(err?.message || 'Registration failed. Please try again.');
+    }
   };
 
+  const qrUrl = tournament.qrCodeBlob ? tournament.qrCodeBlob.getDirectURL() : null;
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-      <div className="bg-card border border-border w-full max-w-lg max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between p-5 border-b border-border">
-          <h2 className="font-orbitron font-bold text-primary uppercase tracking-widest text-lg">
-            Register for Tournament
-          </h2>
-          <button onClick={onClose} className="text-muted-foreground hover:text-foreground transition-colors">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+      <div className="bg-brand-dark border border-brand-red/30 rounded-2xl w-full max-w-md shadow-2xl max-h-[90vh] overflow-y-auto">
+        {/* Header */}
+        <div className="flex items-center justify-between p-5 border-b border-white/10">
+          <div>
+            <h2 className="font-orbitron font-bold text-white text-base">Register for Tournament</h2>
+            <p className="text-gray-400 text-xs mt-0.5">{tournament.name}</p>
+          </div>
+          <button onClick={onClose} className="p-1.5 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition-all">
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {success ? (
-          <div className="p-8 text-center">
-            <CheckCircle className="w-16 h-16 text-green-400 mx-auto mb-4" />
-            <h3 className="font-orbitron font-bold text-foreground text-xl mb-2">Registration Submitted!</h3>
-            <p className="font-saira text-muted-foreground mb-6">
-              Your registration is pending admin approval. Room details will be shared once approved.
+          <div className="p-6 text-center">
+            <div className="w-16 h-16 rounded-full bg-green-500/20 flex items-center justify-center mx-auto mb-4">
+              <CheckCircle className="w-8 h-8 text-green-400" />
+            </div>
+            <h3 className="font-orbitron font-bold text-white text-lg mb-2">Registration Submitted!</h3>
+            <p className="text-gray-400 text-sm mb-5">
+              Your registration is pending admin approval. You'll be notified once approved.
             </p>
-            <button onClick={onClose} className="bg-primary text-primary-foreground font-rajdhani font-bold px-8 py-3 uppercase tracking-widest hover:bg-primary/90 transition-colors">
+            <button
+              onClick={onClose}
+              className="w-full bg-gradient-to-r from-brand-red to-brand-orange text-white font-bold py-3 rounded-xl hover:opacity-90 transition-opacity"
+            >
               Close
             </button>
           </div>
         ) : (
-          <div className="p-5 space-y-5">
+          <form onSubmit={handleSubmit} className="p-5 space-y-5">
             {/* Tournament Info */}
-            <div className="bg-background border border-border p-4">
-              <h3 className="font-rajdhani font-bold text-foreground text-lg mb-3">{tournament.name}</h3>
-              <div className="grid grid-cols-2 gap-3 text-sm">
-                <div>
-                  <p className="font-saira text-muted-foreground text-xs">Entry Fee</p>
-                  <p className="font-rajdhani font-bold text-primary">₹{tournament.entryFee.toString()}</p>
-                </div>
-                <div>
-                  <p className="font-saira text-muted-foreground text-xs">Prize Pool</p>
-                  <p className="font-rajdhani font-bold text-primary">₹{tournament.prizePool.toString()}</p>
-                </div>
-                <div>
-                  <p className="font-saira text-muted-foreground text-xs">Map</p>
-                  <p className="font-rajdhani font-bold text-foreground">{tournament.map}</p>
-                </div>
-                <div>
-                  <p className="font-saira text-muted-foreground text-xs">Slots Left</p>
-                  <p className="font-rajdhani font-bold text-foreground">
-                    {(Number(tournament.totalSlots) - Number(tournament.filledSlots))} remaining
+            <div className="grid grid-cols-2 gap-3">
+              <div className="bg-white/5 rounded-lg p-3">
+                <p className="text-xs text-gray-500">Entry Fee</p>
+                <p className="text-brand-orange font-bold">₹{tournament.entryFee.toString()}</p>
+              </div>
+              <div className="bg-white/5 rounded-lg p-3">
+                <p className="text-xs text-gray-500">Prize Pool</p>
+                <p className="text-green-400 font-bold">₹{tournament.prizePool.toString()}</p>
+              </div>
+            </div>
+
+            {/* UPI Details */}
+            <div className="bg-brand-red/10 border border-brand-red/30 rounded-xl p-4">
+              <h3 className="text-white font-semibold text-sm mb-3">Payment Details</h3>
+              <div className="flex gap-4 items-start">
+                {qrUrl ? (
+                  <img src={qrUrl} alt="QR Code" className="w-24 h-24 rounded-lg object-cover border border-white/10" />
+                ) : (
+                  <div className="w-24 h-24 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center">
+                    <span className="text-gray-500 text-xs text-center">No QR</span>
+                  </div>
+                )}
+                <div className="flex-1">
+                  <p className="text-xs text-gray-400 mb-1">UPI ID</p>
+                  <p className="text-white font-mono text-sm bg-white/5 rounded-lg px-3 py-2 break-all">
+                    {tournament.upiId || 'Not set'}
+                  </p>
+                  <p className="text-xs text-gray-500 mt-2">
+                    Pay ₹{tournament.entryFee.toString()} and upload screenshot below
                   </p>
                 </div>
               </div>
             </div>
 
-            {/* UPI Payment */}
-            <div>
-              <h4 className="font-rajdhani font-bold text-foreground uppercase tracking-wider text-sm mb-3">Payment Details</h4>
-              <div className="bg-background border border-border p-4 text-center">
-                <img
-                  src="/assets/generated/upi-qr-placeholder.dim_300x300.png"
-                  alt="UPI QR Code"
-                  className="w-40 h-40 object-contain mx-auto mb-3"
-                />
-                <p className="font-saira text-sm text-muted-foreground">UPI ID:</p>
-                <p className="font-rajdhani font-bold text-primary text-lg">{tournament.upiId || 'rajempire@upi'}</p>
-                <p className="font-saira text-xs text-muted-foreground mt-2">
-                  Pay ₹{tournament.entryFee.toString()} and upload screenshot below
-                </p>
-              </div>
-            </div>
-
             {/* Screenshot Upload */}
             <div>
-              <h4 className="font-rajdhani font-bold text-foreground uppercase tracking-wider text-sm mb-3">Upload Payment Screenshot</h4>
+              <label className="block text-sm font-medium text-gray-300 mb-2">Payment Screenshot</label>
               <div
                 onClick={() => fileInputRef.current?.click()}
-                className={`border-2 border-dashed p-6 text-center cursor-pointer transition-colors ${
-                  screenshot ? 'border-primary/50 bg-primary/5' : 'border-border hover:border-primary/30'
-                }`}
+                className="border-2 border-dashed border-white/20 rounded-xl p-4 text-center cursor-pointer hover:border-brand-red/50 transition-all"
               >
                 {screenshotPreview ? (
-                  <img src={screenshotPreview} alt="Payment screenshot" className="max-h-40 mx-auto object-contain" />
+                  <img src={screenshotPreview} alt="Screenshot" className="max-h-32 mx-auto rounded-lg object-contain" />
                 ) : (
-                  <div>
-                    <Upload className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
-                    <p className="font-saira text-sm text-muted-foreground">Click to upload payment screenshot</p>
-                    <p className="font-saira text-xs text-muted-foreground mt-1">PNG, JPG up to 10MB</p>
+                  <div className="py-4">
+                    <Upload className="w-8 h-8 text-gray-500 mx-auto mb-2" />
+                    <p className="text-gray-400 text-sm">Click to upload payment screenshot</p>
+                    <p className="text-gray-600 text-xs mt-1">PNG, JPG up to 5MB</p>
                   </div>
                 )}
               </div>
-              <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleFileChange}
+                className="hidden"
+              />
+              {registerMutation.isPending && uploadProgress > 0 && (
+                <div className="mt-2">
+                  <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-gradient-to-r from-brand-red to-brand-orange transition-all"
+                      style={{ width: `${uploadProgress}%` }}
+                    />
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">Uploading... {uploadProgress}%</p>
+                </div>
+              )}
             </div>
-
-            {/* Upload progress */}
-            {isPending && uploadProgress > 0 && uploadProgress < 100 && (
-              <div>
-                <div className="flex justify-between text-xs font-saira text-muted-foreground mb-1">
-                  <span>Uploading...</span>
-                  <span>{uploadProgress}%</span>
-                </div>
-                <div className="h-1.5 bg-muted rounded-full overflow-hidden">
-                  <div className="h-full bg-primary transition-all" style={{ width: `${uploadProgress}%` }} />
-                </div>
-              </div>
-            )}
 
             {/* Terms */}
-            <div className="flex items-start gap-3">
+            <label className="flex items-start gap-3 cursor-pointer">
               <input
                 type="checkbox"
-                id="modal-terms"
                 checked={termsAccepted}
-                onChange={e => setTermsAccepted(e.target.checked)}
-                className="mt-1 accent-primary"
+                onChange={(e) => setTermsAccepted(e.target.checked)}
+                className="mt-0.5 w-4 h-4 accent-brand-red"
               />
-              <label htmlFor="modal-terms" className="font-saira text-sm text-muted-foreground cursor-pointer">
-                I confirm the payment has been made and agree to the tournament rules.
-              </label>
-            </div>
+              <span className="text-sm text-gray-400">
+                I accept the{' '}
+                <a href="/terms" target="_blank" className="text-brand-orange hover:underline">
+                  Terms & Conditions
+                </a>{' '}
+                and confirm that the payment has been made.
+              </span>
+            </label>
 
             {error && (
-              <div className="bg-destructive/10 border border-destructive/50 text-destructive font-saira text-sm px-4 py-3">
-                {(error as Error).message || 'Registration failed. Please try again.'}
+              <div className="flex items-center gap-2 bg-red-500/10 border border-red-500/30 rounded-lg px-3 py-2 text-red-400 text-sm">
+                <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                {error}
               </div>
             )}
 
             <button
-              onClick={handleSubmit}
-              disabled={!screenshot || !termsAccepted || isPending}
-              className="w-full bg-primary text-primary-foreground font-rajdhani font-bold py-3 uppercase tracking-widest hover:bg-primary/90 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+              type="submit"
+              disabled={registerMutation.isPending}
+              className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-brand-red to-brand-orange text-white font-bold py-3 rounded-xl hover:opacity-90 transition-opacity disabled:opacity-60 shadow-lg shadow-brand-red/20"
             >
-              {isPending && <Loader2 className="w-4 h-4 animate-spin" />}
-              Submit Registration
+              {registerMutation.isPending ? (
+                <><Loader2 className="w-4 h-4 animate-spin" /> Submitting...</>
+              ) : (
+                <><CheckCircle className="w-4 h-4" /> Submit Registration</>
+              )}
             </button>
-          </div>
+          </form>
         )}
       </div>
     </div>

@@ -1,222 +1,144 @@
 import React from 'react';
 import { useNavigate } from '@tanstack/react-router';
-import { Trophy, Users, Zap, Shield, ChevronRight, Gamepad2, Star, Target, User } from 'lucide-react';
-import { useGetAllTournaments } from '../hooks/useQueries';
-import { useAuth } from '../context/AuthContext';
+import { Trophy, Gamepad2, Users, Zap, Shield, Star } from 'lucide-react';
 
 export default function HomePage() {
   const navigate = useNavigate();
-  const { isAuthenticated } = useAuth();
-  const { data: tournaments } = useGetAllTournaments();
-
-  const upcomingCount = tournaments?.filter(t => t.status === 'upcoming' || t.status === 'ongoing').length ?? 0;
 
   const features = [
     {
-      icon: <Trophy size={28} />,
-      title: 'Epic Tournaments',
-      desc: 'Join daily BGMI tournaments with massive prize pools and compete against the best.',
+      icon: <Trophy className="w-6 h-6" />,
+      title: 'Daily Tournaments',
+      desc: 'Compete every day in exciting BGMI tournaments with real cash prizes.',
     },
     {
-      icon: <Zap size={28} />,
-      title: 'Instant Registration',
-      desc: 'Register in seconds with our streamlined payment and verification system.',
+      icon: <Zap className="w-6 h-6" />,
+      title: 'Mega Events',
+      desc: 'Join massive tournaments with huge prize pools and epic competition.',
     },
     {
-      icon: <Users size={28} />,
-      title: 'Growing Community',
-      desc: 'Be part of a thriving esports community of passionate BGMI players.',
+      icon: <Users className="w-6 h-6" />,
+      title: 'Solo / Duo / Squad',
+      desc: 'Play your way — solo, with a partner, or as a full squad of four.',
     },
     {
-      icon: <Target size={28} />,
-      title: 'Fair Play',
-      desc: 'Transparent rules, verified payments, and fair match-making for all players.',
+      icon: <Shield className="w-6 h-6" />,
+      title: 'Fair & Secure',
+      desc: 'Transparent registration, verified payments, and fair match rules.',
     },
   ];
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="flex flex-col">
       {/* Hero Section */}
-      <section className="relative overflow-hidden bg-brand-gradient">
-        <div className="absolute inset-0 opacity-10 pointer-events-none">
-          <div className="absolute top-10 left-10 w-64 h-64 rounded-full bg-white blur-3xl" />
-          <div className="absolute bottom-10 right-10 w-96 h-96 rounded-full bg-white blur-3xl" />
-        </div>
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 md:py-28">
-          <div className="text-center">
-            <div className="inline-flex items-center gap-2 bg-white/20 rounded-full px-4 py-2 mb-6">
-              <Star size={14} className="text-white fill-white" />
-              <span className="text-white text-sm font-medium">India's Premier BGMI Tournament Platform</span>
-            </div>
-            <h1 className="font-heading text-4xl md:text-6xl lg:text-7xl font-bold text-white mb-6 leading-tight">
-              Raj Empire
-              <br />
-              <span className="text-white/80">Esports Arena</span>
-            </h1>
-            <p className="text-white/80 text-lg md:text-xl max-w-2xl mx-auto mb-8 leading-relaxed">
-              Compete in thrilling BGMI tournaments, win real prizes, and prove you're the best player in the arena.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <button
-                onClick={() => navigate({ to: '/' })}
-                className="flex items-center justify-center gap-2 px-8 py-4 bg-white text-brand-red rounded-xl font-bold text-lg hover:bg-white/90 transition-all shadow-brand-lg"
-              >
-                <Trophy size={20} />
-                View Tournaments
-                <ChevronRight size={18} />
-              </button>
-              {!isAuthenticated && (
-                <button
-                  onClick={() => navigate({ to: '/player' })}
-                  className="flex items-center justify-center gap-2 px-8 py-4 bg-white/20 hover:bg-white/30 text-white rounded-xl font-bold text-lg transition-all border border-white/30"
-                >
-                  <Gamepad2 size={20} />
-                  Join Now — Free
-                </button>
-              )}
-            </div>
-            {upcomingCount > 0 && (
-              <p className="mt-6 text-white/70 text-sm">
-                🔥 {upcomingCount} tournament{upcomingCount > 1 ? 's' : ''} available right now!
-              </p>
-            )}
-          </div>
-        </div>
-      </section>
+      <section
+        className="relative min-h-[560px] flex items-center justify-center overflow-hidden"
+        style={{
+          background: 'linear-gradient(135deg, #C0100A 0%, #E03010 40%, #FF6A00 100%)',
+        }}
+      >
+        {/* Background image overlay */}
+        <div
+          className="absolute inset-0 opacity-20"
+          style={{
+            backgroundImage: 'url(/assets/generated/hero-bg.dim_1440x600.png)',
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+          }}
+        />
+        {/* Dark overlay for text readability */}
+        <div className="absolute inset-0 bg-black/20" />
 
-      {/* Panel Links Section */}
-      <section className="py-12 bg-muted/50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-8">
-            <h2 className="font-heading text-3xl font-bold text-foreground mb-2">Quick Access</h2>
-            <p className="text-muted-foreground">Jump directly to your panel</p>
+        <div className="relative z-10 text-center px-4 sm:px-6 max-w-3xl mx-auto py-20">
+          {/* Badge */}
+          <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm border border-white/30 rounded-full px-4 py-1.5 mb-6">
+            <Star className="w-4 h-4 text-yellow-300 fill-yellow-300" />
+            <span className="text-white text-sm font-medium">India's Premier BGMI Tournament Platform</span>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-2xl mx-auto">
-            {/* User Panel */}
-            <button
-              onClick={() => navigate({ to: '/player' })}
-              className="group relative overflow-hidden rounded-2xl p-6 bg-brand-gradient shadow-brand hover:shadow-brand-lg transition-all duration-300 hover:-translate-y-1 text-left"
-            >
-              <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-8 translate-x-8 pointer-events-none" />
-              <div className="relative">
-                <div className="w-14 h-14 rounded-xl bg-white/20 flex items-center justify-center mb-4 group-hover:bg-white/30 transition-colors">
-                  <User size={28} className="text-white" />
-                </div>
-                <h3 className="font-heading text-2xl font-bold text-white mb-1">User Panel</h3>
-                <p className="text-white/75 text-sm mb-4">
-                  Access your dashboard, registrations, and support tickets.
-                </p>
-                <div className="flex items-center gap-2 text-white font-semibold text-sm">
-                  Open Panel <ChevronRight size={16} className="group-hover:translate-x-1 transition-transform" />
-                </div>
-              </div>
-            </button>
 
-            {/* Admin Panel */}
-            <button
-              onClick={() => navigate({ to: '/admin' })}
-              className="group relative overflow-hidden rounded-2xl p-6 shadow-brand hover:shadow-brand-lg transition-all duration-300 hover:-translate-y-1 text-left border border-white/10"
-              style={{ background: 'linear-gradient(135deg, oklch(0.42 0.24 18), oklch(0.52 0.24 22))' }}
-            >
-              <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-8 translate-x-8 pointer-events-none" />
-              <div className="relative">
-                <div className="w-14 h-14 rounded-xl bg-white/20 flex items-center justify-center mb-4 group-hover:bg-white/30 transition-colors">
-                  <Shield size={28} className="text-white" />
-                </div>
-                <h3 className="font-heading text-2xl font-bold text-white mb-1">Admin Panel</h3>
-                <p className="text-white/75 text-sm mb-4">
-                  Manage tournaments, registrations, players, and settings.
-                </p>
-                <div className="flex items-center gap-2 text-white font-semibold text-sm">
-                  Open Panel <ChevronRight size={16} className="group-hover:translate-x-1 transition-transform" />
-                </div>
-              </div>
-            </button>
-          </div>
-          <div className="mt-4 text-center">
-            <p className="text-muted-foreground text-xs">
-              User Panel: <code className="bg-muted px-2 py-0.5 rounded text-xs">/player</code>
-              &nbsp;&nbsp;|&nbsp;&nbsp;
-              Admin Panel: <code className="bg-muted px-2 py-0.5 rounded text-xs">/admin</code>
-            </p>
-          </div>
-        </div>
-      </section>
+          {/* Heading */}
+          <h1 className="font-orbitron font-black text-white text-4xl sm:text-5xl md:text-6xl leading-tight mb-4">
+            Raj Empire
+            <br />
+            <span className="text-white/90">Esports Arena</span>
+          </h1>
 
-      {/* Stats */}
-      <section className="py-12 bg-background">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            {[
-              { label: 'Tournaments', value: tournaments?.length ?? 0, suffix: '+' },
-              { label: 'Active Players', value: 500, suffix: '+' },
-              { label: 'Prize Distributed', value: '₹50K', suffix: '+' },
-              { label: 'Daily Matches', value: 10, suffix: '+' },
-            ].map((stat) => (
-              <div key={stat.label} className="text-center p-6 rounded-2xl bg-muted/50 border border-border">
-                <div
-                  className="font-heading text-3xl md:text-4xl font-bold mb-1"
-                  style={{ background: 'linear-gradient(135deg, oklch(0.48 0.24 22), oklch(0.65 0.22 52))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}
-                >
-                  {stat.value}{stat.suffix}
-                </div>
-                <div className="text-muted-foreground text-sm font-medium">{stat.label}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Features */}
-      <section className="py-16 bg-muted/30">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="font-heading text-3xl md:text-4xl font-bold text-foreground mb-4">
-              Why Choose Raj Empire?
-            </h2>
-            <p className="text-muted-foreground text-lg max-w-xl mx-auto">
-              We provide the best BGMI tournament experience with fair play and real rewards.
-            </p>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {features.map((feature) => (
-              <div
-                key={feature.title}
-                className="group p-6 rounded-2xl bg-card border border-border hover:border-brand-orange/50 hover:shadow-brand transition-all duration-300"
-              >
-                <div className="w-14 h-14 rounded-xl bg-brand-gradient flex items-center justify-center text-white mb-4 group-hover:scale-110 transition-transform">
-                  {feature.icon}
-                </div>
-                <h3 className="font-heading text-xl font-bold text-foreground mb-2">{feature.title}</h3>
-                <p className="text-muted-foreground text-sm leading-relaxed">{feature.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* CTA */}
-      <section className="py-16 bg-brand-gradient">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="font-heading text-3xl md:text-4xl font-bold text-white mb-4">
-            Ready to Dominate the Arena?
-          </h2>
-          <p className="text-white/80 text-lg mb-8">
-            Join thousands of players competing in daily BGMI tournaments. Register now and start winning!
+          {/* Tagline */}
+          <p className="text-white/85 text-base sm:text-lg max-w-xl mx-auto mb-8 leading-relaxed">
+            Compete in thrilling BGMI tournaments, win real prizes, and prove you're the best player in the arena.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+
+          {/* CTA Buttons */}
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <button
-              onClick={() => navigate({ to: isAuthenticated ? '/player/dashboard' : '/player' })}
-              className="flex items-center justify-center gap-2 px-8 py-4 bg-white text-brand-red rounded-xl font-bold text-lg hover:bg-white/90 transition-all shadow-brand-lg"
+              onClick={() => navigate({ to: '/tournaments' })}
+              className="flex items-center justify-center gap-2 bg-white text-brand-red font-bold px-8 py-3.5 rounded-xl hover:bg-white/90 transition-all shadow-lg text-base"
             >
-              <Trophy size={20} />
-              {isAuthenticated ? 'Go to Dashboard' : 'Register Free'}
+              <Trophy className="w-5 h-5" />
+              View Tournaments
+              <span className="text-brand-red/60">›</span>
             </button>
             <button
-              onClick={() => navigate({ to: '/' })}
-              className="flex items-center justify-center gap-2 px-8 py-4 bg-white/20 hover:bg-white/30 text-white rounded-xl font-bold text-lg transition-all border border-white/30"
+              onClick={() => navigate({ to: '/player/register' })}
+              className="flex items-center justify-center gap-2 bg-white/20 backdrop-blur-sm border border-white/40 text-white font-bold px-8 py-3.5 rounded-xl hover:bg-white/30 transition-all text-base"
             >
-              View All Tournaments
+              <Gamepad2 className="w-5 h-5" />
+              Join Now — Free
+            </button>
+          </div>
+        </div>
+      </section>
+
+      {/* Features Section */}
+      <section className="py-16 px-4 sm:px-6 bg-brand-darker">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="font-orbitron font-bold text-white text-2xl sm:text-3xl mb-3">
+              Why Choose <span className="text-brand-orange">Raj Empire?</span>
+            </h2>
+            <p className="text-gray-400 max-w-xl mx-auto">
+              The most trusted BGMI tournament platform in India with daily competitions and massive prize pools.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            {features.map((f, i) => (
+              <div
+                key={i}
+                className="bg-brand-dark border border-brand-red/20 rounded-xl p-5 hover:border-brand-red/50 transition-all group"
+              >
+                <div className="w-11 h-11 rounded-lg bg-gradient-to-br from-brand-red/20 to-brand-orange/20 flex items-center justify-center text-brand-orange mb-4 group-hover:from-brand-red/30 group-hover:to-brand-orange/30 transition-all">
+                  {f.icon}
+                </div>
+                <h3 className="font-orbitron font-bold text-white text-sm mb-2">{f.title}</h3>
+                <p className="text-gray-400 text-sm leading-relaxed">{f.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* CTA Banner */}
+      <section className="py-14 px-4 sm:px-6 bg-brand-dark">
+        <div className="max-w-3xl mx-auto text-center">
+          <h2 className="font-orbitron font-bold text-white text-2xl sm:text-3xl mb-4">
+            Ready to <span className="text-brand-orange">Dominate?</span>
+          </h2>
+          <p className="text-gray-400 mb-7">
+            Register now and start competing in daily BGMI tournaments. It's free to join!
+          </p>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <button
+              onClick={() => navigate({ to: '/player/register' })}
+              className="px-8 py-3.5 bg-gradient-to-r from-brand-red to-brand-orange text-white font-bold rounded-xl hover:opacity-90 transition-opacity shadow-lg shadow-brand-red/30 text-base"
+            >
+              Create Free Account
+            </button>
+            <button
+              onClick={() => navigate({ to: '/tournaments' })}
+              className="px-8 py-3.5 border border-brand-red/40 text-brand-orange font-bold rounded-xl hover:bg-brand-red/10 transition-all text-base"
+            >
+              Browse Tournaments
             </button>
           </div>
         </div>
