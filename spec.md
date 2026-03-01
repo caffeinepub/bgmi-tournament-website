@@ -1,13 +1,11 @@
 # Specification
 
 ## Summary
-**Goal:** Replace the single "Verify with Internet Identity" button on the Register Step 2 (Authenticate) screen and the Login page with four distinct authentication option buttons styled after the id.ai "Choose method" UI.
+**Goal:** Fix the broken authentication flow on both the RegisterPage (Step 2) and LoginPage by replacing custom auth buttons with a single "Connect with Internet Identity" button that directly triggers the Internet Identity native popup.
 
 **Planned changes:**
-- On Register Step 2 (Authenticate screen), remove the single "Verify with Internet Identity" button and replace it with four buttons: Google (multicolor G icon), Apple (Apple logo), Microsoft (colored squares logo), and "Continue with Passkey" (person/passkey icon)
-- Google, Apple, and Microsoft buttons are displayed in a row (3 columns), with "Continue with Passkey" as a full-width button below
-- On the Login page, replace the existing single Internet Identity button with the same four-button layout (Google, Apple, Microsoft in a row + Continue with Passkey full-width below)
-- Each of the four buttons triggers the same existing Internet Identity login flow — no backend changes
-- Error state and retry behavior remain unchanged
+- On RegisterPage Step 2 ("Authenticate" step): remove the custom auth buttons and the stuck "Connecting..." state; clear any stale loading state on mount; remove the persistent "Authentication cancelled or failed. Please try again." error message; replace with a single "Connect with Internet Identity" button that calls `login()` from `useInternetIdentity` hook directly
+- On LoginPage: remove the `AuthMethodButtons` component (Google, Apple, Microsoft, Passkey buttons) and the "CHOOSE METHOD" UI; replace with a single "Connect with Internet Identity" button that calls `login()` from `useInternetIdentity` hook directly
+- If authentication fails or is cancelled, show an error message but immediately reset the button to a clickable state
 
-**User-visible outcome:** Users on both the Register (Step 2) and Login pages now see four visually distinct authentication options (Google, Apple, Microsoft, Continue with Passkey) matching the id.ai "Choose method" style, instead of a single generic Internet Identity button.
+**User-visible outcome:** Users can click a single "Connect with Internet Identity" button on both the Login and Register (Step 2) pages that immediately opens the Internet Identity native popup, with no stuck loading states or stale error messages.

@@ -1,48 +1,36 @@
 {
   "schemaVersion": "1.0.0",
   "projectStateVersion": 3,
-  "summary": "BGMI tournament registration app with Internet Identity authentication. User wants Google, Apple, Microsoft, and Passkey login options displayed directly on both the Register (Step 2 Authenticate) screen and the Login page, instead of a single 'Verify with Internet Identity' button.",
+  "summary": "Web app with authentication flow using Internet Identity. Issues found: Register Step 2 has 'Connecting...' stuck state and 'Authentication cancelled or failed' error; Login page buttons (Google/Apple/Microsoft/Passkey) are not clickable. Fix: replace custom auth buttons with Internet Identity default popup on both pages.",
   "architectural_notes": [
-    "Authentication uses Internet Identity (id.ai) — Google, Apple, Microsoft, and Passkey options should be surfaced directly in the app UI rather than relying on the id.ai redirect page"
+    "Authentication uses Internet Identity (II) default popup instead of custom Google/Apple/Microsoft/Passkey buttons"
   ],
   "known_issues": [
-    "Step 2 currently shows 'Authentication cancelled or failed' error when Internet Identity popup is blocked or closed prematurely"
+    "Register Step 2: 'Connecting...' stuck state and 'Authentication cancelled or failed' error",
+    "Login page: Google/Apple/Microsoft/Passkey buttons not clickable"
   ],
-  "isFixRequest": false,
+  "isFixRequest": true,
   "existing_features": [
     {
-      "id": "feature-on-the-register-page-step-2-authenticate-screen-replace-the-single-verify-with-internet-identity-button-with-four-distinct-authentication-option-buttons-matching-the-internet-identity-id-ai-ui-a-google-button-with-google-g-logo-an-apple-button-with-apple-logo-a-microsoft-button-with-microsoft-colored-squares-logo-and-a-continue-with-passkey-button-with-passkey-person-icon-each-button-when-clicked-must-trigger-the-internet-identity-login-flow-the-underlying-authentication-mechanism-remains-internet-identity-but-the-ui-presents-these-four-options-directly-on-the-screen-so-users-can-visually-select-their-preferred-method-before-the-popup-opens",
-      "title": "On the Register page Step 2 (Authenticate screen), replace the single 'Verify with Internet Identity' button with four distinct authentication option buttons matching the Internet Identity (id.ai) UI: a Google button (with Google 'G' logo), an Apple button (with Apple logo), a Microsoft button (with Microsoft colored squares logo), and a 'Continue with Passkey' button (with passkey/person icon). Each button, when clicked, must trigger the Internet Identity login flow — the underlying authentication mechanism remains Internet Identity, but the UI presents these four options directly on the screen so users can visually select their preferred method before the popup opens.",
+      "id": "feature-on-registerpage-step-2-authenticate-step-remove-the-current-custom-authentication-buttons-and-the-stuck-connecting-state-replace-with-a-single-connect-with-internet-identity-button-that-directly-calls-the-login-function-from-useinternetidentity-hook-without-any-custom-method-selection-logic-clear-any-stuck-loading-state-on-mount-so-the-button-is-always-clickable-when-the-user-arrives-at-step-2-remove-the-authentication-cancelled-or-failed-please-try-again-error-that-persists-from-a-previous-failed-attempt",
+      "title": "On RegisterPage Step 2 ('Authenticate' step), remove the current custom authentication buttons and the stuck 'Connecting...' state. Replace with a single 'Connect with Internet Identity' button that directly calls the `login()` function from `useInternetIdentity` hook without any custom method selection logic. Clear any stuck loading state on mount so the button is always clickable when the user arrives at Step 2. Remove the 'Authentication cancelled or failed. Please try again.' error that persists from a previous failed attempt.",
       "reqIds": [
         "REQ-1"
       ],
       "version": 1
     },
     {
-      "id": "feature-on-the-login-page-replace-the-existing-single-internet-identity-authentication-button-with-the-same-four-authentication-option-buttons-google-with-google-g-logo-apple-with-apple-logo-microsoft-with-microsoft-colored-squares-logo-and-continue-with-passkey-with-passkey-person-icon-each-button-triggers-the-internet-identity-login-flow-the-underlying-authentication-mechanism-remains-internet-identity",
-      "title": "On the Login page, replace the existing single Internet Identity authentication button with the same four authentication option buttons: Google (with Google 'G' logo), Apple (with Apple logo), Microsoft (with Microsoft colored squares logo), and 'Continue with Passkey' (with passkey/person icon). Each button triggers the Internet Identity login flow. The underlying authentication mechanism remains Internet Identity.",
+      "id": "feature-on-loginpage-remove-the-authmethodbuttons-component-google-apple-microsoft-passkey-separate-buttons-and-the-choose-method-ui-replace-with-a-single-connect-with-internet-identity-button-that-directly-calls-the-login-function-from-useinternetidentity-hook-the-button-must-be-fully-clickable-and-functional-no-disabled-or-non-interactive-state-on-initial-render",
+      "title": "On LoginPage, remove the AuthMethodButtons component (Google, Apple, Microsoft, Passkey separate buttons) and the 'CHOOSE METHOD' UI. Replace with a single 'Connect with Internet Identity' button that directly calls the `login()` function from `useInternetIdentity` hook. The button must be fully clickable and functional — no disabled or non-interactive state on initial render.",
       "reqIds": [
         "REQ-2"
       ],
       "version": 1
     }
   ],
-  "new_feature_requests": [
-    {
-      "id": "AR-1",
-      "summary": "Add Google, Apple, Microsoft, and Passkey buttons directly on Register Step 2 (Authenticate) screen replacing single Internet Identity button",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-2",
-      "summary": "Add Google, Apple, Microsoft, and Passkey buttons directly on Login page replacing single Internet Identity button",
-      "reqIds": [],
-      "status": "pending"
-    }
-  ],
+  "new_feature_requests": [],
   "gameProjectType": "none",
-  "projectName": "BGMI Tournament Registration App",
+  "projectName": "Raj Empire Esports",
   "clarification_mode": "instant",
   "clarification_rounds": 0
 }

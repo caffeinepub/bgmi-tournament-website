@@ -1,7 +1,7 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-03-01T21:12:10.321Z",
+  "generatedAt": "2026-03-01T21:35:41.156Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
@@ -12,24 +12,18 @@
     "items": [
       {
         "id": "REQ-1",
-        "summary": "On the Register page Step 2 (Authenticate screen), replace the single 'Verify with Internet Identity' button with four distinct authentication option buttons matching the Internet Identity (id.ai) UI: a Google button (with Google 'G' logo), an Apple button (with Apple logo), a Microsoft button (with Microsoft colored squares logo), and a 'Continue with Passkey' button (with passkey/person icon). Each button, when clicked, must trigger the Internet Identity login flow — the underlying authentication mechanism remains Internet Identity, but the UI presents these four options directly on the screen so users can visually select their preferred method before the popup opens.",
+        "summary": "On RegisterPage Step 2 ('Authenticate' step), remove the current custom authentication buttons and the stuck 'Connecting...' state. Replace with a single 'Connect with Internet Identity' button that directly calls the `login()` function from `useInternetIdentity` hook without any custom method selection logic. Clear any stuck loading state on mount so the button is always clickable when the user arrives at Step 2. Remove the 'Authentication cancelled or failed. Please try again.' error that persists from a previous failed attempt.",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/components/AuthMethodButtons.tsx",
-          "frontend/public/assets/icons/google-logo.svg",
-          "frontend/public/assets/icons/apple-logo.svg",
-          "frontend/public/assets/icons/microsoft-logo.svg",
-          "frontend/public/assets/icons/passkey-icon.svg",
           "frontend/src/pages/RegisterPage.tsx"
         ],
         "matchedFiles": [
-          "frontend/src/components/AuthMethodButtons.tsx",
           "frontend/src/pages/RegisterPage.tsx"
         ]
       },
       {
         "id": "REQ-2",
-        "summary": "On the Login page, replace the existing single Internet Identity authentication button with the same four authentication option buttons: Google (with Google 'G' logo), Apple (with Apple logo), Microsoft (with Microsoft colored squares logo), and 'Continue with Passkey' (with passkey/person icon). Each button triggers the Internet Identity login flow. The underlying authentication mechanism remains Internet Identity.",
+        "summary": "On LoginPage, remove the AuthMethodButtons component (Google, Apple, Microsoft, Passkey separate buttons) and the 'CHOOSE METHOD' UI. Replace with a single 'Connect with Internet Identity' button that directly calls the `login()` function from `useInternetIdentity` hook. The button must be fully clickable and functional — no disabled or non-interactive state on initial render.",
         "status": "implemented",
         "plannedFiles": [
           "frontend/src/pages/LoginPage.tsx"
@@ -45,7 +39,6 @@
     "feature_evidence.json",
     "frontend-file-summaries.txt",
     "frontend-implementation-plan.json",
-    "frontend/src/components/AuthMethodButtons.tsx",
     "frontend/src/pages/LoginPage.tsx",
     "frontend/src/pages/RegisterPage.tsx",
     "project_state.json",

@@ -6,9 +6,8 @@ import { useActor } from '../hooks/useActor';
 import { useRegisterPlayer, useSaveCallerUserProfile } from '../hooks/useQueries';
 import {
   Gamepad2, Phone, User, Hash, ArrowRight, Loader2,
-  CheckCircle, ShieldCheck, AlertCircle, PartyPopper, LayoutDashboard
+  CheckCircle, ShieldCheck, AlertCircle, PartyPopper, LayoutDashboard, ShieldIcon
 } from 'lucide-react';
-import AuthMethodButtons from '../components/AuthMethodButtons';
 
 interface FieldErrors {
   displayName?: string;
@@ -19,7 +18,7 @@ interface FieldErrors {
 export default function RegisterPage() {
   const navigate = useNavigate();
   const { login } = useAuth();
-  const { login: iiLogin, clear: iiClear, identity, isLoggingIn, isLoginError } = useInternetIdentity();
+  const { login: iiLogin, clear: iiClear, identity, isLoggingIn } = useInternetIdentity();
   const { actor, isFetching: actorFetching } = useActor();
   const registerPlayer = useRegisterPlayer();
   const saveProfile = useSaveCallerUserProfile();
@@ -29,19 +28,19 @@ export default function RegisterPage() {
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [globalError, setGlobalError] = useState('');
   const [isRegistering, setIsRegistering] = useState(false);
+  const [authLoading, setAuthLoading] = useState(false);
 
   // Track if we've already triggered registration to avoid double-calls
   const registrationTriggeredRef = useRef(false);
-  // Track if the user has explicitly clicked an auth method button on step 2
-  const loginInitiatedRef = useRef(false);
 
-  // Watch isLoginError: if login fails/is cancelled, reset so user can retry
+  // Reset auth state when entering authenticate step
   useEffect(() => {
-    if (step === 'authenticate' && isLoginError) {
-      loginInitiatedRef.current = false;
-      setGlobalError('Authentication cancelled or failed. Please try again.');
+    if (step === 'authenticate') {
+      setAuthLoading(false);
+      setGlobalError('');
+      registrationTriggeredRef.current = false;
     }
-  }, [isLoginError, step]);
+  }, [step]);
 
   // When identity becomes available AND actor is ready in the 'authenticate' step, complete registration
   useEffect(() => {
@@ -51,8 +50,7 @@ export default function RegisterPage() {
       actor &&
       !actorFetching &&
       !isRegistering &&
-      !registrationTriggeredRef.current &&
-      loginInitiatedRef.current
+      !registrationTriggeredRef.current
     ) {
       registrationTriggeredRef.current = true;
       handleCompleteRegistration();
@@ -128,17 +126,19 @@ export default function RegisterPage() {
     }
 
     setFieldErrors({});
-    // Reset refs when entering authenticate step
-    registrationTriggeredRef.current = false;
-    loginInitiatedRef.current = false;
     setStep('authenticate');
   };
 
-  // Called when user clicks any auth method button on Step 2
-  const handleAuthMethodClick = () => {
+  // Called when user clicks the Internet Identity button on Step 2
+  const handleConnectWithII = async () => {
     setGlobalError('');
-    loginInitiatedRef.current = true;
-    iiLogin();
+    setAuthLoading(true);
+    try {
+      await iiLogin();
+    } catch (err: any) {
+      setGlobalError('Authentication cancelled or failed. Please try again.');
+      setAuthLoading(false);
+    }
   };
 
   const handleCompleteRegistration = async () => {
@@ -167,7 +167,7 @@ export default function RegisterPage() {
       } else {
         setGlobalError(msg || 'Registration failed. Please try again.');
         registrationTriggeredRef.current = false;
-        loginInitiatedRef.current = false;
+        setAuthLoading(false);
         await iiClear();
       }
     } finally {
@@ -180,8 +180,14 @@ export default function RegisterPage() {
 
   const isActorReady = !!actor && !actorFetching;
   const isWaitingForActor = identity && !isActorReady && step === 'authenticate';
-  // Show connecting state only after user has clicked the button
-  const isConnecting = loginInitiatedRef.current && isLoggingIn && !identity;
+  const isBusy = authLoading || isLoggingIn || isRegistering || !!isWaitingForActor;
+
+  const getButtonText = () => {
+    if (isRegistering) return 'Creating Account...';
+    if (isWaitingForActor) return 'Connecting...';
+    if (isLoggingIn || authLoading) return 'Opening Identity Provider...';
+    return 'Connect with Internet Identity';
+  };
 
   return (
     <div className="min-h-screen bg-brand-darker flex items-center justify-center px-4 py-12">
@@ -357,7 +363,7 @@ export default function RegisterPage() {
                 </div>
                 <h3 className="font-orbitron font-bold text-white text-base mb-1">Verify Your Identity</h3>
                 <p className="text-gray-400 text-sm">
-                  Choose a method to securely create your account on the blockchain.
+                  Connect with Internet Identity to securely create your account on the blockchain.
                 </p>
               </div>
 
@@ -385,33 +391,28 @@ export default function RegisterPage() {
                 </div>
               )}
 
-              {/* Auth method buttons or loading state */}
-              {(isRegistering || isWaitingForActor) ? (
-                <AuthMethodButtons
-                  onMethodClick={handleAuthMethodClick}
-                  isLoading={true}
-                  loadingText={isWaitingForActor ? 'Connecting...' : 'Creating Account...'}
-                />
-              ) : isConnecting ? (
-                <AuthMethodButtons
-                  onMethodClick={handleAuthMethodClick}
-                  isLoading={true}
-                  loadingText="Opening Identity Provider..."
-                />
-              ) : (
-                <AuthMethodButtons
-                  onMethodClick={handleAuthMethodClick}
-                  isLoading={false}
-                />
-              )}
+              {/* Single Internet Identity button */}
+              <button
+                type="button"
+                onClick={handleConnectWithII}
+                disabled={isBusy}
+                className="w-full flex items-center justify-center gap-3 bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-500 hover:to-indigo-600 disabled:opacity-60 disabled:cursor-not-allowed text-white font-bold py-3.5 rounded-xl transition-all shadow-lg shadow-blue-600/20"
+              >
+                {isBusy ? (
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                ) : (
+                  <ShieldIcon className="w-5 h-5" />
+                )}
+                {getButtonText()}
+              </button>
 
               <button
                 type="button"
                 onClick={() => {
                   setStep('details');
                   setGlobalError('');
+                  setAuthLoading(false);
                   registrationTriggeredRef.current = false;
-                  loginInitiatedRef.current = false;
                 }}
                 className="w-full text-center text-gray-500 text-sm hover:text-gray-300 transition-colors"
               >
@@ -433,16 +434,17 @@ export default function RegisterPage() {
 
           {/* ── Step 3: Success ── */}
           {step === 'success' && (
-            <div className="space-y-5 text-center">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-green-500/20 border border-green-500/40 mb-2">
+            <div className="text-center space-y-5 py-4">
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-green-500/20 border border-green-500/30 mb-2">
                 <PartyPopper className="w-8 h-8 text-green-400" />
               </div>
               <div>
-                <h3 className="font-orbitron font-bold text-white text-lg mb-1">Account Created! 🎉</h3>
-                <p className="text-gray-400 text-sm">Welcome to Raj Empire Esports Arena, {form.displayName}!</p>
+                <h3 className="font-orbitron font-bold text-white text-lg mb-1">Account Created!</h3>
+                <p className="text-gray-400 text-sm">
+                  Welcome to Raj Empire Esports Arena, <span className="text-brand-orange font-medium">{form.displayName}</span>!
+                </p>
               </div>
-
-              <div className="bg-white/5 border border-white/10 rounded-xl p-4 space-y-2 text-left">
+              <div className="bg-white/5 border border-white/10 rounded-xl p-4 text-left space-y-2">
                 <p className="text-xs text-gray-400 font-medium uppercase tracking-wider mb-2">Your Account</p>
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-500">Display Name</span>
@@ -457,9 +459,7 @@ export default function RegisterPage() {
                   <span className="text-white font-medium">{form.bgmiPlayerId}</span>
                 </div>
               </div>
-
               <button
-                type="button"
                 onClick={() => navigate({ to: '/player' })}
                 className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-brand-red to-brand-orange text-white font-bold py-3 rounded-xl hover:opacity-90 transition-opacity shadow-lg shadow-brand-red/20"
               >

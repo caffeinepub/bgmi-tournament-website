@@ -1,70 +1,68 @@
 {
   "kind": "build_request",
-  "title": "Add Google, Apple, Microsoft, and Passkey login options on Register Step 2 and Login page",
+  "title": "Fix authentication flow: replace broken custom auth buttons with Internet Identity default popup",
   "projectName": "Raj Empire Esports",
-  "priority": "normal",
+  "priority": "high",
   "requirements": [
     {
       "id": "REQ-1",
-      "text": "On the Register page Step 2 (Authenticate screen), replace the single 'Verify with Internet Identity' button with four distinct authentication option buttons matching the Internet Identity (id.ai) UI: a Google button (with Google 'G' logo), an Apple button (with Apple logo), a Microsoft button (with Microsoft colored squares logo), and a 'Continue with Passkey' button (with passkey/person icon). Each button, when clicked, must trigger the Internet Identity login flow — the underlying authentication mechanism remains Internet Identity, but the UI presents these four options directly on the screen so users can visually select their preferred method before the popup opens.",
+      "text": "On RegisterPage Step 2 ('Authenticate' step), remove the current custom authentication buttons and the stuck 'Connecting...' state. Replace with a single 'Connect with Internet Identity' button that directly calls the `login()` function from `useInternetIdentity` hook without any custom method selection logic. Clear any stuck loading state on mount so the button is always clickable when the user arrives at Step 2. Remove the 'Authentication cancelled or failed. Please try again.' error that persists from a previous failed attempt.",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-14",
-          "msg-16",
-          "msg-18",
-          "msg-20"
+          "msg-1",
+          "msg-2",
+          "msg-3"
         ],
         "quotes": [
-          "screen 2 pe kam kare",
-          "dono pe",
-          "Google, Apple, Microsoft, aur Passkey",
-          "ye photo me dikh raha h na loging karne ka option aisa option tum bhi add karo taki user name mobile no. or bgmi id dalne ke baad ye option aye fir ragisterd done ho jaye"
+          "Register Step 2 pe button 'Connecting...' stuck hai aur 'Authentication cancelled or failed' error aa raha hai",
+          "default popup kholen",
+          "Seedha Internet Identity ka default popup use karunga — ek single 'Connect with Internet Identity' button hoga"
         ]
       },
       "acceptanceCriteria": [
-        "Step 2 (Authenticate) screen shows four separate buttons: Google, Apple, Microsoft, and Continue with Passkey",
-        "Each button has its respective brand logo/icon (Google multicolor G, Apple black logo, Microsoft colored squares, passkey person icon)",
-        "The single 'Verify with Internet Identity' button is no longer displayed",
-        "Clicking any of the four buttons triggers the Internet Identity authentication flow",
-        "After successful authentication, registration proceeds to Step 3 (Success screen) as before",
-        "Error state ('Authentication cancelled or failed') still shows if login is cancelled, with option to retry",
-        "Layout matches the id.ai 'Choose method' style: Google, Apple, Microsoft in a row, then 'Continue with Passkey' as a full-width button below"
+        "Step 2 shows a single 'Connect with Internet Identity' button (not Google/Apple/Microsoft/Passkey separate buttons)",
+        "Button is always enabled and clickable when Step 2 is rendered — no stuck 'Connecting...' state on load",
+        "Clicking the button triggers the Internet Identity native popup directly via the useInternetIdentity login() function",
+        "No stale error message ('Authentication cancelled or failed') is shown when arriving at Step 2",
+        "If authentication fails or is cancelled, an error message is shown but the button resets to clickable state immediately"
       ]
     },
     {
       "id": "REQ-2",
-      "text": "On the Login page, replace the existing single Internet Identity authentication button with the same four authentication option buttons: Google (with Google 'G' logo), Apple (with Apple logo), Microsoft (with Microsoft colored squares logo), and 'Continue with Passkey' (with passkey/person icon). Each button triggers the Internet Identity login flow. The underlying authentication mechanism remains Internet Identity.",
+      "text": "On LoginPage, remove the AuthMethodButtons component (Google, Apple, Microsoft, Passkey separate buttons) and the 'CHOOSE METHOD' UI. Replace with a single 'Connect with Internet Identity' button that directly calls the `login()` function from `useInternetIdentity` hook. The button must be fully clickable and functional — no disabled or non-interactive state on initial render.",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-18",
-          "msg-20"
+          "msg-1",
+          "msg-2",
+          "msg-3"
         ],
         "quotes": [
-          "dono pe",
-          "Login page — same 4 options directly dikhenge"
+          "Login page pe Google, Apple, Microsoft aur Passkey buttons click hi nahi ho rahe",
+          "default popup kholen",
+          "Dono jagah se custom authentication buttons hata dunga — Seedha Internet Identity ka default popup use karunga"
         ]
       },
       "acceptanceCriteria": [
-        "Login page shows four separate buttons: Google, Apple, Microsoft, and Continue with Passkey",
-        "Each button has its respective brand logo/icon",
-        "The single Internet Identity button is replaced by these four options",
-        "Clicking any of the four buttons triggers the Internet Identity authentication flow",
-        "After successful authentication, user is logged in and redirected to dashboard as before",
-        "Layout matches the id.ai 'Choose method' style: Google, Apple, Microsoft in a row, then 'Continue with Passkey' as full-width button below"
+        "LoginPage shows a single 'Connect with Internet Identity' button replacing the Google/Apple/Microsoft/Passkey buttons",
+        "The button is immediately clickable on page load with no disabled or stuck state",
+        "Clicking the button opens Internet Identity's native popup directly",
+        "After successful authentication, the existing profile-fetch and redirect logic runs as before",
+        "The AuthMethodButtons component is no longer used on LoginPage"
       ]
     }
   ],
   "constraints": [
-    "Do not change the backend authentication mechanism — Internet Identity must remain the underlying auth provider",
-    "Do not modify files in frontend/src/hooks/useInternetIdentity.ts or frontend/src/hooks/useActor.ts",
-    "The four buttons are UI wrappers that call the same Internet Identity login function already in use"
+    "Do not modify files under frontend/src/hooks/ (useInternetIdentity.ts, useActor.ts) — they are immutable",
+    "Use only the existing login() function from useInternetIdentity hook — do not introduce a new auth client",
+    "Do not change backend logic or data models"
   ],
   "nonGoals": [
-    "Replacing Internet Identity with direct Google/Apple/Microsoft OAuth integrations",
-    "Adding any new backend authentication logic",
-    "Changing the registration form (Step 1) or success screen (Step 3)"
+    "Adding new authentication providers beyond Internet Identity",
+    "Changing the overall page layout or visual theme",
+    "Modifying Step 1 or Step 3 of the registration flow",
+    "Any backend changes"
   ],
   "imageRequirements": {
     "required": [],

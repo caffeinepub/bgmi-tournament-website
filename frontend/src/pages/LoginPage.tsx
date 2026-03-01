@@ -3,8 +3,7 @@ import { useNavigate } from '@tanstack/react-router';
 import { useAuth } from '../context/AuthContext';
 import { useActor } from '../hooks/useActor';
 import { useInternetIdentity } from '../hooks/useInternetIdentity';
-import { Gamepad2, ShieldCheck } from 'lucide-react';
-import AuthMethodButtons from '../components/AuthMethodButtons';
+import { Gamepad2, ShieldCheck, ShieldIcon, Loader2 } from 'lucide-react';
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -14,6 +13,7 @@ export default function LoginPage() {
 
   const [error, setError] = useState('');
   const [isVerifying, setIsVerifying] = useState(false);
+  const [authLoading, setAuthLoading] = useState(false);
 
   // When identity becomes available, fetch profile and log in
   useEffect(() => {
@@ -45,19 +45,28 @@ export default function LoginPage() {
       await iiClear();
     } finally {
       setIsVerifying(false);
+      setAuthLoading(false);
     }
   };
 
-  const handleMethodClick = async () => {
+  const handleConnectWithII = async () => {
     setError('');
+    setAuthLoading(true);
     try {
       await iiLogin();
     } catch (err: any) {
-      setError(err?.message || 'Authentication failed. Please try again.');
+      setError(err?.message || 'Authentication cancelled or failed. Please try again.');
+      setAuthLoading(false);
     }
   };
 
-  const isLoading = isLoggingIn || isVerifying;
+  const isBusy = authLoading || isLoggingIn || isVerifying;
+
+  const getButtonText = () => {
+    if (isVerifying) return 'Verifying Account...';
+    if (isLoggingIn || authLoading) return 'Opening Identity Provider...';
+    return 'Connect with Internet Identity';
+  };
 
   return (
     <div className="min-h-screen bg-brand-darker flex items-center justify-center px-4 py-12">
@@ -78,21 +87,31 @@ export default function LoginPage() {
             </div>
             <h3 className="font-orbitron font-bold text-white text-base mb-1">Secure Login</h3>
             <p className="text-gray-400 text-sm">
-              Choose a method to securely access your account.
+              Connect with Internet Identity to securely access your account.
             </p>
           </div>
 
           {error && (
-            <div className="bg-red-500/10 border border-red-500/30 rounded-lg px-3 py-2 text-red-400 text-sm mb-4">
+            <div className="bg-red-500/10 border border-red-500/30 rounded-lg px-3 py-2 text-red-400 text-sm mb-4 flex items-center gap-2">
+              <ShieldCheck className="w-4 h-4 flex-shrink-0 text-red-400" />
               {error}
             </div>
           )}
 
-          <AuthMethodButtons
-            onMethodClick={handleMethodClick}
-            isLoading={isLoading}
-            loadingText={isVerifying ? 'Verifying...' : 'Authenticating...'}
-          />
+          {/* Single Internet Identity button */}
+          <button
+            type="button"
+            onClick={handleConnectWithII}
+            disabled={isBusy}
+            className="w-full flex items-center justify-center gap-3 bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-500 hover:to-indigo-600 disabled:opacity-60 disabled:cursor-not-allowed text-white font-bold py-3.5 rounded-xl transition-all shadow-lg shadow-blue-600/20"
+          >
+            {isBusy ? (
+              <Loader2 className="w-5 h-5 animate-spin" />
+            ) : (
+              <ShieldIcon className="w-5 h-5" />
+            )}
+            {getButtonText()}
+          </button>
 
           <div className="mt-5 pt-4 border-t border-white/5 text-center">
             <p className="text-sm text-gray-500">
