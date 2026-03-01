@@ -3,5 +3,10 @@
   "frontend/src/main.tsx": "Application bootstrap that renders the React app with QueryClientProvider and InternetIdentityProvider wrapping the App component.",
   "frontend/src/pages/TermsPage.tsx": "Public Terms & Conditions page that fetches and displays T&C content from the backend with dark gaming theme styling and a fallback empty state.",
   "frontend/src/pages/AdminLoginPage.tsx": "Admin-only login page at /admin with hardcoded credential validation (username: 'Empire Esports', password: 'Shivam803119&'), redirects to /admin/dashboard on success.",
-  "frontend/src/pages/AdminDashboardPage.tsx": "Full admin dashboard with six tabbed sections: Tournament Management (create/view), Registrations, Player List, Terms & Conditions editor, Support Tickets viewer with reply/status controls, and Social Links editor."
+  "frontend/src/pages/AdminDashboardPage.tsx": "Full admin dashboard with six tabbed sections: Tournament Management (create/view), Registrations, Player List, Terms & Conditions editor, Support Tickets viewer with reply/status controls, and Social Links editor.",
+  "frontend/src/components/AdminProtectedRoute.tsx": "Guards admin routes by checking `isAdminAuthenticated` from AdminAuthContext, redirecting to `/admin` if not authenticated.",
+  "frontend/src/components/ProtectedRoute.tsx": "Guards player routes by checking `isAuthenticated` from AuthContext, redirecting to `/player/login` if not authenticated.",
+  "frontend/src/components/Footer.tsx": "Site footer with social links (fetched via `useGetSocialLinks`), navigation buttons using `useNavigate` (no `Link` component to avoid route type errors), and caffeine.ai attribution.",
+  "frontend/src/components/Header.tsx": "Sticky site header with logo, desktop/mobile navigation using `useNavigate` and `isAuthenticated` from AuthContext, with login/logout/register actions pointing to correct `/player/*` routes.",
+  "frontend/src/pages/TournamentsPage.tsx": "Public tournaments listing page using `useGetAllTournaments` and `isAuthenticated`, with tournament cards showing entry fee/prize/slots/map, register button opening PaymentModal, and correct `/player/login` and `/player` navigation routes."
 }

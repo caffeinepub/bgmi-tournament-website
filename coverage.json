@@ -1,266 +1,72 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-28T18:40:51.800Z",
+  "generatedAt": "2026-03-01T05:51:54.079Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
   },
   "requirements": {
-    "total": 9,
-    "implemented": 8,
+    "total": 4,
+    "implemented": 0,
     "items": [
       {
-        "id": "REQ-48",
-        "summary": "Implement the complete Motoko backend in a single actor with all data models and functions: Player (mobile, bgmiPlayerId, displayName, OTP simulation), Tournament (name, dateTime, entryFee, prizePool, map, totalSlots, filledSlots, upiId, qrCodeBlob, roomId, roomPassword, matchRules, status), TournamentRegistration (registrationId, tournamentId, playerId, paymentScreenshotBlob, status: Pending/Approved/Rejected), TermsAndConditions (content), SupportTicket (ticketId, playerId, playerName, subject, description, screenshotBlob optional, status: Open/Replied/Closed, createdAt, adminReply optional, repliedAt optional), and SocialLinks (youtube, instagram, telegram). Expose all CRUD, query, and mutation functions: OTP generation/verification, tournament slot management (auto-close when filledSlots reaches totalSlots), admin approval of registrations (unlocks roomId/roomPassword for approved player), support ticket create/reply/status-update, T&C get/update, and social links get/update.",
+        "id": "REQ-1",
+        "summary": "Fix the OTP generation error 'Unauthorized: Only authenticated users can generate OTPs' in the backend. The `generateOTP` function must allow unauthenticated (anonymous) callers so that new players can register and existing players can log in without needing a prior authenticated session.",
         "status": "unknown",
         "plannedFiles": [],
         "matchedFiles": []
       },
       {
-        "id": "REQ-49",
-        "summary": "Build the player registration page at route /register with fields: mobile number, display name, BGMI Player ID (mandatory). After entering mobile, show a 4-digit OTP input step and display the simulated OTP on screen. Enforce one account per mobile — show a clear error if mobile already exists. Include an 'I agree to the Terms & Conditions' checkbox with a clickable link to /terms; disable the submit button until the checkbox is checked. On success, redirect to the player dashboard at /dashboard.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/pages/RegisterPage.tsx",
-          "frontend/src/App.tsx"
-        ],
-        "matchedFiles": [
-          "frontend/src/pages/RegisterPage.tsx",
-          "frontend/src/App.tsx"
-        ]
-      },
-      {
-        "id": "REQ-50",
-        "summary": "Build the player login page at route /login using mobile number + OTP (no password). Player enters mobile, receives simulated OTP displayed on screen, enters it to log in. On success, redirect to the player dashboard at /dashboard.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/pages/LoginPage.tsx",
-          "frontend/src/App.tsx",
-          "frontend/src/context/AuthContext.tsx",
-          "frontend/src/main.tsx"
-        ],
-        "matchedFiles": [
-          "frontend/src/pages/LoginPage.tsx",
-          "frontend/src/App.tsx",
-          "frontend/src/context/AuthContext.tsx",
-          "frontend/src/main.tsx"
-        ]
-      },
-      {
-        "id": "REQ-51",
-        "summary": "Build the tournament listing page at route /tournaments showing all active tournaments as cards. Each card displays: tournament name, entry fee, prize pool, total slots, filled slots, map, date/time, and registration status (Open/Full). If matchRules is non-empty, display it below the card. Players must be logged in to register. When a tournament's slots are full, show it as 'Full' and disable the Register button.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/pages/TournamentsPage.tsx",
-          "frontend/src/App.tsx"
-        ],
-        "matchedFiles": [
-          "frontend/src/pages/TournamentsPage.tsx",
-          "frontend/src/App.tsx"
-        ]
-      },
-      {
-        "id": "REQ-52",
-        "summary": "Implement the payment flow: after a player clicks Register on a tournament, show a payment modal/page with the tournament's UPI ID (default: empirerajesports@ibl) and QR code image (fallback to upi-qr-placeholder.dim_300x300.png if no QR uploaded by admin). Player uploads a payment screenshot (image file). Include an 'I agree to the Terms & Conditions' checkbox. On submission, save registration with status 'Pending Admin Approval'. Room ID and Password remain hidden until admin approves.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/components/PaymentModal.tsx",
-          "frontend/src/pages/TournamentsPage.tsx"
-        ],
-        "matchedFiles": [
-          "frontend/src/components/PaymentModal.tsx",
-          "frontend/src/pages/TournamentsPage.tsx"
-        ]
-      },
-      {
-        "id": "REQ-53",
-        "summary": "Build the player dashboard at route /dashboard showing: player's display name and BGMI Player ID, their tournament registrations with status badges (Pending/Approved/Rejected). For Approved registrations, display Room ID and Room Password. Include a Support section where the player can create new support tickets (subject, description, optional screenshot upload), view their ticket list with status badges (Open/Replied/Closed), and click a ticket to see full details including admin reply.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/pages/DashboardPage.tsx",
-          "frontend/src/App.tsx",
-          "frontend/src/components/ProtectedRoute.tsx"
-        ],
-        "matchedFiles": [
-          "frontend/src/pages/DashboardPage.tsx",
-          "frontend/src/App.tsx",
-          "frontend/src/components/ProtectedRoute.tsx"
-        ]
-      },
-      {
-        "id": "REQ-54",
-        "summary": "Build the admin dashboard accessible via a separate login page at route /admin with hardcoded credentials (username: 'Empire Esports', password: 'Shivam803119&'). Admin dashboard must have six sections: (1) Tournament Management — add/edit/delete tournaments with all fields including matchRules textarea, UPI ID, QR code upload, Room ID, Room Password; (2) Registrations — list all registrations with player info and payment screenshots, approve or reject each; (3) Player List — view all registered players; (4) Terms & Conditions — view and edit T&C content in a textarea with a save button; (5) Support Tickets — list all tickets with player name, BGMI ID, subject, status, date; click to view detail with screenshot; reply to ticket; update ticket status via dropdown/buttons; (6) Social Links — input fields for YouTube, Instagram, and Telegram URLs with a save button.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/pages/AdminLoginPage.tsx",
-          "frontend/src/pages/AdminDashboardPage.tsx",
-          "frontend/src/App.tsx",
-          "frontend/src/context/AdminAuthContext.tsx",
-          "frontend/src/main.tsx",
-          "frontend/src/components/AdminProtectedRoute.tsx"
-        ],
-        "matchedFiles": [
-          "frontend/src/pages/AdminLoginPage.tsx",
-          "frontend/src/pages/AdminDashboardPage.tsx",
-          "frontend/src/App.tsx",
-          "frontend/src/context/AdminAuthContext.tsx",
-          "frontend/src/main.tsx",
-          "frontend/src/components/AdminProtectedRoute.tsx"
-        ]
-      },
-      {
-        "id": "REQ-55",
-        "summary": "Add a dedicated Terms & Conditions page at route /terms that fetches and displays the current T&C content from the backend. Style with the dark gaming theme consistent with Raj Empire Esports branding.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/pages/TermsPage.tsx",
-          "frontend/src/App.tsx"
-        ],
-        "matchedFiles": [
-          "frontend/src/pages/TermsPage.tsx",
-          "frontend/src/App.tsx"
-        ]
-      },
-      {
-        "id": "REQ-56",
-        "summary": "Apply a dark, high-energy battle-royale gaming aesthetic consistently across all pages. Use a near-black deep dark background, bold orange and gold accent colors, sharp angular UI elements, and military/tactical typography. Brand all pages, tab title, header, and footer as 'Raj Empire Esports'. Use raj-empire-esports-logo.dim_400x120.png as the site header logo. Display the Social Links (YouTube, Instagram, Telegram) fetched from the backend in the site footer as icon links.",
-        "status": "implemented",
+        "id": "REQ-2",
+        "summary": "Redesign the entire frontend UI — both the Player Panel (Register, Login, Dashboard, Home, Tournaments, Terms pages) and the Admin Panel (Admin Login, Admin Dashboard) — with a dark background base and a mixed orange & white color theme. Use deep dark backgrounds (near-black or very dark gray), vibrant orange as the primary accent color for buttons, highlights, borders, and active states, and white/light gray for primary text and secondary elements. Apply this consistently across all pages, cards, forms, modals, headers, footers, and navigation.",
+        "status": "missing",
         "plannedFiles": [
           "frontend/src/index.css",
           "frontend/tailwind.config.js",
-          "frontend/index.html",
+          "frontend/src/pages/HomePage.tsx",
+          "frontend/src/pages/RegisterPage.tsx",
+          "frontend/src/pages/LoginPage.tsx",
+          "frontend/src/pages/DashboardPage.tsx",
+          "frontend/src/pages/TournamentsPage.tsx",
+          "frontend/src/pages/TermsPage.tsx",
+          "frontend/src/pages/AdminLoginPage.tsx",
+          "frontend/src/pages/AdminDashboardPage.tsx",
           "frontend/src/components/Header.tsx",
           "frontend/src/components/Footer.tsx",
-          "frontend/src/components/Layout.tsx",
-          "frontend/src/App.tsx"
+          "frontend/src/components/PaymentModal.tsx",
+          "frontend/src/components/Layout.tsx"
         ],
-        "matchedFiles": [
-          "frontend/src/index.css",
-          "frontend/tailwind.config.js",
-          "frontend/index.html",
-          "frontend/src/components/Header.tsx",
-          "frontend/src/components/Footer.tsx",
-          "frontend/src/components/Layout.tsx",
-          "frontend/src/App.tsx"
-        ]
+        "matchedFiles": []
+      },
+      {
+        "id": "REQ-3",
+        "summary": "Add a persistent `domainName` field to the backend actor state with a default value of 'Raj-Empire-Esports'. Expose `getDomainName` (public query) and `setDomainName` (admin-only update) functions.",
+        "status": "unknown",
+        "plannedFiles": [],
+        "matchedFiles": []
+      },
+      {
+        "id": "REQ-4",
+        "summary": "Add a 'Domain Settings' section in the Admin Dashboard page. It must display the current domain name fetched from the backend and provide a text input field with a Save button that allows the admin to update the domain name. The default value shown must be 'Raj-Empire-Esports'.",
+        "status": "missing",
+        "plannedFiles": [
+          "frontend/src/hooks/useQueries.ts",
+          "frontend/src/pages/AdminDashboardPage.tsx"
+        ],
+        "matchedFiles": []
       }
     ]
   },
   "changedFiles": [
-    "backend/blob-storage/Mixin.mo",
-    "backend/blob-storage/Storage.mo",
     "backend/main.mo",
     "build-request.json",
-    "build-template/Dockerfile",
-    "build-template/LICENSE",
-    "build-template/README.md",
-    "build-template/deploy.sh",
-    "build-template/icp.yaml",
-    "build-template/package.json",
-    "build-template/pnpm-lock.yaml",
-    "build-template/pnpm-workspace.yaml",
-    "build-template/scripts/prune-unused-images.js",
-    "build-template/scripts/resize-images.js",
-    "build-template/src/backend/canister.yaml",
-    "build-template/src/backend/system-idl/aaaaa-aa.did",
-    "build-template/src/frontend/canister.yaml",
-    "build-template/src/frontend/components.json",
-    "build-template/src/frontend/env.json",
-    "build-template/src/frontend/eslint-rules/no-bigint-in-query-keys.js",
-    "build-template/src/frontend/eslint-rules/require-internet-identity-provider.js",
-    "build-template/src/frontend/eslint.config.js",
-    "build-template/src/frontend/package.json",
-    "build-template/src/frontend/postcss.config.js",
-    "build-template/src/frontend/src/components/ui/accordion.tsx",
-    "build-template/src/frontend/src/components/ui/alert-dialog.tsx",
-    "build-template/src/frontend/src/components/ui/alert.tsx",
-    "build-template/src/frontend/src/components/ui/aspect-ratio.tsx",
-    "build-template/src/frontend/src/components/ui/avatar.tsx",
-    "build-template/src/frontend/src/components/ui/badge.tsx",
-    "build-template/src/frontend/src/components/ui/breadcrumb.tsx",
-    "build-template/src/frontend/src/components/ui/button.tsx",
-    "build-template/src/frontend/src/components/ui/calendar.tsx",
-    "build-template/src/frontend/src/components/ui/card.tsx",
-    "build-template/src/frontend/src/components/ui/carousel.tsx",
-    "build-template/src/frontend/src/components/ui/chart.tsx",
-    "build-template/src/frontend/src/components/ui/checkbox.tsx",
-    "build-template/src/frontend/src/components/ui/collapsible.tsx",
-    "build-template/src/frontend/src/components/ui/command.tsx",
-    "build-template/src/frontend/src/components/ui/context-menu.tsx",
-    "build-template/src/frontend/src/components/ui/dialog.tsx",
-    "build-template/src/frontend/src/components/ui/drawer.tsx",
-    "build-template/src/frontend/src/components/ui/dropdown-menu.tsx",
-    "build-template/src/frontend/src/components/ui/form.tsx",
-    "build-template/src/frontend/src/components/ui/hover-card.tsx",
-    "build-template/src/frontend/src/components/ui/input-otp.tsx",
-    "build-template/src/frontend/src/components/ui/input.tsx",
-    "build-template/src/frontend/src/components/ui/label.tsx",
-    "build-template/src/frontend/src/components/ui/menubar.tsx",
-    "build-template/src/frontend/src/components/ui/navigation-menu.tsx",
-    "build-template/src/frontend/src/components/ui/pagination.tsx",
-    "build-template/src/frontend/src/components/ui/popover.tsx",
-    "build-template/src/frontend/src/components/ui/progress.tsx",
-    "build-template/src/frontend/src/components/ui/radio-group.tsx",
-    "build-template/src/frontend/src/components/ui/resizable.tsx",
-    "build-template/src/frontend/src/components/ui/scroll-area.tsx",
-    "build-template/src/frontend/src/components/ui/select.tsx",
-    "build-template/src/frontend/src/components/ui/separator.tsx",
-    "build-template/src/frontend/src/components/ui/sheet.tsx",
-    "build-template/src/frontend/src/components/ui/sidebar.tsx",
-    "build-template/src/frontend/src/components/ui/skeleton.tsx",
-    "build-template/src/frontend/src/components/ui/slider.tsx",
-    "build-template/src/frontend/src/components/ui/sonner.tsx",
-    "build-template/src/frontend/src/components/ui/switch.tsx",
-    "build-template/src/frontend/src/components/ui/table.tsx",
-    "build-template/src/frontend/src/components/ui/tabs.tsx",
-    "build-template/src/frontend/src/components/ui/textarea.tsx",
-    "build-template/src/frontend/src/components/ui/toggle-group.tsx",
-    "build-template/src/frontend/src/components/ui/toggle.tsx",
-    "build-template/src/frontend/src/components/ui/tooltip.tsx",
-    "build-template/src/frontend/src/hooks/use-mobile.tsx",
-    "build-template/src/frontend/src/lib/utils.ts",
-    "build-template/src/frontend/tsconfig.json",
-    "build-template/src/frontend/vite.config.js",
-    "build-template/tsconfig.json",
-    "caffeine.lock.json",
     "feature_evidence.json",
-    "frontend-file-summaries.txt",
     "frontend-implementation-plan.json",
-    "frontend/index.css",
-    "frontend/index.html",
-    "frontend/public/assets/generated/raj-empire-esports-logo.dim_400x120.png",
-    "frontend/public/assets/generated/upi-qr-placeholder.dim_300x300.png",
-    "frontend/src/App.tsx",
     "frontend/src/backend.d.ts",
     "frontend/src/backend.ts",
-    "frontend/src/components/AdminProtectedRoute.tsx",
-    "frontend/src/components/Footer.tsx",
-    "frontend/src/components/Header.tsx",
-    "frontend/src/components/Layout.tsx",
-    "frontend/src/components/PaymentModal.tsx",
-    "frontend/src/components/ProtectedRoute.tsx",
-    "frontend/src/config.ts",
-    "frontend/src/context/AdminAuthContext.tsx",
-    "frontend/src/context/AuthContext.tsx",
     "frontend/src/declarations/backend.did.d.ts",
     "frontend/src/declarations/backend.did.js",
-    "frontend/src/hooks/useActor.ts",
-    "frontend/src/hooks/useInternetIdentity.ts",
-    "frontend/src/hooks/useQueries.ts",
-    "frontend/src/index.css",
-    "frontend/src/main.tsx",
-    "frontend/src/pages/AdminDashboardPage.tsx",
-    "frontend/src/pages/AdminLoginPage.tsx",
-    "frontend/src/pages/DashboardPage.tsx",
-    "frontend/src/pages/HomePage.tsx",
-    "frontend/src/pages/LoginPage.tsx",
-    "frontend/src/pages/RegisterPage.tsx",
-    "frontend/src/pages/TermsPage.tsx",
-    "frontend/src/pages/TournamentsPage.tsx",
-    "frontend/src/ui-summary.json",
-    "frontend/src/utils/StorageClient.ts",
-    "frontend/tailwind.config.js",
     "project_state.json",
     "scratch/component-selection.json",
     "spec.md",

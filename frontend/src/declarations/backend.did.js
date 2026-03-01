@@ -19,6 +19,11 @@ export const _CaffeineStorageRefillResult = IDL.Record({
   'success' : IDL.Opt(IDL.Bool),
   'topped_up_amount' : IDL.Opt(IDL.Nat),
 });
+export const UserRole = IDL.Variant({
+  'admin' : IDL.Null,
+  'user' : IDL.Null,
+  'guest' : IDL.Null,
+});
 export const ExternalBlob = IDL.Vec(IDL.Nat8);
 export const Time = IDL.Int;
 export const TournamentStatus = IDL.Variant({
@@ -43,6 +48,12 @@ export const Tournament = IDL.Record({
   'matchRules' : IDL.Text,
   'prizePool' : IDL.Nat,
 });
+export const Player = IDL.Record({
+  'principal' : IDL.Principal,
+  'displayName' : IDL.Text,
+  'bgmiPlayerId' : IDL.Text,
+  'mobile' : IDL.Text,
+});
 export const TicketStatus = IDL.Variant({
   'closed' : IDL.Null,
   'open' : IDL.Null,
@@ -59,6 +70,23 @@ export const SupportTicket = IDL.Record({
   'repliedAt' : IDL.Opt(Time),
   'playerName' : IDL.Text,
   'screenshotBlob' : IDL.Opt(ExternalBlob),
+});
+export const UserProfile = IDL.Record({
+  'displayName' : IDL.Text,
+  'bgmiPlayerId' : IDL.Text,
+  'mobile' : IDL.Text,
+});
+export const RegistrationStatus = IDL.Variant({
+  'pending' : IDL.Null,
+  'approved' : IDL.Null,
+  'rejected' : IDL.Null,
+});
+export const TournamentRegistration = IDL.Record({
+  'status' : RegistrationStatus,
+  'paymentScreenshotBlob' : ExternalBlob,
+  'playerId' : IDL.Text,
+  'registrationId' : IDL.Text,
+  'tournamentId' : IDL.Text,
 });
 export const SocialLinks = IDL.Record({
   'instagram' : IDL.Text,
@@ -94,8 +122,11 @@ export const idlService = IDL.Service({
       [],
     ),
   '_caffeineStorageUpdateGatewayPrincipals' : IDL.Func([], [], []),
+  '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
+  'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
+  'closeSupportTicket' : IDL.Func([IDL.Text], [], []),
   'createSupportTicket' : IDL.Func(
-      [IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Opt(ExternalBlob)],
+      [IDL.Text, IDL.Text, IDL.Text, IDL.Opt(ExternalBlob)],
       [IDL.Text],
       [],
     ),
@@ -106,27 +137,61 @@ export const idlService = IDL.Service({
     ),
   'findUnusedSlots' : IDL.Func([], [IDL.Vec(Tournament)], ['query']),
   'generateOtp' : IDL.Func([], [IDL.Text], []),
+  'getAllPlayers' : IDL.Func([], [IDL.Vec(Player)], ['query']),
   'getAllSupportTicketsSorted' : IDL.Func(
       [],
       [IDL.Vec(SupportTicket)],
       ['query'],
     ),
+  'getAllTournaments' : IDL.Func([], [IDL.Vec(Tournament)], ['query']),
+  'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
+  'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
+  'getDomainName' : IDL.Func([], [IDL.Text], ['query']),
+  'getMyRegistrations' : IDL.Func(
+      [],
+      [IDL.Vec(TournamentRegistration)],
+      ['query'],
+    ),
+  'getMySupportTickets' : IDL.Func([], [IDL.Vec(SupportTicket)], ['query']),
+  'getRegistrationsForTournament' : IDL.Func(
+      [IDL.Text],
+      [IDL.Vec(TournamentRegistration)],
+      ['query'],
+    ),
   'getSocialLinks' : IDL.Func([], [SocialLinks], ['query']),
   'getTermsAndConditions' : IDL.Func([], [TermsAndConditions], ['query']),
+  'getTournamentById' : IDL.Func([IDL.Text], [IDL.Opt(Tournament)], ['query']),
   'getTournamentsByMap' : IDL.Func(
       [IDL.Text],
       [IDL.Vec(Tournament)],
       ['query'],
     ),
+  'getUserProfile' : IDL.Func(
+      [IDL.Principal],
+      [IDL.Opt(UserProfile)],
+      ['query'],
+    ),
+  'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
   'registerForTournament' : IDL.Func([IDL.Text, ExternalBlob], [IDL.Text], []),
   'registerPlayer' : IDL.Func([IDL.Text, IDL.Text, IDL.Text], [], []),
+  'replyToSupportTicket' : IDL.Func([IDL.Text, IDL.Text], [], []),
+  'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
   'searchSupportTicketsByPlayerName' : IDL.Func(
       [IDL.Text],
       [IDL.Vec(SupportTicket)],
       ['query'],
     ),
+  'setDomainName' : IDL.Func([IDL.Text], [], []),
+  'updateRegistrationStatus' : IDL.Func([IDL.Text, RegistrationStatus], [], []),
   'updateSocialLinks' : IDL.Func([IDL.Text, IDL.Text, IDL.Text], [], []),
   'updateTermsAndConditions' : IDL.Func([IDL.Text], [], []),
+  'updateTournamentQrCode' : IDL.Func([IDL.Text, ExternalBlob], [], []),
+  'updateTournamentRoomDetails' : IDL.Func(
+      [IDL.Text, IDL.Text, IDL.Text],
+      [],
+      [],
+    ),
+  'updateTournamentStatus' : IDL.Func([IDL.Text, TournamentStatus], [], []),
   'verifyOtp' : IDL.Func([IDL.Text], [IDL.Bool], []),
 });
 
@@ -143,6 +208,11 @@ export const idlFactory = ({ IDL }) => {
   const _CaffeineStorageRefillResult = IDL.Record({
     'success' : IDL.Opt(IDL.Bool),
     'topped_up_amount' : IDL.Opt(IDL.Nat),
+  });
+  const UserRole = IDL.Variant({
+    'admin' : IDL.Null,
+    'user' : IDL.Null,
+    'guest' : IDL.Null,
   });
   const ExternalBlob = IDL.Vec(IDL.Nat8);
   const Time = IDL.Int;
@@ -168,6 +238,12 @@ export const idlFactory = ({ IDL }) => {
     'matchRules' : IDL.Text,
     'prizePool' : IDL.Nat,
   });
+  const Player = IDL.Record({
+    'principal' : IDL.Principal,
+    'displayName' : IDL.Text,
+    'bgmiPlayerId' : IDL.Text,
+    'mobile' : IDL.Text,
+  });
   const TicketStatus = IDL.Variant({
     'closed' : IDL.Null,
     'open' : IDL.Null,
@@ -184,6 +260,23 @@ export const idlFactory = ({ IDL }) => {
     'repliedAt' : IDL.Opt(Time),
     'playerName' : IDL.Text,
     'screenshotBlob' : IDL.Opt(ExternalBlob),
+  });
+  const UserProfile = IDL.Record({
+    'displayName' : IDL.Text,
+    'bgmiPlayerId' : IDL.Text,
+    'mobile' : IDL.Text,
+  });
+  const RegistrationStatus = IDL.Variant({
+    'pending' : IDL.Null,
+    'approved' : IDL.Null,
+    'rejected' : IDL.Null,
+  });
+  const TournamentRegistration = IDL.Record({
+    'status' : RegistrationStatus,
+    'paymentScreenshotBlob' : ExternalBlob,
+    'playerId' : IDL.Text,
+    'registrationId' : IDL.Text,
+    'tournamentId' : IDL.Text,
   });
   const SocialLinks = IDL.Record({
     'instagram' : IDL.Text,
@@ -219,8 +312,11 @@ export const idlFactory = ({ IDL }) => {
         [],
       ),
     '_caffeineStorageUpdateGatewayPrincipals' : IDL.Func([], [], []),
+    '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
+    'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
+    'closeSupportTicket' : IDL.Func([IDL.Text], [], []),
     'createSupportTicket' : IDL.Func(
-        [IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Opt(ExternalBlob)],
+        [IDL.Text, IDL.Text, IDL.Text, IDL.Opt(ExternalBlob)],
         [IDL.Text],
         [],
       ),
@@ -240,31 +336,73 @@ export const idlFactory = ({ IDL }) => {
       ),
     'findUnusedSlots' : IDL.Func([], [IDL.Vec(Tournament)], ['query']),
     'generateOtp' : IDL.Func([], [IDL.Text], []),
+    'getAllPlayers' : IDL.Func([], [IDL.Vec(Player)], ['query']),
     'getAllSupportTicketsSorted' : IDL.Func(
         [],
         [IDL.Vec(SupportTicket)],
         ['query'],
       ),
+    'getAllTournaments' : IDL.Func([], [IDL.Vec(Tournament)], ['query']),
+    'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
+    'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
+    'getDomainName' : IDL.Func([], [IDL.Text], ['query']),
+    'getMyRegistrations' : IDL.Func(
+        [],
+        [IDL.Vec(TournamentRegistration)],
+        ['query'],
+      ),
+    'getMySupportTickets' : IDL.Func([], [IDL.Vec(SupportTicket)], ['query']),
+    'getRegistrationsForTournament' : IDL.Func(
+        [IDL.Text],
+        [IDL.Vec(TournamentRegistration)],
+        ['query'],
+      ),
     'getSocialLinks' : IDL.Func([], [SocialLinks], ['query']),
     'getTermsAndConditions' : IDL.Func([], [TermsAndConditions], ['query']),
+    'getTournamentById' : IDL.Func(
+        [IDL.Text],
+        [IDL.Opt(Tournament)],
+        ['query'],
+      ),
     'getTournamentsByMap' : IDL.Func(
         [IDL.Text],
         [IDL.Vec(Tournament)],
         ['query'],
       ),
+    'getUserProfile' : IDL.Func(
+        [IDL.Principal],
+        [IDL.Opt(UserProfile)],
+        ['query'],
+      ),
+    'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
     'registerForTournament' : IDL.Func(
         [IDL.Text, ExternalBlob],
         [IDL.Text],
         [],
       ),
     'registerPlayer' : IDL.Func([IDL.Text, IDL.Text, IDL.Text], [], []),
+    'replyToSupportTicket' : IDL.Func([IDL.Text, IDL.Text], [], []),
+    'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
     'searchSupportTicketsByPlayerName' : IDL.Func(
         [IDL.Text],
         [IDL.Vec(SupportTicket)],
         ['query'],
       ),
+    'setDomainName' : IDL.Func([IDL.Text], [], []),
+    'updateRegistrationStatus' : IDL.Func(
+        [IDL.Text, RegistrationStatus],
+        [],
+        [],
+      ),
     'updateSocialLinks' : IDL.Func([IDL.Text, IDL.Text, IDL.Text], [], []),
     'updateTermsAndConditions' : IDL.Func([IDL.Text], [], []),
+    'updateTournamentQrCode' : IDL.Func([IDL.Text, ExternalBlob], [], []),
+    'updateTournamentRoomDetails' : IDL.Func(
+        [IDL.Text, IDL.Text, IDL.Text],
+        [],
+        [],
+      ),
+    'updateTournamentStatus' : IDL.Func([IDL.Text, TournamentStatus], [], []),
     'verifyOtp' : IDL.Func([IDL.Text], [IDL.Bool], []),
   });
 };

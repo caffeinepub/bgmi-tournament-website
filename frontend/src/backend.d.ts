@@ -26,9 +26,24 @@ export interface SupportTicket {
     playerName: string;
     screenshotBlob?: ExternalBlob;
 }
+export interface TournamentRegistration {
+    status: RegistrationStatus;
+    paymentScreenshotBlob: ExternalBlob;
+    playerId: string;
+    registrationId: string;
+    tournamentId: string;
+}
+export interface UserProfile {
+    displayName: string;
+    bgmiPlayerId: string;
+    mobile: string;
+}
 export type Time = bigint;
-export interface TermsAndConditions {
-    content: string;
+export interface Player {
+    principal: Principal;
+    displayName: string;
+    bgmiPlayerId: string;
+    mobile: string;
 }
 export interface Tournament {
     id: string;
@@ -51,6 +66,14 @@ export interface SocialLinks {
     youtube: string;
     telegram: string;
 }
+export interface TermsAndConditions {
+    content: string;
+}
+export enum RegistrationStatus {
+    pending = "pending",
+    approved = "approved",
+    rejected = "rejected"
+}
 export enum TicketStatus {
     closed = "closed",
     open = "open",
@@ -62,19 +85,44 @@ export enum TournamentStatus {
     completed = "completed",
     ongoing = "ongoing"
 }
+export enum UserRole {
+    admin = "admin",
+    user = "user",
+    guest = "guest"
+}
 export interface backendInterface {
-    createSupportTicket(playerId: string, playerName: string, subject: string, description: string, screenshotBlob: ExternalBlob | null): Promise<string>;
+    assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
+    closeSupportTicket(ticketId: string): Promise<void>;
+    createSupportTicket(playerName: string, subject: string, description: string, screenshotBlob: ExternalBlob | null): Promise<string>;
     createTournament(name: string, dateTime: Time, entryFee: bigint, prizePool: bigint, map: string, totalSlots: bigint, upiId: string, matchRules: string): Promise<string>;
     findUnusedSlots(): Promise<Array<Tournament>>;
     generateOtp(): Promise<string>;
+    getAllPlayers(): Promise<Array<Player>>;
     getAllSupportTicketsSorted(): Promise<Array<SupportTicket>>;
+    getAllTournaments(): Promise<Array<Tournament>>;
+    getCallerUserProfile(): Promise<UserProfile | null>;
+    getCallerUserRole(): Promise<UserRole>;
+    getDomainName(): Promise<string>;
+    getMyRegistrations(): Promise<Array<TournamentRegistration>>;
+    getMySupportTickets(): Promise<Array<SupportTicket>>;
+    getRegistrationsForTournament(tournamentId: string): Promise<Array<TournamentRegistration>>;
     getSocialLinks(): Promise<SocialLinks>;
     getTermsAndConditions(): Promise<TermsAndConditions>;
+    getTournamentById(id: string): Promise<Tournament | null>;
     getTournamentsByMap(map: string): Promise<Array<Tournament>>;
+    getUserProfile(user: Principal): Promise<UserProfile | null>;
+    isCallerAdmin(): Promise<boolean>;
     registerForTournament(tournamentId: string, paymentScreenshotBlob: ExternalBlob): Promise<string>;
     registerPlayer(mobile: string, bgmiPlayerId: string, displayName: string): Promise<void>;
+    replyToSupportTicket(ticketId: string, reply: string): Promise<void>;
+    saveCallerUserProfile(profile: UserProfile): Promise<void>;
     searchSupportTicketsByPlayerName(name: string): Promise<Array<SupportTicket>>;
+    setDomainName(newName: string): Promise<void>;
+    updateRegistrationStatus(registrationId: string, status: RegistrationStatus): Promise<void>;
     updateSocialLinks(youtube: string, instagram: string, telegram: string): Promise<void>;
     updateTermsAndConditions(content: string): Promise<void>;
+    updateTournamentQrCode(tournamentId: string, qrCodeBlob: ExternalBlob): Promise<void>;
+    updateTournamentRoomDetails(tournamentId: string, roomId: string, roomPassword: string): Promise<void>;
+    updateTournamentStatus(tournamentId: string, status: TournamentStatus): Promise<void>;
     verifyOtp(otp: string): Promise<boolean>;
 }

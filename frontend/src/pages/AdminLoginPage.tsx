@@ -1,109 +1,99 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from '@tanstack/react-router';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Loader2, AlertCircle, Shield } from 'lucide-react';
 import { useAdminAuth } from '../context/AdminAuthContext';
+import { Loader2, Shield } from 'lucide-react';
 
 export default function AdminLoginPage() {
-    const navigate = useNavigate();
-    const { adminLogin, isAdminLoggedIn } = useAdminAuth();
+  const navigate = useNavigate();
+  const { isAdminAuthenticated, adminLogin } = useAdminAuth();
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
-    const [username, setUsername] = useState('');
-    const [password, setPassword] = useState('');
-    const [error, setError] = useState('');
-    const [loading, setLoading] = useState(false);
+  useEffect(() => {
+    if (isAdminAuthenticated) {
+      navigate({ to: '/admin/dashboard' });
+    }
+  }, [isAdminAuthenticated]);
 
-    // If already logged in, redirect
-    React.useEffect(() => {
-        if (isAdminLoggedIn) {
-            navigate({ to: '/admin/dashboard' });
-        }
-    }, [isAdminLoggedIn, navigate]);
+  const handleLogin = async () => {
+    if (!username || !password) {
+      setError('Please enter username and password');
+      return;
+    }
+    setError('');
+    setLoading(true);
+    await new Promise(r => setTimeout(r, 500));
+    const success = adminLogin(username, password);
+    if (!success) {
+      setError('Invalid credentials. Please try again.');
+    } else {
+      navigate({ to: '/admin/dashboard' });
+    }
+    setLoading(false);
+  };
 
-    const handleLogin = async () => {
-        if (!username.trim() || !password.trim()) {
-            setError('Please enter username and password.');
-            return;
-        }
-        setLoading(true);
-        setError('');
-        // Small delay for UX
-        await new Promise(r => setTimeout(r, 300));
-        const success = adminLogin(username, password);
-        setLoading(false);
-        if (success) {
-            navigate({ to: '/admin/dashboard' });
-        } else {
-            setError('Invalid credentials. Access denied.');
-        }
-    };
-
-    return (
-        <div className="min-h-screen flex items-center justify-center px-4 py-12" style={{ background: 'oklch(0.08 0 0)' }}>
-            <div className="w-full max-w-md">
-                <div className="text-center mb-8">
-                    <div className="w-16 h-16 flex items-center justify-center mx-auto mb-4 rounded-sm" style={{ background: 'oklch(0.65 0.22 45 / 0.15)', border: '1px solid oklch(0.65 0.22 45 / 0.4)' }}>
-                        <Shield className="w-8 h-8" style={{ color: 'oklch(0.65 0.22 45)' }} />
-                    </div>
-                    <div className="inline-block mb-3 px-3 py-1 font-saira text-xs tracking-widest uppercase rounded-sm" style={{ background: 'oklch(0.65 0.22 45 / 0.15)', border: '1px solid oklch(0.65 0.22 45 / 0.4)', color: 'oklch(0.65 0.22 45)' }}>
-                        Admin Access
-                    </div>
-                    <h1 className="font-orbitron text-2xl font-black" style={{ color: 'oklch(0.90 0.01 80)' }}>
-                        COMMAND CENTER
-                    </h1>
-                    <p className="font-rajdhani text-sm mt-2" style={{ color: 'oklch(0.45 0.02 60)' }}>
-                        Raj Empire Esports — Admin Panel
-                    </p>
-                </div>
-
-                <div className="p-6 clip-angular" style={{ background: 'oklch(0.13 0 0)', border: '1px solid oklch(0.22 0.02 50)' }}>
-                    <div className="space-y-4">
-                        <div>
-                            <Label className="font-saira text-xs tracking-widest uppercase mb-2 block" style={{ color: 'oklch(0.55 0.02 60)' }}>
-                                Username
-                            </Label>
-                            <Input
-                                placeholder="Admin username"
-                                value={username}
-                                onChange={(e) => setUsername(e.target.value)}
-                                className="font-rajdhani"
-                                style={{ background: 'oklch(0.16 0 0)', border: '1px solid oklch(0.28 0.02 50)', color: 'oklch(0.90 0.01 80)' }}
-                                onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
-                            />
-                        </div>
-                        <div>
-                            <Label className="font-saira text-xs tracking-widest uppercase mb-2 block" style={{ color: 'oklch(0.55 0.02 60)' }}>
-                                Password
-                            </Label>
-                            <Input
-                                type="password"
-                                placeholder="Admin password"
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                className="font-rajdhani"
-                                style={{ background: 'oklch(0.16 0 0)', border: '1px solid oklch(0.28 0.02 50)', color: 'oklch(0.90 0.01 80)' }}
-                                onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
-                            />
-                        </div>
-                        {error && (
-                            <div className="flex items-center gap-2 p-3 rounded-sm" style={{ background: 'oklch(0.18 0.08 25)', border: '1px solid oklch(0.45 0.22 25)' }}>
-                                <AlertCircle className="w-4 h-4 shrink-0" style={{ color: 'oklch(0.70 0.22 25)' }} />
-                                <p className="font-rajdhani text-sm" style={{ color: 'oklch(0.80 0.10 25)' }}>{error}</p>
-                            </div>
-                        )}
-                        <Button
-                            onClick={handleLogin}
-                            disabled={loading}
-                            className="w-full font-saira tracking-widest uppercase font-bold"
-                            style={{ background: 'oklch(0.65 0.22 45)', color: 'oklch(0.08 0 0)' }}
-                        >
-                            {loading ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Authenticating...</> : 'Access Admin Panel'}
-                        </Button>
-                    </div>
-                </div>
-            </div>
+  return (
+    <div className="min-h-screen bg-background flex flex-col items-center justify-center px-4">
+      <div className="w-full max-w-md">
+        <div className="text-center mb-8">
+          <img src="/assets/generated/raj-empire-esports-logo.dim_400x120.png" alt="Raj Empire Esports" className="h-16 object-contain mx-auto mb-4" />
+          <div className="flex items-center justify-center gap-2 text-muted-foreground">
+            <Shield className="w-4 h-4 text-primary" />
+            <span className="font-rajdhani text-sm uppercase tracking-widest">Admin Panel</span>
+          </div>
         </div>
-    );
+
+        <div className="bg-card border border-border p-8">
+          <h1 className="font-orbitron font-bold text-xl text-primary uppercase tracking-widest mb-6 text-center">
+            Admin Login
+          </h1>
+
+          {error && (
+            <div className="bg-destructive/10 border border-destructive/50 text-destructive font-saira text-sm px-4 py-3 mb-6">
+              {error}
+            </div>
+          )}
+
+          <div className="space-y-4">
+            <div>
+              <label className="font-rajdhani font-semibold text-foreground text-sm uppercase tracking-wider block mb-2">Username</label>
+              <input
+                type="text"
+                value={username}
+                onChange={e => setUsername(e.target.value)}
+                placeholder="Admin username"
+                onKeyDown={e => e.key === 'Enter' && handleLogin()}
+                className="w-full bg-background border border-border px-4 py-3 font-saira text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-colors"
+              />
+            </div>
+            <div>
+              <label className="font-rajdhani font-semibold text-foreground text-sm uppercase tracking-wider block mb-2">Password</label>
+              <input
+                type="password"
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                placeholder="Admin password"
+                onKeyDown={e => e.key === 'Enter' && handleLogin()}
+                className="w-full bg-background border border-border px-4 py-3 font-saira text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-colors"
+              />
+            </div>
+            <button
+              onClick={handleLogin}
+              disabled={loading}
+              className="w-full bg-primary text-primary-foreground font-rajdhani font-bold py-3 uppercase tracking-widest hover:bg-primary/90 transition-colors disabled:opacity-50 flex items-center justify-center gap-2 mt-2"
+            >
+              {loading && <Loader2 className="w-4 h-4 animate-spin" />}
+              Login
+            </button>
+          </div>
+        </div>
+
+        <p className="text-center mt-6 font-saira text-xs text-muted-foreground">
+          <button onClick={() => navigate({ to: '/' })} className="hover:text-primary transition-colors">← Back to Home</button>
+        </p>
+      </div>
+    </div>
+  );
 }

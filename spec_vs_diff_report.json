@@ -1,150 +1,42 @@
 {
   "kind": "spec_vs_diff_report",
   "version": "1.0",
-  "generatedAt": "2026-02-28T18:40:51.794Z",
-  "summary": "The diff implements a comprehensive full-stack BGMI tournament website with Motoko backend and React frontend. Most requirements are covered, but several specific acceptance criteria have gaps or are partially implemented. Key issues include: the backend is truncated so full verification is limited; the login page stores placeholder values instead of real player data after OTP verification; the admin dashboard edit/delete for tournaments appears incomplete; the backend uses Internet Identity (Principal-based) rather than mobile-number-based OTP auth as specified; and several backend-specific ACs cannot be fully verified due to truncation.",
+  "generatedAt": "2026-03-01T05:51:54.076Z",
+  "summary": "The diff only modifies backend/main.mo and project_state.json. The backend shows a persistent domainName variable initialized to 'Raj-Empire-Esports', which partially addresses REQ-3. However, the diff is truncated and does not show the generateOTP fix (REQ-1), getDomainName/setDomainName functions (REQ-3), or any frontend changes (REQ-2, REQ-4). The project_state.json only updates tracking metadata with all feature requests still marked 'pending'.",
   "missing_requirements": [
     {
-      "requirement": "One account per mobile number is enforced at the backend level; OTP is tied to mobile number input by the player",
-      "reason": "The backend in main.mo uses Principal (Internet Identity) as the player key, not mobile number. The frontend login/register uses generateOtp() and verifyOtp() without passing a mobile number to the backend, meaning OTP is not keyed per mobile number as specified.",
-      "evidence": [
-        "backend/main.mo",
-        "frontend/src/pages/LoginPage.tsx",
-        "frontend/src/hooks/useQueries.ts"
-      ]
-    },
-    {
-      "requirement": "REQ-49: Duplicate mobile number shows a clear error message on the registration page",
-      "reason": "The backend enforces player uniqueness via Principal, not mobile number string. A duplicate mobile check per mobile string is not implemented as required.",
-      "evidence": [
-        "backend/main.mo",
-        "frontend/src/hooks/useQueries.ts"
-      ]
-    },
-    {
-      "requirement": "REQ-50: On successful OTP login, player display name and BGMI Player ID are properly loaded into session",
-      "reason": "LoginPage.tsx sets login({ mobile, displayName: mobile, bgmiPlayerId: '' }) — using mobile as displayName placeholder and empty bgmiPlayerId, meaning the dashboard will not correctly show the player's actual display name and BGMI Player ID from the backend.",
-      "evidence": [
-        "frontend/src/pages/LoginPage.tsx"
-      ]
-    },
-    {
-      "id": "REQ-53",
-      "requirement": "Dashboard shows player's actual display name and BGMI Player ID from backend",
-      "reason": "Because login stores placeholder values (displayName = mobile, bgmiPlayerId = ''), the dashboard will display incorrect player info. There is no backend call after login to fetch the real player profile.",
-      "evidence": [
-        "frontend/src/pages/LoginPage.tsx",
-        "frontend/src/pages/DashboardPage.tsx",
-        "frontend/src/context/AuthContext.tsx"
-      ]
-    },
-    {
-      "id": "REQ-54",
-      "requirement": "Tournament Management section supports edit and delete of existing tournaments",
-      "reason": "The TournamentFormModal visible in the diff is titled 'Add Tournament' only. Edit pre-population and delete functionality for existing tournaments is not confirmed in the visible truncated diff.",
-      "evidence": [
-        "frontend/src/pages/AdminDashboardPage.tsx"
-      ]
-    },
-    {
-      "id": "REQ-54",
-      "requirement": "Registrations section lists all registrations with player info and payment screenshots and approve/reject actions",
-      "reason": "The AdminDashboardPage diff is truncated and the Registrations tab content cannot be confirmed from the available diff.",
-      "evidence": [
-        "frontend/src/pages/AdminDashboardPage.tsx"
-      ]
-    },
-    {
-      "id": "REQ-54",
-      "requirement": "Player List section shows all registered players",
-      "reason": "The AdminDashboardPage diff is truncated and the Player List section content cannot be confirmed from the visible code.",
-      "evidence": [
-        "frontend/src/pages/AdminDashboardPage.tsx"
-      ]
-    },
-    {
-      "id": "REQ-48",
-      "requirement": "Room ID and Password are only returned to players with Approved registration status",
-      "reason": "The backend main.mo is truncated after the registerForTournament function starts. The conditional room details return based on approval status cannot be verified from the available diff.",
+      "id": "REQ-1",
+      "requirement": "Fix the OTP generation error by allowing unauthenticated (anonymous) callers in the generateOTP function.",
+      "reason": "The diff is truncated and does not show any changes to the generateOTP function. No evidence of the authorization check being removed or modified for anonymous callers.",
       "evidence": [
         "backend/main.mo"
       ]
     },
     {
-      "id": "REQ-48",
-      "requirement": "Tournament filledSlots increments on approved registration; status auto-sets to Full when filledSlots equals totalSlots",
-      "reason": "The backend is truncated mid-function. The slot increment and auto-Full logic cannot be confirmed from the available diff.",
+      "id": "REQ-2",
+      "requirement": "Redesign the entire frontend UI with dark background and orange/white color theme across all Player Panel and Admin Panel pages.",
+      "reason": "No frontend files are modified in the diff. The diff only touches backend/main.mo and project_state.json. Zero frontend UI changes are present.",
+      "evidence": []
+    },
+    {
+      "id": "REQ-3",
+      "requirement": "Expose getDomainName (public query) and setDomainName (admin-only update) functions in the backend.",
+      "reason": "The diff is truncated and only shows the domainName variable declaration. The getDomainName and setDomainName functions are not visible in the provided diff content.",
       "evidence": [
         "backend/main.mo"
       ]
     },
     {
-      "id": "REQ-48",
-      "requirement": "All data models are persisted in stable storage",
-      "reason": "The backend declares regular mutable variables without the 'stable' keyword visible in the truncated main.mo. Stable storage declaration cannot be confirmed.",
-      "evidence": [
-        "backend/main.mo"
-      ]
-    },
-    {
-      "id": "REQ-51",
-      "requirement": "All active tournaments render as cards with all specified fields including Full status tournaments",
-      "reason": "The useAllTournaments hook calls actor.findUnusedSlots() which only returns tournaments with available slots, so full tournaments would not appear in the listing at all, making the Full status card display impossible.",
-      "evidence": [
-        "frontend/src/hooks/useQueries.ts"
-      ]
+      "id": "REQ-4",
+      "requirement": "Add a 'Domain Settings' section in the Admin Dashboard page with input field, Save button, success/error messaging, and orange/white/dark theme.",
+      "reason": "No frontend files are modified in the diff. The Admin Dashboard page changes required for Domain Settings are entirely absent.",
+      "evidence": []
     }
   ],
-  "hallucinated_features": [
-    {
-      "description": "Internet Identity authentication infrastructure is included throughout the codebase",
-      "reason": "The build request explicitly states Internet Identity or Web3 wallet authentication is a non-goal, yet the codebase includes useInternetIdentity.ts, InternetIdentityProvider, AuthClient integration, and the backend uses Principal as the player identifier.",
-      "evidence": [
-        "frontend/src/hooks/useInternetIdentity.ts",
-        "frontend/src/main.tsx",
-        "frontend/src/hooks/useActor.ts",
-        "backend/main.mo"
-      ]
-    },
-    {
-      "description": "HomePage with hero section and features marketing content at route /",
-      "reason": "The build request does not specify a home page at route / with hero sections, feature cards, or marketing content. This was added beyond the specified requirements.",
-      "evidence": [
-        "frontend/src/pages/HomePage.tsx",
-        "frontend/src/App.tsx"
-      ]
-    }
-  ],
-  "confidence": 0.52,
+  "hallucinated_features": [],
+  "confidence": 0.6,
   "changed_files": [
-    "all_files_summary.json",
     "backend/main.mo",
-    "frontend-file-summaries.txt",
-    "frontend/index.css",
-    "frontend/index.html",
-    "frontend/src/App.tsx",
-    "frontend/src/components/AdminProtectedRoute.tsx",
-    "frontend/src/components/Footer.tsx",
-    "frontend/src/components/Header.tsx",
-    "frontend/src/components/Layout.tsx",
-    "frontend/src/components/PaymentModal.tsx",
-    "frontend/src/components/ProtectedRoute.tsx",
-    "frontend/src/context/AdminAuthContext.tsx",
-    "frontend/src/context/AuthContext.tsx",
-    "frontend/src/hooks/useActor.ts",
-    "frontend/src/hooks/useInternetIdentity.ts",
-    "frontend/src/hooks/useQueries.ts",
-    "frontend/src/index.css",
-    "frontend/src/main.tsx",
-    "frontend/src/pages/AdminDashboardPage.tsx",
-    "frontend/src/pages/AdminLoginPage.tsx",
-    "frontend/src/pages/DashboardPage.tsx",
-    "frontend/src/pages/HomePage.tsx",
-    "frontend/src/pages/LoginPage.tsx",
-    "frontend/src/pages/RegisterPage.tsx",
-    "frontend/src/pages/TermsPage.tsx",
-    "frontend/src/pages/TournamentsPage.tsx",
-    "frontend/tailwind.config.js",
     "project_state.json"
   ]
 }

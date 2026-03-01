@@ -1,178 +1,181 @@
 import React, { useState, useRef } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Label } from '@/components/ui/label';
-import { Link } from '@tanstack/react-router';
-import { Upload, Loader2, CheckCircle, AlertCircle } from 'lucide-react';
-import { ExternalBlob, Tournament } from '../backend';
+import { X, Upload, Loader2, CheckCircle } from 'lucide-react';
+import { Tournament } from '../backend';
+import { ExternalBlob } from '../backend';
 import { useRegisterForTournament } from '../hooks/useQueries';
 
 interface PaymentModalProps {
-    tournament: Tournament;
-    open: boolean;
-    onClose: () => void;
+  tournament: Tournament;
+  onClose: () => void;
 }
 
-export default function PaymentModal({ tournament, open, onClose }: PaymentModalProps) {
-    const [agreedToTerms, setAgreedToTerms] = useState(false);
-    const [screenshotFile, setScreenshotFile] = useState<File | null>(null);
-    const [screenshotPreview, setScreenshotPreview] = useState<string | null>(null);
-    const [success, setSuccess] = useState(false);
-    const [error, setError] = useState('');
-    const fileInputRef = useRef<HTMLInputElement>(null);
-    const registerMutation = useRegisterForTournament();
+export default function PaymentModal({ tournament, onClose }: PaymentModalProps) {
+  const [screenshot, setScreenshot] = useState<File | null>(null);
+  const [screenshotPreview, setScreenshotPreview] = useState<string | null>(null);
+  const [termsAccepted, setTermsAccepted] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [success, setSuccess] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const { mutate: registerForTournament, isPending, error } = useRegisterForTournament();
 
-    const upiId = tournament.upiId || 'empirerajesports@ibl';
-    const qrUrl = tournament.qrCodeBlob ? tournament.qrCodeBlob.getDirectURL() : '/assets/generated/upi-qr-placeholder.dim_300x300.png';
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setScreenshot(file);
+    const reader = new FileReader();
+    reader.onload = ev => setScreenshotPreview(ev.target?.result as string);
+    reader.readAsDataURL(file);
+  };
 
-    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (file) {
-            setScreenshotFile(file);
-            const reader = new FileReader();
-            reader.onload = (ev) => setScreenshotPreview(ev.target?.result as string);
-            reader.readAsDataURL(file);
-        }
-    };
+  const handleSubmit = async () => {
+    if (!screenshot) return;
+    if (!termsAccepted) return;
 
-    const handleSubmit = async () => {
-        if (!screenshotFile) {
-            setError('Please upload a payment screenshot.');
-            return;
-        }
-        if (!agreedToTerms) {
-            setError('Please agree to the Terms & Conditions.');
-            return;
-        }
-        setError('');
-        try {
-            const bytes = new Uint8Array(await screenshotFile.arrayBuffer());
-            const blob = ExternalBlob.fromBytes(bytes);
-            await registerMutation.mutateAsync({ tournamentId: tournament.id, paymentScreenshotBlob: blob });
-            setSuccess(true);
-        } catch (err: unknown) {
-            const msg = err instanceof Error ? err.message : 'Registration failed. Please try again.';
-            setError(msg);
-        }
-    };
+    const arrayBuffer = await screenshot.arrayBuffer();
+    const bytes = new Uint8Array(arrayBuffer);
+    const blob = ExternalBlob.fromBytes(bytes).withUploadProgress(pct => setUploadProgress(pct));
 
-    const handleClose = () => {
-        setAgreedToTerms(false);
-        setScreenshotFile(null);
-        setScreenshotPreview(null);
-        setSuccess(false);
-        setError('');
-        onClose();
-    };
-
-    return (
-        <Dialog open={open} onOpenChange={handleClose}>
-            <DialogContent className="max-w-md border-0 p-0 overflow-hidden" style={{ background: 'oklch(0.12 0 0)', border: '1px solid oklch(0.65 0.22 45 / 0.4)' }}>
-                <div className="p-6">
-                    <DialogHeader>
-                        <DialogTitle className="font-orbitron text-lg" style={{ color: 'oklch(0.65 0.22 45)' }}>
-                            Complete Payment
-                        </DialogTitle>
-                        <DialogDescription className="font-rajdhani" style={{ color: 'oklch(0.60 0.02 60)' }}>
-                            {tournament.name}
-                        </DialogDescription>
-                    </DialogHeader>
-
-                    {success ? (
-                        <div className="mt-6 text-center py-8">
-                            <CheckCircle className="w-16 h-16 mx-auto mb-4" style={{ color: 'oklch(0.65 0.22 45)' }} />
-                            <h3 className="font-orbitron text-lg mb-2" style={{ color: 'oklch(0.65 0.22 45)' }}>Registration Submitted!</h3>
-                            <p className="font-rajdhani text-sm" style={{ color: 'oklch(0.60 0.02 60)' }}>
-                                Your registration is pending admin approval. Room ID and Password will be visible on your dashboard once approved.
-                            </p>
-                            <Button onClick={handleClose} className="mt-6 font-saira tracking-wider uppercase" style={{ background: 'oklch(0.65 0.22 45)', color: 'oklch(0.08 0 0)' }}>
-                                Close
-                            </Button>
-                        </div>
-                    ) : (
-                        <div className="mt-4 space-y-5">
-                            {/* UPI Info */}
-                            <div className="p-3 rounded" style={{ background: 'oklch(0.15 0.01 50)', border: '1px solid oklch(0.25 0.03 50)' }}>
-                                <p className="font-saira text-xs tracking-widest uppercase mb-1" style={{ color: 'oklch(0.55 0.02 60)' }}>UPI ID</p>
-                                <p className="font-orbitron text-sm font-bold" style={{ color: 'oklch(0.75 0.18 85)' }}>{upiId}</p>
-                            </div>
-
-                            {/* QR Code */}
-                            <div className="flex justify-center">
-                                <div className="p-2 rounded" style={{ background: 'oklch(0.15 0.01 50)', border: '1px solid oklch(0.25 0.03 50)' }}>
-                                    <img src={qrUrl} alt="UPI QR Code" className="w-48 h-48 object-contain" />
-                                </div>
-                            </div>
-
-                            {/* Entry Fee */}
-                            <div className="flex justify-between items-center p-3 rounded" style={{ background: 'oklch(0.15 0.01 50)', border: '1px solid oklch(0.25 0.03 50)' }}>
-                                <span className="font-saira text-xs tracking-widest uppercase" style={{ color: 'oklch(0.55 0.02 60)' }}>Entry Fee</span>
-                                <span className="font-orbitron font-bold" style={{ color: 'oklch(0.65 0.22 45)' }}>₹{tournament.entryFee.toString()}</span>
-                            </div>
-
-                            {/* Screenshot Upload */}
-                            <div>
-                                <Label className="font-saira text-xs tracking-widest uppercase mb-2 block" style={{ color: 'oklch(0.55 0.02 60)' }}>
-                                    Payment Screenshot *
-                                </Label>
-                                <div
-                                    className="border-2 border-dashed rounded p-4 text-center cursor-pointer transition-colors"
-                                    style={{ borderColor: screenshotFile ? 'oklch(0.65 0.22 45)' : 'oklch(0.30 0.02 50)', background: 'oklch(0.13 0 0)' }}
-                                    onClick={() => fileInputRef.current?.click()}
-                                >
-                                    {screenshotPreview ? (
-                                        <img src={screenshotPreview} alt="Screenshot preview" className="max-h-32 mx-auto rounded object-contain" />
-                                    ) : (
-                                        <div>
-                                            <Upload className="w-8 h-8 mx-auto mb-2" style={{ color: 'oklch(0.45 0.02 60)' }} />
-                                            <p className="font-rajdhani text-sm" style={{ color: 'oklch(0.55 0.02 60)' }}>Click to upload screenshot</p>
-                                        </div>
-                                    )}
-                                    <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
-                                </div>
-                            </div>
-
-                            {/* T&C */}
-                            <div className="flex items-start gap-3">
-                                <Checkbox
-                                    id="payment-terms"
-                                    checked={agreedToTerms}
-                                    onCheckedChange={(v) => setAgreedToTerms(!!v)}
-                                    className="mt-0.5"
-                                    style={{ borderColor: 'oklch(0.65 0.22 45)' }}
-                                />
-                                <Label htmlFor="payment-terms" className="font-rajdhani text-sm cursor-pointer" style={{ color: 'oklch(0.65 0.02 60)' }}>
-                                    I agree to the{' '}
-                                    <Link to="/terms" className="underline" style={{ color: 'oklch(0.65 0.22 45)' }} onClick={handleClose}>
-                                        Terms & Conditions
-                                    </Link>
-                                </Label>
-                            </div>
-
-                            {error && (
-                                <div className="flex items-center gap-2 p-3 rounded" style={{ background: 'oklch(0.20 0.08 25)', border: '1px solid oklch(0.55 0.22 25)' }}>
-                                    <AlertCircle className="w-4 h-4 shrink-0" style={{ color: 'oklch(0.70 0.22 25)' }} />
-                                    <p className="font-rajdhani text-sm" style={{ color: 'oklch(0.80 0.10 25)' }}>{error}</p>
-                                </div>
-                            )}
-
-                            <Button
-                                onClick={handleSubmit}
-                                disabled={!agreedToTerms || !screenshotFile || registerMutation.isPending}
-                                className="w-full font-saira tracking-wider uppercase font-bold"
-                                style={{ background: agreedToTerms && screenshotFile ? 'oklch(0.65 0.22 45)' : 'oklch(0.25 0.02 50)', color: 'oklch(0.08 0 0)' }}
-                            >
-                                {registerMutation.isPending ? (
-                                    <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Submitting...</>
-                                ) : (
-                                    'Submit Registration'
-                                )}
-                            </Button>
-                        </div>
-                    )}
-                </div>
-            </DialogContent>
-        </Dialog>
+    registerForTournament(
+      { tournamentId: tournament.id, paymentScreenshotBlob: blob },
+      {
+        onSuccess: () => setSuccess(true),
+      }
     );
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+      <div className="bg-card border border-border w-full max-w-lg max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between p-5 border-b border-border">
+          <h2 className="font-orbitron font-bold text-primary uppercase tracking-widest text-lg">
+            Register for Tournament
+          </h2>
+          <button onClick={onClose} className="text-muted-foreground hover:text-foreground transition-colors">
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        {success ? (
+          <div className="p-8 text-center">
+            <CheckCircle className="w-16 h-16 text-green-400 mx-auto mb-4" />
+            <h3 className="font-orbitron font-bold text-foreground text-xl mb-2">Registration Submitted!</h3>
+            <p className="font-saira text-muted-foreground mb-6">
+              Your registration is pending admin approval. Room details will be shared once approved.
+            </p>
+            <button onClick={onClose} className="bg-primary text-primary-foreground font-rajdhani font-bold px-8 py-3 uppercase tracking-widest hover:bg-primary/90 transition-colors">
+              Close
+            </button>
+          </div>
+        ) : (
+          <div className="p-5 space-y-5">
+            {/* Tournament Info */}
+            <div className="bg-background border border-border p-4">
+              <h3 className="font-rajdhani font-bold text-foreground text-lg mb-3">{tournament.name}</h3>
+              <div className="grid grid-cols-2 gap-3 text-sm">
+                <div>
+                  <p className="font-saira text-muted-foreground text-xs">Entry Fee</p>
+                  <p className="font-rajdhani font-bold text-primary">₹{tournament.entryFee.toString()}</p>
+                </div>
+                <div>
+                  <p className="font-saira text-muted-foreground text-xs">Prize Pool</p>
+                  <p className="font-rajdhani font-bold text-primary">₹{tournament.prizePool.toString()}</p>
+                </div>
+                <div>
+                  <p className="font-saira text-muted-foreground text-xs">Map</p>
+                  <p className="font-rajdhani font-bold text-foreground">{tournament.map}</p>
+                </div>
+                <div>
+                  <p className="font-saira text-muted-foreground text-xs">Slots Left</p>
+                  <p className="font-rajdhani font-bold text-foreground">
+                    {(Number(tournament.totalSlots) - Number(tournament.filledSlots))} remaining
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* UPI Payment */}
+            <div>
+              <h4 className="font-rajdhani font-bold text-foreground uppercase tracking-wider text-sm mb-3">Payment Details</h4>
+              <div className="bg-background border border-border p-4 text-center">
+                <img
+                  src="/assets/generated/upi-qr-placeholder.dim_300x300.png"
+                  alt="UPI QR Code"
+                  className="w-40 h-40 object-contain mx-auto mb-3"
+                />
+                <p className="font-saira text-sm text-muted-foreground">UPI ID:</p>
+                <p className="font-rajdhani font-bold text-primary text-lg">{tournament.upiId || 'rajempire@upi'}</p>
+                <p className="font-saira text-xs text-muted-foreground mt-2">
+                  Pay ₹{tournament.entryFee.toString()} and upload screenshot below
+                </p>
+              </div>
+            </div>
+
+            {/* Screenshot Upload */}
+            <div>
+              <h4 className="font-rajdhani font-bold text-foreground uppercase tracking-wider text-sm mb-3">Upload Payment Screenshot</h4>
+              <div
+                onClick={() => fileInputRef.current?.click()}
+                className={`border-2 border-dashed p-6 text-center cursor-pointer transition-colors ${
+                  screenshot ? 'border-primary/50 bg-primary/5' : 'border-border hover:border-primary/30'
+                }`}
+              >
+                {screenshotPreview ? (
+                  <img src={screenshotPreview} alt="Payment screenshot" className="max-h-40 mx-auto object-contain" />
+                ) : (
+                  <div>
+                    <Upload className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
+                    <p className="font-saira text-sm text-muted-foreground">Click to upload payment screenshot</p>
+                    <p className="font-saira text-xs text-muted-foreground mt-1">PNG, JPG up to 10MB</p>
+                  </div>
+                )}
+              </div>
+              <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
+            </div>
+
+            {/* Upload progress */}
+            {isPending && uploadProgress > 0 && uploadProgress < 100 && (
+              <div>
+                <div className="flex justify-between text-xs font-saira text-muted-foreground mb-1">
+                  <span>Uploading...</span>
+                  <span>{uploadProgress}%</span>
+                </div>
+                <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+                  <div className="h-full bg-primary transition-all" style={{ width: `${uploadProgress}%` }} />
+                </div>
+              </div>
+            )}
+
+            {/* Terms */}
+            <div className="flex items-start gap-3">
+              <input
+                type="checkbox"
+                id="modal-terms"
+                checked={termsAccepted}
+                onChange={e => setTermsAccepted(e.target.checked)}
+                className="mt-1 accent-primary"
+              />
+              <label htmlFor="modal-terms" className="font-saira text-sm text-muted-foreground cursor-pointer">
+                I confirm the payment has been made and agree to the tournament rules.
+              </label>
+            </div>
+
+            {error && (
+              <div className="bg-destructive/10 border border-destructive/50 text-destructive font-saira text-sm px-4 py-3">
+                {(error as Error).message || 'Registration failed. Please try again.'}
+              </div>
+            )}
+
+            <button
+              onClick={handleSubmit}
+              disabled={!screenshot || !termsAccepted || isPending}
+              className="w-full bg-primary text-primary-foreground font-rajdhani font-bold py-3 uppercase tracking-widest hover:bg-primary/90 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+            >
+              {isPending && <Loader2 className="w-4 h-4 animate-spin" />}
+              Submit Registration
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
 }

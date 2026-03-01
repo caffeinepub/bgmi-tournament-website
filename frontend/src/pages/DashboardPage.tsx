@@ -1,308 +1,320 @@
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
+import { useNavigate } from '@tanstack/react-router';
 import { useAuth } from '../context/AuthContext';
-import { useAllTournaments, useAllSupportTickets, useCreateSupportTicket } from '../hooks/useQueries';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { User, Trophy, Ticket, Upload, Loader2, AlertCircle, ChevronRight, X, Key } from 'lucide-react';
-import { ExternalBlob, TicketStatus, type SupportTicket } from '../backend';
+import { useGetAllTournaments, useGetMyRegistrations } from '../hooks/useQueries';
+import { Tournament, TournamentRegistration, TournamentStatus, RegistrationStatus } from '../backend';
+import { Trophy, User, Clock, MapPin, Users, DollarSign, Lock, Unlock, LogOut, Loader2 } from 'lucide-react';
+import PaymentModal from '../components/PaymentModal';
 
-function formatDate(time: bigint): string {
-    const ms = Number(time) / 1_000_000;
-    return new Date(ms).toLocaleDateString('en-IN', { dateStyle: 'medium' });
-}
-
-function TicketStatusBadge({ status }: { status: TicketStatus }) {
-    const config = {
-        [TicketStatus.open]: { label: 'Open', color: 'oklch(0.65 0.22 45)' },
-        [TicketStatus.replied]: { label: 'Replied', color: 'oklch(0.65 0.18 200)' },
-        [TicketStatus.closed]: { label: 'Closed', color: 'oklch(0.45 0.02 60)' },
-    };
-    const { label, color } = config[status] || config[TicketStatus.open];
-    return (
-        <span className="px-2 py-0.5 font-saira text-xs tracking-wider uppercase rounded-sm" style={{ background: `${color}20`, border: `1px solid ${color}`, color }}>
-            {label}
-        </span>
-    );
-}
-
-function TicketDetail({ ticket, onClose }: { ticket: SupportTicket; onClose: () => void }) {
-    return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'oklch(0 0 0 / 0.8)' }}>
-            <div className="w-full max-w-lg max-h-[90vh] overflow-y-auto clip-angular" style={{ background: 'oklch(0.13 0 0)', border: '1px solid oklch(0.65 0.22 45 / 0.4)' }}>
-                <div className="p-5">
-                    <div className="flex items-start justify-between mb-4">
-                        <div>
-                            <h3 className="font-orbitron text-base font-bold" style={{ color: 'oklch(0.90 0.01 80)' }}>{ticket.subject}</h3>
-                            <p className="font-rajdhani text-xs mt-1" style={{ color: 'oklch(0.45 0.02 60)' }}>{formatDate(ticket.createdAt)}</p>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <TicketStatusBadge status={ticket.status} />
-                            <button onClick={onClose} style={{ color: 'oklch(0.55 0.02 60)' }}>
-                                <X className="w-5 h-5" />
-                            </button>
-                        </div>
-                    </div>
-                    <div className="p-3 rounded-sm mb-4" style={{ background: 'oklch(0.16 0 0)', border: '1px solid oklch(0.22 0.02 50)' }}>
-                        <p className="font-rajdhani text-sm whitespace-pre-wrap" style={{ color: 'oklch(0.75 0.01 80)' }}>{ticket.description}</p>
-                    </div>
-                    {ticket.screenshotBlob && (
-                        <div className="mb-4">
-                            <p className="font-saira text-xs tracking-widest uppercase mb-2" style={{ color: 'oklch(0.55 0.02 60)' }}>Screenshot</p>
-                            <img src={ticket.screenshotBlob.getDirectURL()} alt="Ticket screenshot" className="max-w-full rounded-sm" style={{ border: '1px solid oklch(0.22 0.02 50)' }} />
-                        </div>
-                    )}
-                    {ticket.adminReply && (
-                        <div className="p-3 rounded-sm" style={{ background: 'oklch(0.65 0.22 45 / 0.08)', border: '1px solid oklch(0.65 0.22 45 / 0.3)' }}>
-                            <p className="font-saira text-xs tracking-widest uppercase mb-2" style={{ color: 'oklch(0.65 0.22 45)' }}>Admin Reply</p>
-                            <p className="font-rajdhani text-sm whitespace-pre-wrap" style={{ color: 'oklch(0.80 0.01 80)' }}>{ticket.adminReply}</p>
-                            {ticket.repliedAt && (
-                                <p className="font-rajdhani text-xs mt-2" style={{ color: 'oklch(0.45 0.02 60)' }}>{formatDate(ticket.repliedAt)}</p>
-                            )}
-                        </div>
-                    )}
-                </div>
-            </div>
-        </div>
-    );
-}
+type Tab = 'tournaments' | 'myregistrations' | 'profile';
 
 export default function DashboardPage() {
-    const { player } = useAuth();
-    const { data: tournaments, isLoading: tournamentsLoading } = useAllTournaments();
-    const { data: allTickets, isLoading: ticketsLoading } = useAllSupportTickets();
-    const createTicketMutation = useCreateSupportTicket();
+  const navigate = useNavigate();
+  const { player, isAuthenticated, logout } = useAuth();
+  const [activeTab, setActiveTab] = useState<Tab>('tournaments');
+  const [selectedTournament, setSelectedTournament] = useState<Tournament | null>(null);
 
-    const [ticketSubject, setTicketSubject] = useState('');
-    const [ticketDescription, setTicketDescription] = useState('');
-    const [ticketScreenshot, setTicketScreenshot] = useState<File | null>(null);
-    const [ticketError, setTicketError] = useState('');
-    const [ticketSuccess, setTicketSuccess] = useState(false);
-    const [selectedTicket, setSelectedTicket] = useState<SupportTicket | null>(null);
-    const fileInputRef = useRef<HTMLInputElement>(null);
+  const { data: tournaments = [], isLoading: tournamentsLoading } = useGetAllTournaments();
+  const { data: myRegistrations = [], isLoading: regsLoading } = useGetMyRegistrations();
 
-    // Filter tickets for this player
-    const myTickets = allTickets?.filter(t => t.playerId === player?.mobile || t.playerName === player?.displayName) || [];
+  if (!isAuthenticated) {
+    navigate({ to: '/player/login' });
+    return null;
+  }
 
-    const handleCreateTicket = async () => {
-        if (!ticketSubject.trim()) { setTicketError('Please enter a subject.'); return; }
-        if (!ticketDescription.trim()) { setTicketError('Please enter a description.'); return; }
-        setTicketError('');
-        try {
-            let screenshotBlob: ExternalBlob | null = null;
-            if (ticketScreenshot) {
-                const bytes = new Uint8Array(await ticketScreenshot.arrayBuffer());
-                screenshotBlob = ExternalBlob.fromBytes(bytes);
-            }
-            await createTicketMutation.mutateAsync({
-                playerId: player?.mobile || '',
-                playerName: player?.displayName || '',
-                subject: ticketSubject.trim(),
-                description: ticketDescription.trim(),
-                screenshotBlob,
-            });
-            setTicketSubject('');
-            setTicketDescription('');
-            setTicketScreenshot(null);
-            setTicketSuccess(true);
-            setTimeout(() => setTicketSuccess(false), 3000);
-        } catch (err: unknown) {
-            setTicketError('Failed to create ticket. Please try again.');
-        }
+  const handleLogout = () => {
+    logout();
+    navigate({ to: '/' });
+  };
+
+  const getStatusBadge = (status: RegistrationStatus) => {
+    const map = {
+      [RegistrationStatus.pending]: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/50',
+      [RegistrationStatus.approved]: 'bg-green-500/20 text-green-400 border-green-500/50',
+      [RegistrationStatus.rejected]: 'bg-red-500/20 text-red-400 border-red-500/50',
     };
+    return map[status] || map[RegistrationStatus.pending];
+  };
 
-    return (
-        <div className="min-h-screen px-4 py-12" style={{ background: 'oklch(0.10 0 0)' }}>
-            <div className="container mx-auto max-w-4xl">
-                {/* Profile Header */}
-                <div className="mb-8 p-6 clip-angular" style={{ background: 'linear-gradient(135deg, oklch(0.13 0 0), oklch(0.15 0.01 50))', border: '1px solid oklch(0.65 0.22 45 / 0.3)' }}>
-                    <div className="flex items-center gap-4">
-                        <div className="w-16 h-16 flex items-center justify-center rounded-sm" style={{ background: 'oklch(0.65 0.22 45 / 0.15)', border: '1px solid oklch(0.65 0.22 45 / 0.4)' }}>
-                            <User className="w-8 h-8" style={{ color: 'oklch(0.65 0.22 45)' }} />
-                        </div>
-                        <div>
-                            <h1 className="font-orbitron text-xl font-black" style={{ color: 'oklch(0.90 0.01 80)' }}>
-                                {player?.displayName || player?.mobile}
-                            </h1>
-                            {player?.bgmiPlayerId && (
-                                <p className="font-saira text-sm tracking-wider" style={{ color: 'oklch(0.65 0.22 45)' }}>
-                                    BGMI ID: {player.bgmiPlayerId}
-                                </p>
-                            )}
-                            <p className="font-rajdhani text-xs" style={{ color: 'oklch(0.45 0.02 60)' }}>
-                                Mobile: {player?.mobile}
-                            </p>
-                        </div>
-                    </div>
-                </div>
+  const getTournamentStatusBadge = (status: TournamentStatus) => {
+    const map: Record<string, string> = {
+      upcoming: 'bg-primary/20 text-primary border-primary/50',
+      ongoing: 'bg-green-500/20 text-green-400 border-green-500/50',
+      closed: 'bg-muted text-muted-foreground border-border',
+      completed: 'bg-muted text-muted-foreground border-border',
+    };
+    return map[status] || map['upcoming'];
+  };
 
-                <Tabs defaultValue="tournaments">
-                    <TabsList className="w-full mb-6 rounded-sm" style={{ background: 'oklch(0.13 0 0)', border: '1px solid oklch(0.22 0.02 50)' }}>
-                        <TabsTrigger value="tournaments" className="flex-1 font-saira text-xs tracking-widest uppercase data-[state=active]:text-black" style={{ '--tw-ring-color': 'oklch(0.65 0.22 45)' } as React.CSSProperties}>
-                            <Trophy className="w-4 h-4 mr-2" />
-                            Tournaments
-                        </TabsTrigger>
-                        <TabsTrigger value="support" className="flex-1 font-saira text-xs tracking-widest uppercase data-[state=active]:text-black">
-                            <Ticket className="w-4 h-4 mr-2" />
-                            Support
-                        </TabsTrigger>
-                    </TabsList>
+  const isRegistered = (tournamentId: string) =>
+    myRegistrations.some(r => r.tournamentId === tournamentId);
 
-                    {/* Tournaments Tab */}
-                    <TabsContent value="tournaments">
-                        <div className="space-y-4">
-                            <h2 className="font-orbitron text-base font-bold" style={{ color: 'oklch(0.75 0.18 85)' }}>MY REGISTRATIONS</h2>
-                            {tournamentsLoading ? (
-                                <div className="space-y-3">
-                                    {[1, 2].map(i => <Skeleton key={i} className="h-24" style={{ background: 'oklch(0.15 0 0)' }} />)}
-                                </div>
-                            ) : !tournaments || tournaments.length === 0 ? (
-                                <div className="text-center py-12 p-6 rounded-sm" style={{ background: 'oklch(0.13 0 0)', border: '1px solid oklch(0.22 0.02 50)' }}>
-                                    <Trophy className="w-12 h-12 mx-auto mb-3" style={{ color: 'oklch(0.30 0.02 50)' }} />
-                                    <p className="font-rajdhani" style={{ color: 'oklch(0.45 0.02 60)' }}>No tournament registrations yet.</p>
-                                    <p className="font-rajdhani text-sm mt-1" style={{ color: 'oklch(0.35 0.02 50)' }}>Browse tournaments and register to compete!</p>
-                                </div>
-                            ) : (
-                                tournaments.map((t) => (
-                                    <div key={t.id} className="p-4 rounded-sm" style={{ background: 'oklch(0.13 0 0)', border: '1px solid oklch(0.22 0.02 50)' }}>
-                                        <div className="flex items-start justify-between gap-3 mb-3">
-                                            <h3 className="font-orbitron text-sm font-bold" style={{ color: 'oklch(0.90 0.01 80)' }}>{t.name}</h3>
-                                            <span className="shrink-0 px-2 py-0.5 font-saira text-xs tracking-wider uppercase rounded-sm" style={{ background: 'oklch(0.65 0.22 45 / 0.15)', border: '1px solid oklch(0.65 0.22 45 / 0.4)', color: 'oklch(0.65 0.22 45)' }}>
-                                                Pending
-                                            </span>
-                                        </div>
-                                        <div className="grid grid-cols-2 gap-2 text-sm">
-                                            <div>
-                                                <span className="font-saira text-xs tracking-wider uppercase" style={{ color: 'oklch(0.45 0.02 60)' }}>Map: </span>
-                                                <span className="font-rajdhani" style={{ color: 'oklch(0.75 0.01 80)' }}>{t.map}</span>
-                                            </div>
-                                            <div>
-                                                <span className="font-saira text-xs tracking-wider uppercase" style={{ color: 'oklch(0.45 0.02 60)' }}>Prize: </span>
-                                                <span className="font-rajdhani font-semibold" style={{ color: 'oklch(0.75 0.18 85)' }}>₹{t.prizePool.toString()}</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))
-                            )}
-                        </div>
-                    </TabsContent>
+  const getMyRegistration = (tournamentId: string) =>
+    myRegistrations.find(r => r.tournamentId === tournamentId);
 
-                    {/* Support Tab */}
-                    <TabsContent value="support">
-                        <div className="space-y-6">
-                            {/* Create Ticket Form */}
-                            <div className="p-5 rounded-sm" style={{ background: 'oklch(0.13 0 0)', border: '1px solid oklch(0.22 0.02 50)' }}>
-                                <h2 className="font-orbitron text-base font-bold mb-4" style={{ color: 'oklch(0.75 0.18 85)' }}>CREATE SUPPORT TICKET</h2>
-                                <div className="space-y-4">
-                                    <div>
-                                        <Label className="font-saira text-xs tracking-widest uppercase mb-2 block" style={{ color: 'oklch(0.55 0.02 60)' }}>Subject</Label>
-                                        <Input
-                                            placeholder="Brief description of your issue"
-                                            value={ticketSubject}
-                                            onChange={(e) => setTicketSubject(e.target.value)}
-                                            className="font-rajdhani"
-                                            style={{ background: 'oklch(0.16 0 0)', border: '1px solid oklch(0.28 0.02 50)', color: 'oklch(0.90 0.01 80)' }}
-                                        />
-                                    </div>
-                                    <div>
-                                        <Label className="font-saira text-xs tracking-widest uppercase mb-2 block" style={{ color: 'oklch(0.55 0.02 60)' }}>Description</Label>
-                                        <Textarea
-                                            placeholder="Describe your issue in detail..."
-                                            value={ticketDescription}
-                                            onChange={(e) => setTicketDescription(e.target.value)}
-                                            rows={4}
-                                            className="font-rajdhani resize-none"
-                                            style={{ background: 'oklch(0.16 0 0)', border: '1px solid oklch(0.28 0.02 50)', color: 'oklch(0.90 0.01 80)' }}
-                                        />
-                                    </div>
-                                    <div>
-                                        <Label className="font-saira text-xs tracking-widest uppercase mb-2 block" style={{ color: 'oklch(0.55 0.02 60)' }}>Screenshot (Optional)</Label>
-                                        <div
-                                            className="border-2 border-dashed rounded-sm p-3 text-center cursor-pointer"
-                                            style={{ borderColor: ticketScreenshot ? 'oklch(0.65 0.22 45)' : 'oklch(0.28 0.02 50)', background: 'oklch(0.13 0 0)' }}
-                                            onClick={() => fileInputRef.current?.click()}
-                                        >
-                                            {ticketScreenshot ? (
-                                                <p className="font-rajdhani text-sm" style={{ color: 'oklch(0.65 0.22 45)' }}>{ticketScreenshot.name}</p>
-                                            ) : (
-                                                <div className="flex items-center justify-center gap-2">
-                                                    <Upload className="w-4 h-4" style={{ color: 'oklch(0.45 0.02 60)' }} />
-                                                    <p className="font-rajdhani text-sm" style={{ color: 'oklch(0.45 0.02 60)' }}>Click to upload screenshot</p>
-                                                </div>
-                                            )}
-                                            <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={(e) => setTicketScreenshot(e.target.files?.[0] || null)} />
-                                        </div>
-                                    </div>
-                                    {ticketError && (
-                                        <div className="flex items-center gap-2 p-3 rounded-sm" style={{ background: 'oklch(0.18 0.08 25)', border: '1px solid oklch(0.45 0.22 25)' }}>
-                                            <AlertCircle className="w-4 h-4 shrink-0" style={{ color: 'oklch(0.70 0.22 25)' }} />
-                                            <p className="font-rajdhani text-sm" style={{ color: 'oklch(0.80 0.10 25)' }}>{ticketError}</p>
-                                        </div>
-                                    )}
-                                    {ticketSuccess && (
-                                        <div className="p-3 rounded-sm" style={{ background: 'oklch(0.65 0.22 45 / 0.1)', border: '1px solid oklch(0.65 0.22 45 / 0.4)' }}>
-                                            <p className="font-rajdhani text-sm" style={{ color: 'oklch(0.65 0.22 45)' }}>✓ Ticket submitted successfully!</p>
-                                        </div>
-                                    )}
-                                    <Button
-                                        onClick={handleCreateTicket}
-                                        disabled={createTicketMutation.isPending}
-                                        className="w-full font-saira tracking-widest uppercase font-bold"
-                                        style={{ background: 'oklch(0.65 0.22 45)', color: 'oklch(0.08 0 0)' }}
-                                    >
-                                        {createTicketMutation.isPending ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Submitting...</> : 'Submit Ticket'}
-                                    </Button>
-                                </div>
-                            </div>
+  const canRegister = (t: Tournament) =>
+    t.status === TournamentStatus.upcoming &&
+    Number(t.filledSlots) < Number(t.totalSlots) &&
+    !isRegistered(t.id);
 
-                            {/* Ticket List */}
-                            <div>
-                                <h2 className="font-orbitron text-base font-bold mb-4" style={{ color: 'oklch(0.75 0.18 85)' }}>MY TICKETS</h2>
-                                {ticketsLoading ? (
-                                    <div className="space-y-3">
-                                        {[1, 2].map(i => <Skeleton key={i} className="h-16" style={{ background: 'oklch(0.15 0 0)' }} />)}
-                                    </div>
-                                ) : myTickets.length === 0 ? (
-                                    <div className="text-center py-8 rounded-sm" style={{ background: 'oklch(0.13 0 0)', border: '1px solid oklch(0.22 0.02 50)' }}>
-                                        <Ticket className="w-10 h-10 mx-auto mb-2" style={{ color: 'oklch(0.30 0.02 50)' }} />
-                                        <p className="font-rajdhani" style={{ color: 'oklch(0.45 0.02 60)' }}>No support tickets yet.</p>
-                                    </div>
-                                ) : (
-                                    <div className="space-y-3">
-                                        {myTickets.map((ticket) => (
-                                            <button
-                                                key={ticket.ticketId}
-                                                onClick={() => setSelectedTicket(ticket)}
-                                                className="w-full text-left p-4 rounded-sm transition-colors hover:border-orange-DEFAULT"
-                                                style={{ background: 'oklch(0.13 0 0)', border: '1px solid oklch(0.22 0.02 50)' }}
-                                            >
-                                                <div className="flex items-center justify-between gap-3">
-                                                    <div className="flex-1 min-w-0">
-                                                        <p className="font-rajdhani font-semibold truncate" style={{ color: 'oklch(0.85 0.01 80)' }}>{ticket.subject}</p>
-                                                        <p className="font-rajdhani text-xs mt-0.5" style={{ color: 'oklch(0.45 0.02 60)' }}>{formatDate(ticket.createdAt)}</p>
-                                                    </div>
-                                                    <div className="flex items-center gap-2 shrink-0">
-                                                        <TicketStatusBadge status={ticket.status} />
-                                                        <ChevronRight className="w-4 h-4" style={{ color: 'oklch(0.45 0.02 60)' }} />
-                                                    </div>
-                                                </div>
-                                            </button>
-                                        ))}
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                    </TabsContent>
-                </Tabs>
-            </div>
-
-            {selectedTicket && (
-                <TicketDetail ticket={selectedTicket} onClose={() => setSelectedTicket(null)} />
-            )}
+  return (
+    <div className="min-h-screen bg-background flex flex-col">
+      {/* Header */}
+      <header className="border-b border-border/40 bg-background/95 backdrop-blur sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+          <button onClick={() => navigate({ to: '/' })}>
+            <img src="/assets/generated/raj-empire-esports-logo.dim_400x120.png" alt="Raj Empire Esports" className="h-12 object-contain" />
+          </button>
+          <div className="flex items-center gap-4">
+            <span className="font-rajdhani text-sm text-muted-foreground hidden sm:block">
+              Welcome, <span className="text-primary font-bold">{player?.displayName}</span>
+            </span>
+            <button onClick={handleLogout} className="flex items-center gap-2 font-rajdhani text-sm text-muted-foreground hover:text-destructive transition-colors">
+              <LogOut className="w-4 h-4" />
+              <span className="hidden sm:block">Logout</span>
+            </button>
+          </div>
         </div>
-    );
+      </header>
+
+      <main className="flex-1 max-w-7xl mx-auto w-full px-4 py-8">
+        {/* Tabs */}
+        <div className="flex gap-1 mb-8 border-b border-border">
+          {([
+            { key: 'tournaments', label: 'Tournaments', icon: Trophy },
+            { key: 'myregistrations', label: 'My Registrations', icon: Clock },
+            { key: 'profile', label: 'Profile', icon: User },
+          ] as { key: Tab; label: string; icon: any }[]).map(({ key, label, icon: Icon }) => (
+            <button
+              key={key}
+              onClick={() => setActiveTab(key)}
+              className={`flex items-center gap-2 px-4 py-3 font-rajdhani font-semibold text-sm uppercase tracking-wider border-b-2 transition-colors ${
+                activeTab === key
+                  ? 'border-primary text-primary'
+                  : 'border-transparent text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              <Icon className="w-4 h-4" />
+              {label}
+            </button>
+          ))}
+        </div>
+
+        {/* Tournaments Tab */}
+        {activeTab === 'tournaments' && (
+          <div>
+            <h2 className="font-orbitron font-bold text-xl text-foreground uppercase tracking-widest mb-6">Active Tournaments</h2>
+            {tournamentsLoading ? (
+              <div className="flex items-center justify-center py-20">
+                <Loader2 className="w-8 h-8 animate-spin text-primary" />
+              </div>
+            ) : tournaments.length === 0 ? (
+              <div className="text-center py-20 text-muted-foreground font-saira">
+                No tournaments available right now. Check back soon!
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {tournaments.map(t => {
+                  const reg = getMyRegistration(t.id);
+                  return (
+                    <div key={t.id} className="bg-card border border-border hover:border-primary/50 transition-colors flex flex-col">
+                      <div className="p-5 flex-1">
+                        <div className="flex items-start justify-between mb-3">
+                          <h3 className="font-rajdhani font-bold text-foreground text-lg leading-tight">{t.name}</h3>
+                          <span className={`text-xs font-rajdhani font-bold px-2 py-0.5 border uppercase ${getTournamentStatusBadge(t.status)}`}>
+                            {t.status}
+                          </span>
+                        </div>
+                        <div className="grid grid-cols-2 gap-3 mb-4">
+                          <div className="flex items-center gap-2">
+                            <DollarSign className="w-4 h-4 text-primary flex-shrink-0" />
+                            <div>
+                              <p className="text-xs font-saira text-muted-foreground">Entry Fee</p>
+                              <p className="font-rajdhani font-bold text-foreground text-sm">₹{t.entryFee.toString()}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Trophy className="w-4 h-4 text-primary flex-shrink-0" />
+                            <div>
+                              <p className="text-xs font-saira text-muted-foreground">Prize Pool</p>
+                              <p className="font-rajdhani font-bold text-foreground text-sm">₹{t.prizePool.toString()}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Users className="w-4 h-4 text-primary flex-shrink-0" />
+                            <div>
+                              <p className="text-xs font-saira text-muted-foreground">Slots</p>
+                              <p className="font-rajdhani font-bold text-foreground text-sm">{t.filledSlots.toString()}/{t.totalSlots.toString()}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <MapPin className="w-4 h-4 text-primary flex-shrink-0" />
+                            <div>
+                              <p className="text-xs font-saira text-muted-foreground">Map</p>
+                              <p className="font-rajdhani font-bold text-foreground text-sm">{t.map}</p>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 mb-4">
+                          <Clock className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                          <p className="font-saira text-xs text-muted-foreground">
+                            {new Date(Number(t.dateTime) / 1_000_000).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })}
+                          </p>
+                        </div>
+
+                        {/* Room details for approved registrations */}
+                        {reg?.status === RegistrationStatus.approved && (
+                          <div className="bg-green-500/10 border border-green-500/30 p-3 mb-4">
+                            <div className="flex items-center gap-2 mb-2">
+                              <Unlock className="w-4 h-4 text-green-400" />
+                              <span className="font-rajdhani font-bold text-green-400 text-sm uppercase">Room Details</span>
+                            </div>
+                            {t.roomId ? (
+                              <div className="space-y-1">
+                                <p className="font-saira text-sm text-foreground">Room ID: <span className="font-bold text-primary">{t.roomId}</span></p>
+                                <p className="font-saira text-sm text-foreground">Password: <span className="font-bold text-primary">{t.roomPassword}</span></p>
+                              </div>
+                            ) : (
+                              <p className="font-saira text-xs text-muted-foreground">Room details will be shared before the match.</p>
+                            )}
+                          </div>
+                        )}
+
+                        {reg && reg.status !== RegistrationStatus.approved && (
+                          <div className="flex items-center gap-2 mb-4">
+                            <Lock className="w-4 h-4 text-muted-foreground" />
+                            <span className="font-saira text-xs text-muted-foreground">Room details visible after approval</span>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="p-5 pt-0">
+                        {reg ? (
+                          <div className={`text-center py-2 font-rajdhani font-bold text-sm uppercase tracking-wider border ${getStatusBadge(reg.status)}`}>
+                            {reg.status === RegistrationStatus.pending ? '⏳ Pending Approval' :
+                              reg.status === RegistrationStatus.approved ? '✅ Registered' : '❌ Rejected'}
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => canRegister(t) && setSelectedTournament(t)}
+                            disabled={!canRegister(t)}
+                            className="w-full bg-primary text-primary-foreground font-rajdhani font-bold py-2.5 uppercase tracking-widest hover:bg-primary/90 transition-colors disabled:opacity-40 disabled:cursor-not-allowed text-sm"
+                          >
+                            {Number(t.filledSlots) >= Number(t.totalSlots) ? 'Full' :
+                              t.status !== TournamentStatus.upcoming ? t.status.toString().toUpperCase() : 'Register Now'}
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* My Registrations Tab */}
+        {activeTab === 'myregistrations' && (
+          <div>
+            <h2 className="font-orbitron font-bold text-xl text-foreground uppercase tracking-widest mb-6">My Registrations</h2>
+            {regsLoading ? (
+              <div className="flex items-center justify-center py-20">
+                <Loader2 className="w-8 h-8 animate-spin text-primary" />
+              </div>
+            ) : myRegistrations.length === 0 ? (
+              <div className="text-center py-20 text-muted-foreground font-saira">
+                You haven't registered for any tournaments yet.
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {myRegistrations.map(reg => {
+                  const tournament = tournaments.find(t => t.id === reg.tournamentId);
+                  return (
+                    <div key={reg.registrationId} className="bg-card border border-border p-5">
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <h3 className="font-rajdhani font-bold text-foreground text-lg">
+                            {tournament?.name || reg.tournamentId}
+                          </h3>
+                          <p className="font-saira text-xs text-muted-foreground mt-1">
+                            Registration ID: {reg.registrationId}
+                          </p>
+                        </div>
+                        <span className={`text-xs font-rajdhani font-bold px-3 py-1 border uppercase ${getStatusBadge(reg.status)}`}>
+                          {reg.status}
+                        </span>
+                      </div>
+                      {reg.status === RegistrationStatus.approved && tournament && (
+                        <div className="mt-4 bg-green-500/10 border border-green-500/30 p-3">
+                          <div className="flex items-center gap-2 mb-2">
+                            <Unlock className="w-4 h-4 text-green-400" />
+                            <span className="font-rajdhani font-bold text-green-400 text-sm uppercase">Room Details</span>
+                          </div>
+                          {tournament.roomId ? (
+                            <div className="space-y-1">
+                              <p className="font-saira text-sm text-foreground">Room ID: <span className="font-bold text-primary">{tournament.roomId}</span></p>
+                              <p className="font-saira text-sm text-foreground">Password: <span className="font-bold text-primary">{tournament.roomPassword}</span></p>
+                            </div>
+                          ) : (
+                            <p className="font-saira text-xs text-muted-foreground">Room details will be shared before the match.</p>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Profile Tab */}
+        {activeTab === 'profile' && (
+          <div>
+            <h2 className="font-orbitron font-bold text-xl text-foreground uppercase tracking-widest mb-6">My Profile</h2>
+            <div className="bg-card border border-border p-6 max-w-md">
+              <div className="flex items-center gap-4 mb-6">
+                <div className="w-16 h-16 bg-primary/20 border border-primary/50 flex items-center justify-center">
+                  <User className="w-8 h-8 text-primary" />
+                </div>
+                <div>
+                  <h3 className="font-rajdhani font-bold text-foreground text-xl">{player?.displayName}</h3>
+                  <p className="font-saira text-sm text-muted-foreground">BGMI Player</p>
+                </div>
+              </div>
+              <div className="space-y-4">
+                <div className="border-b border-border pb-4">
+                  <p className="font-rajdhani text-xs text-muted-foreground uppercase tracking-wider mb-1">Mobile Number</p>
+                  <p className="font-saira text-foreground">+91 {player?.mobile}</p>
+                </div>
+                <div className="border-b border-border pb-4">
+                  <p className="font-rajdhani text-xs text-muted-foreground uppercase tracking-wider mb-1">Display Name</p>
+                  <p className="font-saira text-foreground">{player?.displayName}</p>
+                </div>
+                <div>
+                  <p className="font-rajdhani text-xs text-muted-foreground uppercase tracking-wider mb-1">BGMI Player ID</p>
+                  <p className="font-saira text-foreground">{player?.bgmiPlayerId || 'Not set'}</p>
+                </div>
+              </div>
+              <button
+                onClick={handleLogout}
+                className="mt-6 w-full border border-destructive text-destructive font-rajdhani font-bold py-2.5 uppercase tracking-widest hover:bg-destructive/10 transition-colors text-sm flex items-center justify-center gap-2"
+              >
+                <LogOut className="w-4 h-4" />
+                Logout
+              </button>
+            </div>
+          </div>
+        )}
+      </main>
+
+      {/* Payment Modal */}
+      {selectedTournament && (
+        <PaymentModal
+          tournament={selectedTournament}
+          onClose={() => setSelectedTournament(null)}
+        />
+      )}
+    </div>
+  );
 }

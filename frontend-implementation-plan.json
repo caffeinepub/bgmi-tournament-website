@@ -1,250 +1,113 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Raj Empire Esports BGMI Tournament Website - Frontend Implementation",
+  "title": "Orange/White Dark UI Redesign & Domain Settings Frontend",
   "requirements": [
     {
-      "id": "REQ-49",
-      "summary": "Build player registration page with mobile, display name, BGMI Player ID, OTP verification, T&C checkbox, and duplicate mobile enforcement",
+      "id": "REQ-2",
+      "summary": "Redesign the entire frontend UI with a dark background base and a mixed orange & white color theme across all pages",
       "acceptanceCriteria": [
-        "Form has mobile number, display name, and BGMI Player ID fields",
-        "After submitting mobile, OTP step is shown with the simulated code displayed on screen",
-        "Duplicate mobile number shows a clear error message",
-        "T&C checkbox is present with a link to /terms",
-        "Submit is disabled until checkbox is checked",
-        "On successful registration, player is redirected to /dashboard"
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/pages/RegisterPage.tsx",
-          "operation": "create",
-          "description": "Create the player registration page with multi-step form (mobile → OTP → details). Collect mobile number, display name, and BGMI Player ID. Call backend generateOtp() and display the simulated OTP on screen. Call verifyOtp() to validate the OTP. Call registerPlayer() to save the account. Enforce duplicate mobile error handling. Include a checkbox for agreeing to Terms & Conditions with a clickable link to /terms. Disable submit button until checkbox is checked. On success, redirect to /dashboard. Use the dark gaming theme with orange/gold accents and angular UI elements."
-        },
-        {
-          "path": "frontend/src/App.tsx",
-          "operation": "modify",
-          "description": "Add route for /register that renders RegisterPage component. Ensure the route is accessible without authentication."
-        }
-      ]
-    },
-    {
-      "id": "REQ-50",
-      "summary": "Build player login page with mobile + OTP authentication",
-      "acceptanceCriteria": [
-        "Login page has mobile number input and OTP step",
-        "Simulated OTP is displayed on screen after mobile submission",
-        "Correct OTP entry logs the player in and redirects to /dashboard",
-        "Incorrect OTP shows an error message"
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/pages/LoginPage.tsx",
-          "operation": "create",
-          "description": "Create the player login page with mobile number input followed by OTP verification step. Call backend generateOtp() and display the simulated OTP on screen. Call verifyOtp() to authenticate. On success, store player session (mobile number or player ID) in localStorage or context and redirect to /dashboard. Show error message for incorrect OTP. Use the dark gaming theme with orange/gold accents."
-        },
-        {
-          "path": "frontend/src/App.tsx",
-          "operation": "modify",
-          "description": "Add route for /login that renders LoginPage component. Ensure the route is accessible without authentication."
-        },
-        {
-          "path": "frontend/src/context/AuthContext.tsx",
-          "operation": "create",
-          "description": "Create an authentication context to manage player login state. Store logged-in player information (mobile number, display name, BGMI Player ID) and provide login/logout functions. Use localStorage to persist session across page reloads."
-        },
-        {
-          "path": "frontend/src/main.tsx",
-          "operation": "modify",
-          "description": "Wrap the App component with AuthContext provider to make authentication state available throughout the app."
-        }
-      ]
-    },
-    {
-      "id": "REQ-51",
-      "summary": "Build tournament listing page showing all active tournaments with registration capability",
-      "acceptanceCriteria": [
-        "All active tournaments render as cards with all specified fields",
-        "Match Rules section renders below card only when matchRules is non-empty",
-        "Register button is disabled and shows 'Full' when filledSlots equals totalSlots",
-        "Unauthenticated players are prompted to log in when clicking Register"
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/pages/TournamentsPage.tsx",
-          "operation": "create",
-          "description": "Create the tournament listing page that fetches all tournaments from the backend (use getTournamentsByMap or appropriate query method from backend interface). Display each tournament as a card showing: name, entry fee, prize pool, total slots, filled slots, map, date/time, and status (Open/Full). If matchRules is non-empty, display it below the card. Disable the Register button and show 'Full' when filledSlots equals totalSlots. For unauthenticated players, show a prompt to log in when clicking Register. On Register click (for logged-in players), navigate to the payment modal or page. Use the dark gaming theme with orange/gold accents and angular card designs."
-        },
-        {
-          "path": "frontend/src/App.tsx",
-          "operation": "modify",
-          "description": "Add route for /tournaments that renders TournamentsPage component. Make this route accessible without authentication for browsing, but require login for registration actions."
-        }
-      ]
-    },
-    {
-      "id": "REQ-52",
-      "summary": "Implement payment flow with UPI ID, QR code display, payment screenshot upload, and T&C checkbox",
-      "acceptanceCriteria": [
-        "Payment modal/page shows UPI ID and QR code image",
-        "Falls back to upi-qr-placeholder.dim_300x300.png when no QR is uploaded",
-        "Player can upload a payment screenshot image file",
-        "T&C checkbox must be checked before submission",
-        "Registration is saved with status Pending Admin Approval",
-        "Room ID and Password are not visible until admin approves"
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/components/PaymentModal.tsx",
-          "operation": "create",
-          "description": "Create a payment modal component that accepts a tournament object as prop. Display the tournament's UPI ID (default to 'empirerajesports@ibl' if not set) and QR code. Use the blob-storage component to handle QR code display: if tournament.qrCodeBlob exists, use ExternalBlob.getDirectURL() to show the image; otherwise, fall back to frontend/public/assets/generated/upi-qr-placeholder.dim_300x300.png. Include a file input for the player to upload a payment screenshot. Use ExternalBlob.fromBytes() from the blob-storage component to convert the selected file to ExternalBlob before submission. Verify the blob-storage component's usage instructions before implementing. Include a checkbox for agreeing to Terms & Conditions with a link to /terms. Disable submit until the checkbox is checked. On submission, call backend registerForTournament(tournamentId, paymentScreenshotBlob) with the ExternalBlob instance. Show success message indicating 'Pending Admin Approval'. Use the dark gaming theme with orange/gold accents."
-        },
-        {
-          "path": "frontend/src/pages/TournamentsPage.tsx",
-          "operation": "modify",
-          "description": "Integrate PaymentModal component. When a logged-in player clicks Register on a tournament card, open the PaymentModal and pass the selected tournament. Handle modal open/close state."
-        }
-      ]
-    },
-    {
-      "id": "REQ-53",
-      "summary": "Build player dashboard showing profile, tournament registrations with Room ID/Password for approved registrations, and support ticket management",
-      "acceptanceCriteria": [
-        "Dashboard shows player display name and BGMI Player ID",
-        "Tournament registrations are listed with correct status badges",
-        "Room ID and Room Password are visible only for Approved registrations",
-        "Support ticket creation form with subject, description, and optional screenshot upload works",
-        "Ticket list shows subject, status badge, and creation date",
-        "Clicking a ticket opens full detail view with admin reply if present"
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/pages/DashboardPage.tsx",
-          "operation": "create",
-          "description": "Create the player dashboard page showing player profile (display name and BGMI Player ID from AuthContext). Display the player's tournament registrations with status badges (Pending/Approved/Rejected). For Approved registrations, show Room ID and Room Password. Include a Support section with a form to create new support tickets (subject, description, optional screenshot upload). Use the blob-storage component (ExternalBlob.fromBytes()) for screenshot upload. Verify the blob-storage component's usage instructions before implementing. Call backend createSupportTicket() with the screenshot as ExternalBlob or null. Display the player's ticket list with subject, status badge, and creation date. Make each ticket clickable to view full details including admin reply if present. Use the dark gaming theme with orange/gold accents."
-        },
-        {
-          "path": "frontend/src/App.tsx",
-          "operation": "modify",
-          "description": "Add route for /dashboard that renders DashboardPage component. Protect this route with authentication guard: redirect to /login if not authenticated."
-        },
-        {
-          "path": "frontend/src/components/ProtectedRoute.tsx",
-          "operation": "create",
-          "description": "Create a ProtectedRoute wrapper component that checks AuthContext for logged-in player. If not authenticated, redirect to /login. Otherwise, render the child component."
-        }
-      ]
-    },
-    {
-      "id": "REQ-54",
-      "summary": "Build admin dashboard with hardcoded login, tournament management, registrations approval, player list, T&C editor, support ticket management, and social links editor",
-      "acceptanceCriteria": [
-        "Admin login at /admin accepts only username 'Empire Esports' and password 'Shivam803119&'",
-        "Tournament Management section supports add/edit/delete with all fields including matchRules",
-        "Registrations section lists all registrations with payment screenshots and approve/reject actions",
-        "Player List section shows all registered players",
-        "T&C section shows current content in textarea with a functional save button",
-        "Support Tickets section lists all tickets and allows reply and status update",
-        "Social Links section has YouTube, Instagram, Telegram URL inputs with save"
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/pages/AdminLoginPage.tsx",
-          "operation": "create",
-          "description": "Create the admin login page at route /admin with hardcoded credentials check: username 'Empire Esports' and password 'Shivam803119&'. On successful login, store admin session in localStorage or context and redirect to /admin/dashboard. Use the dark gaming theme with orange/gold accents."
-        },
-        {
-          "path": "frontend/src/pages/AdminDashboardPage.tsx",
-          "operation": "create",
-          "description": "Create the admin dashboard page with six sections: (1) Tournament Management — add/edit/delete tournaments with all fields (name, dateTime, entryFee, prizePool, map, totalSlots, upiId, matchRules textarea, QR code upload using blob-storage component, roomId, roomPassword). Use ExternalBlob.fromBytes() for QR code upload and ExternalBlob.getDirectURL() for display. Verify the blob-storage component's usage instructions before implementing. Call backend createTournament() and appropriate update/delete methods. (2) Registrations — list all registrations with player info and payment screenshots (use ExternalBlob.getDirectURL() to display). Provide approve/reject buttons. (3) Player List — display all registered players. (4) T&C — fetch current content via backend getTermsAndConditions(), display in textarea, and call updateTermsAndConditions() on save. (5) Support Tickets — fetch all tickets via getAllSupportTicketsSorted(), display with player name, BGMI ID, subject, status, date. Click to view detail with screenshot (use ExternalBlob.getDirectURL() if present). Provide reply input and status update dropdown/buttons. (6) Social Links — fetch via getSocialLinks(), display input fields for YouTube, Instagram, Telegram URLs, and call updateSocialLinks() on save. Use the dark gaming theme with orange/gold accents."
-        },
-        {
-          "path": "frontend/src/App.tsx",
-          "operation": "modify",
-          "description": "Add route for /admin that renders AdminLoginPage component. Add route for /admin/dashboard that renders AdminDashboardPage component and is protected with an admin authentication guard."
-        },
-        {
-          "path": "frontend/src/context/AdminAuthContext.tsx",
-          "operation": "create",
-          "description": "Create an admin authentication context to manage admin login state. Store admin session (e.g., isAdminLoggedIn boolean) and provide login/logout functions. Use localStorage to persist session."
-        },
-        {
-          "path": "frontend/src/main.tsx",
-          "operation": "modify",
-          "description": "Wrap the App component with AdminAuthContext provider in addition to AuthContext."
-        },
-        {
-          "path": "frontend/src/components/AdminProtectedRoute.tsx",
-          "operation": "create",
-          "description": "Create an AdminProtectedRoute wrapper component that checks AdminAuthContext for admin login. If not authenticated, redirect to /admin. Otherwise, render the child component."
-        }
-      ]
-    },
-    {
-      "id": "REQ-55",
-      "summary": "Add dedicated Terms & Conditions page displaying content fetched from backend",
-      "acceptanceCriteria": [
-        "Page at /terms fetches and renders T&C content from backend",
-        "Page uses the dark gaming theme with orange/gold accents",
-        "Page is accessible via the link in registration and payment forms"
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/pages/TermsPage.tsx",
-          "operation": "create",
-          "description": "Create the Terms & Conditions page that fetches T&C content from the backend using getTermsAndConditions() and displays it. Use the dark gaming theme with orange/gold accents and readable typography. Ensure the page is accessible without authentication."
-        },
-        {
-          "path": "frontend/src/App.tsx",
-          "operation": "modify",
-          "description": "Add route for /terms that renders TermsPage component. Ensure the route is accessible without authentication."
-        }
-      ]
-    },
-    {
-      "id": "REQ-56",
-      "summary": "Apply dark battle-royale gaming aesthetic, Raj Empire Esports branding, logo, and social links in footer across all pages",
-      "acceptanceCriteria": [
-        "All pages use near-black background with orange and gold accents",
-        "Sharp angular UI elements and military/tactical typography are applied throughout",
-        "Tab title, header, and footer all read 'Raj Empire Esports'",
-        "raj-empire-esports-logo.dim_400x120.png is used as the site header logo",
-        "Footer displays YouTube, Instagram, and Telegram icon links fetched from backend"
+        "All pages (Home, Register, Login, Dashboard, Tournaments, Terms, Admin Login, Admin Dashboard) have a dark background.",
+        "Orange is used consistently as the primary accent color for buttons, active nav links, step indicators, badges, and highlights.",
+        "White or light gray is used for body text, headings, input text, and secondary UI elements.",
+        "No white/light backgrounds remain on any page or major component.",
+        "The orange/white/dark theme is cohesive and consistent across Player Panel and Admin Panel.",
+        "The Raj Empire Esports logo and branding remain intact."
       ],
       "file_operations": [
         {
           "path": "frontend/src/index.css",
           "operation": "modify",
-          "description": "Update global styles to apply the dark battle-royale gaming aesthetic: near-black background (#0a0a0a or similar), orange (#ff6b00 or similar) and gold (#ffd700 or similar) accent colors. Use sharp angular UI elements (e.g., border styles, card shapes). Apply military/tactical typography (e.g., bold sans-serif fonts like 'Rajdhani', 'Orbitron', or 'Saira Condensed'). Ensure consistent theme across all components and pages."
+          "description": "Update the global Tailwind CSS stylesheet to define dark background tokens and orange/white accent colors. Set --background to a near-black or very dark gray OKLCH value, --primary to vibrant orange, --foreground to white or light gray, and adjust other color tokens (card, popover, muted, accent, destructive, border, input, ring) to support the dark orange/white theme. Update body background to use the dark background token."
         },
         {
           "path": "frontend/tailwind.config.js",
           "operation": "modify",
-          "description": "Extend Tailwind theme with custom colors for the dark gaming aesthetic: near-black background, orange and gold accents. Add custom font families for military/tactical typography if needed. Configure utilities for sharp angular UI elements."
+          "description": "Extend the Tailwind theme to apply the orange/white/dark color palette defined in index.css. Ensure primary, background, foreground, and other semantic color tokens map to the dark orange/white scheme. Verify border radius and font configurations remain intact for the Raj Empire Esports brand."
         },
         {
-          "path": "frontend/index.html",
+          "path": "frontend/src/pages/HomePage.tsx",
           "operation": "modify",
-          "description": "Update the page title to 'Raj Empire Esports' in the <title> tag. Add any necessary font imports (e.g., Google Fonts for military-style typography)."
+          "description": "Apply the dark background and orange/white theme to the HomePage. Update hero section, feature cards, and navigation links to use dark backgrounds, orange buttons/highlights, and white text. Ensure the Raj Empire Esports logo remains visible and social links use the orange accent color."
+        },
+        {
+          "path": "frontend/src/pages/RegisterPage.tsx",
+          "operation": "modify",
+          "description": "Apply the dark background and orange/white theme to the RegisterPage. Update the multi-step registration form (mobile → OTP → profile) to use dark card backgrounds, orange step indicators and active states, white form labels/inputs, and orange buttons. Ensure error messages are visible against the dark background."
+        },
+        {
+          "path": "frontend/src/pages/LoginPage.tsx",
+          "operation": "modify",
+          "description": "Apply the dark background and orange/white theme to the LoginPage. Update the two-step login form (mobile number → OTP verification) to use dark card backgrounds, orange step indicators and active states, white form labels/inputs, and orange buttons. Ensure error messages are visible."
+        },
+        {
+          "path": "frontend/src/pages/DashboardPage.tsx",
+          "operation": "modify",
+          "description": "Apply the dark background and orange/white theme to the DashboardPage. Update the tabbed sections (tournaments, registrations, profile) to use dark card backgrounds, orange tab highlights and active states, white text, and orange buttons. Ensure the PaymentModal trigger button uses the orange accent color."
+        },
+        {
+          "path": "frontend/src/pages/TournamentsPage.tsx",
+          "operation": "modify",
+          "description": "Apply the dark background and orange/white theme to the TournamentsPage. Update tournament cards to use dark backgrounds, orange status badges, white text, and orange register buttons. Ensure the PaymentModal uses the dark orange/white theme."
+        },
+        {
+          "path": "frontend/src/pages/TermsPage.tsx",
+          "operation": "modify",
+          "description": "Apply the dark background and orange/white theme to the TermsPage. Update the terms content container to use a dark background, white text, and orange section headings or highlights. Ensure the loading spinner is visible against the dark background."
+        },
+        {
+          "path": "frontend/src/pages/AdminLoginPage.tsx",
+          "operation": "modify",
+          "description": "Apply the dark background and orange/white theme to the AdminLoginPage. Update the admin login form to use a dark card background, white input labels/text, and an orange submit button. Ensure error messages are visible against the dark background."
+        },
+        {
+          "path": "frontend/src/pages/AdminDashboardPage.tsx",
+          "operation": "modify",
+          "description": "Apply the dark background and orange/white theme to the AdminDashboardPage. Update all tabbed sections (tournaments, registrations, players, support tickets, terms, social links) to use dark card backgrounds, orange tab highlights and active states, white text, and orange buttons. Ensure table headers, rows, and form inputs use the dark orange/white scheme."
         },
         {
           "path": "frontend/src/components/Header.tsx",
-          "operation": "create",
-          "description": "Create a Header component displaying the site logo using frontend/public/assets/generated/raj-empire-esports-logo.dim_400x120.png. Include navigation links to /tournaments, /login, /register, and /dashboard (if logged in). Use the dark gaming theme with orange/gold accents and angular design. Display 'Raj Empire Esports' branding."
+          "operation": "modify",
+          "description": "Apply the dark background and orange/white theme to the Header component. Update the sticky navigation bar to use a dark background, orange active nav link highlights, and white text. Ensure the logo remains visible and the mobile hamburger menu uses the dark orange/white theme."
         },
         {
           "path": "frontend/src/components/Footer.tsx",
-          "operation": "create",
-          "description": "Create a Footer component displaying 'Raj Empire Esports' branding. Fetch social links from the backend using getSocialLinks() and display YouTube, Instagram, and Telegram icon links. Use appropriate icon library (e.g., react-icons) for social media icons. Use the dark gaming theme with orange/gold accents."
+          "operation": "modify",
+          "description": "Apply the dark background and orange/white theme to the Footer component. Update the footer to use a dark background, orange social media icons/links, and white text. Ensure the logo and navigation buttons use the dark orange/white scheme."
+        },
+        {
+          "path": "frontend/src/components/PaymentModal.tsx",
+          "operation": "modify",
+          "description": "Apply the dark background and orange/white theme to the PaymentModal component. Update the modal dialog to use a dark background, white text, orange buttons (upload, submit), and dark form inputs. Ensure the terms checkbox and error messages are visible."
         },
         {
           "path": "frontend/src/components/Layout.tsx",
-          "operation": "create",
-          "description": "Create a Layout component that wraps all pages with Header and Footer components. Use this Layout in App.tsx to ensure consistent branding and navigation across all pages."
+          "operation": "modify",
+          "description": "Apply the dark background to the Layout component. Ensure the root layout wrapper uses the dark background token and that the Header, Outlet, and Footer are rendered with the dark orange/white theme applied globally."
+        }
+      ]
+    },
+    {
+      "id": "REQ-4",
+      "summary": "Add a 'Domain Settings' section in the Admin Dashboard page to display and update the domain name",
+      "acceptanceCriteria": [
+        "Admin Dashboard has a 'Domain Settings' tab or section.",
+        "The current domain name is fetched from the backend and displayed in an editable input field.",
+        "The input field is pre-populated with 'Raj-Empire-Esports' by default.",
+        "Admin can type a new domain name and click Save to update it via the backend.",
+        "A success or error message is shown after saving.",
+        "The domain settings section matches the orange/white/dark theme."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/hooks/useQueries.ts",
+          "operation": "modify",
+          "description": "Add two React Query hooks: useGetDomainName (query hook fetching the current domain name via actor.getDomainName) and useSetDomainName (mutation hook updating the domain name via actor.setDomainName). Ensure useSetDomainName invalidates the 'domainName' query key on success to refetch the updated value."
         },
         {
-          "path": "frontend/src/App.tsx",
+          "path": "frontend/src/pages/AdminDashboardPage.tsx",
           "operation": "modify",
-          "description": "Wrap all page routes with the Layout component to ensure Header and Footer are displayed on every page."
+          "description": "Add a 'Domain Settings' tab to the AdminDashboardPage. Include a section that fetches the current domain name using useGetDomainName and displays it in a controlled text input field. Add a Save button that triggers useSetDomainName with the new domain name value. Show a success toast on successful save and an error message if the mutation fails. Apply the dark orange/white theme to the domain settings section (dark background, white text, orange Save button)."
         }
       ]
     }

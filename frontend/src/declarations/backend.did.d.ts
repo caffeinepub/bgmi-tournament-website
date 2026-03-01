@@ -11,6 +11,15 @@ import type { IDL } from '@icp-sdk/core/candid';
 import type { Principal } from '@icp-sdk/core/principal';
 
 export type ExternalBlob = Uint8Array;
+export interface Player {
+  'principal' : Principal,
+  'displayName' : string,
+  'bgmiPlayerId' : string,
+  'mobile' : string,
+}
+export type RegistrationStatus = { 'pending' : null } |
+  { 'approved' : null } |
+  { 'rejected' : null };
 export interface SocialLinks {
   'instagram' : string,
   'youtube' : string,
@@ -49,10 +58,25 @@ export interface Tournament {
   'matchRules' : string,
   'prizePool' : bigint,
 }
+export interface TournamentRegistration {
+  'status' : RegistrationStatus,
+  'paymentScreenshotBlob' : ExternalBlob,
+  'playerId' : string,
+  'registrationId' : string,
+  'tournamentId' : string,
+}
 export type TournamentStatus = { 'closed' : null } |
   { 'upcoming' : null } |
   { 'completed' : null } |
   { 'ongoing' : null };
+export interface UserProfile {
+  'displayName' : string,
+  'bgmiPlayerId' : string,
+  'mobile' : string,
+}
+export type UserRole = { 'admin' : null } |
+  { 'user' : null } |
+  { 'guest' : null };
 export interface _CaffeineStorageCreateCertificateResult {
   'method' : string,
   'blob_hash' : string,
@@ -80,8 +104,11 @@ export interface _SERVICE {
     _CaffeineStorageRefillResult
   >,
   '_caffeineStorageUpdateGatewayPrincipals' : ActorMethod<[], undefined>,
+  '_initializeAccessControlWithSecret' : ActorMethod<[string], undefined>,
+  'assignCallerUserRole' : ActorMethod<[Principal, UserRole], undefined>,
+  'closeSupportTicket' : ActorMethod<[string], undefined>,
   'createSupportTicket' : ActorMethod<
-    [string, string, string, string, [] | [ExternalBlob]],
+    [string, string, string, [] | [ExternalBlob]],
     string
   >,
   'createTournament' : ActorMethod<
@@ -90,18 +117,45 @@ export interface _SERVICE {
   >,
   'findUnusedSlots' : ActorMethod<[], Array<Tournament>>,
   'generateOtp' : ActorMethod<[], string>,
+  'getAllPlayers' : ActorMethod<[], Array<Player>>,
   'getAllSupportTicketsSorted' : ActorMethod<[], Array<SupportTicket>>,
+  'getAllTournaments' : ActorMethod<[], Array<Tournament>>,
+  'getCallerUserProfile' : ActorMethod<[], [] | [UserProfile]>,
+  'getCallerUserRole' : ActorMethod<[], UserRole>,
+  'getDomainName' : ActorMethod<[], string>,
+  'getMyRegistrations' : ActorMethod<[], Array<TournamentRegistration>>,
+  'getMySupportTickets' : ActorMethod<[], Array<SupportTicket>>,
+  'getRegistrationsForTournament' : ActorMethod<
+    [string],
+    Array<TournamentRegistration>
+  >,
   'getSocialLinks' : ActorMethod<[], SocialLinks>,
   'getTermsAndConditions' : ActorMethod<[], TermsAndConditions>,
+  'getTournamentById' : ActorMethod<[string], [] | [Tournament]>,
   'getTournamentsByMap' : ActorMethod<[string], Array<Tournament>>,
+  'getUserProfile' : ActorMethod<[Principal], [] | [UserProfile]>,
+  'isCallerAdmin' : ActorMethod<[], boolean>,
   'registerForTournament' : ActorMethod<[string, ExternalBlob], string>,
   'registerPlayer' : ActorMethod<[string, string, string], undefined>,
+  'replyToSupportTicket' : ActorMethod<[string, string], undefined>,
+  'saveCallerUserProfile' : ActorMethod<[UserProfile], undefined>,
   'searchSupportTicketsByPlayerName' : ActorMethod<
     [string],
     Array<SupportTicket>
   >,
+  'setDomainName' : ActorMethod<[string], undefined>,
+  'updateRegistrationStatus' : ActorMethod<
+    [string, RegistrationStatus],
+    undefined
+  >,
   'updateSocialLinks' : ActorMethod<[string, string, string], undefined>,
   'updateTermsAndConditions' : ActorMethod<[string], undefined>,
+  'updateTournamentQrCode' : ActorMethod<[string, ExternalBlob], undefined>,
+  'updateTournamentRoomDetails' : ActorMethod<
+    [string, string, string],
+    undefined
+  >,
+  'updateTournamentStatus' : ActorMethod<[string, TournamentStatus], undefined>,
   'verifyOtp' : ActorMethod<[string], boolean>,
 }
 export declare const idlService: IDL.ServiceClass;

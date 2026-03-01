@@ -1,52 +1,61 @@
 import React from 'react';
-import { useTermsAndConditions } from '../hooks/useQueries';
-import { Skeleton } from '@/components/ui/skeleton';
-import { FileText } from 'lucide-react';
+import { useNavigate } from '@tanstack/react-router';
+import { useGetTermsAndConditions } from '../hooks/useQueries';
+import { Loader2, ArrowLeft } from 'lucide-react';
 
 export default function TermsPage() {
-    const { data: terms, isLoading } = useTermsAndConditions();
+  const navigate = useNavigate();
+  const { data: terms, isLoading } = useGetTermsAndConditions();
 
-    return (
-        <div className="min-h-screen px-4 py-12" style={{ background: 'oklch(0.10 0 0)' }}>
-            <div className="container mx-auto max-w-3xl">
-                <div className="text-center mb-10">
-                    <div className="inline-block mb-3 px-3 py-1 font-saira text-xs tracking-widest uppercase rounded-sm" style={{ background: 'oklch(0.65 0.22 45 / 0.15)', border: '1px solid oklch(0.65 0.22 45 / 0.4)', color: 'oklch(0.65 0.22 45)' }}>
-                        Legal
-                    </div>
-                    <h1 className="font-orbitron text-3xl font-black" style={{ color: 'oklch(0.90 0.01 80)' }}>
-                        TERMS & CONDITIONS
-                    </h1>
-                    <p className="font-rajdhani text-sm mt-2" style={{ color: 'oklch(0.55 0.02 60)' }}>
-                        Raj Empire Esports — Tournament Platform Rules
-                    </p>
-                </div>
-
-                <div className="p-6 clip-angular" style={{ background: 'oklch(0.13 0 0)', border: '1px solid oklch(0.22 0.02 50)' }}>
-                    {isLoading ? (
-                        <div className="space-y-3">
-                            {[1, 2, 3, 4, 5].map(i => (
-                                <Skeleton key={i} className="h-4 w-full" style={{ background: 'oklch(0.18 0 0)' }} />
-                            ))}
-                        </div>
-                    ) : !terms?.content ? (
-                        <div className="text-center py-12">
-                            <FileText className="w-12 h-12 mx-auto mb-4" style={{ color: 'oklch(0.30 0.02 50)' }} />
-                            <p className="font-rajdhani text-lg" style={{ color: 'oklch(0.45 0.02 60)' }}>
-                                Terms & Conditions have not been set yet.
-                            </p>
-                            <p className="font-rajdhani text-sm mt-2" style={{ color: 'oklch(0.35 0.02 50)' }}>
-                                Please check back later.
-                            </p>
-                        </div>
-                    ) : (
-                        <div className="prose prose-invert max-w-none">
-                            <p className="font-rajdhani text-base leading-relaxed whitespace-pre-wrap" style={{ color: 'oklch(0.75 0.01 80)' }}>
-                                {terms.content}
-                            </p>
-                        </div>
-                    )}
-                </div>
-            </div>
+  return (
+    <div className="min-h-screen bg-background flex flex-col">
+      <header className="border-b border-border/40 bg-background/95 backdrop-blur sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+          <button onClick={() => navigate({ to: '/' })}>
+            <img src="/assets/generated/raj-empire-esports-logo.dim_400x120.png" alt="Raj Empire Esports" className="h-12 object-contain" />
+          </button>
+          <button onClick={() => navigate({ to: '/' })} className="flex items-center gap-2 font-rajdhani text-sm text-muted-foreground hover:text-foreground transition-colors">
+            <ArrowLeft className="w-4 h-4" />
+            Back to Home
+          </button>
         </div>
-    );
+      </header>
+
+      <main className="flex-1 max-w-4xl mx-auto w-full px-4 py-12">
+        <h1 className="font-orbitron font-bold text-3xl text-primary uppercase tracking-widest mb-8">
+          Terms & Conditions
+        </h1>
+
+        {isLoading ? (
+          <div className="flex items-center justify-center py-20">
+            <Loader2 className="w-8 h-8 animate-spin text-primary" />
+          </div>
+        ) : terms?.content ? (
+          <div className="bg-card border border-border p-8">
+            <pre className="font-saira text-foreground text-sm whitespace-pre-wrap leading-relaxed">
+              {terms.content}
+            </pre>
+          </div>
+        ) : (
+          <div className="bg-card border border-border p-8 text-center">
+            <p className="font-saira text-muted-foreground">Terms & Conditions have not been set yet. Please check back later.</p>
+          </div>
+        )}
+      </main>
+
+      <footer className="border-t border-border/40 py-6 px-4 text-center">
+        <p className="font-saira text-xs text-muted-foreground">
+          © {new Date().getFullYear()} Raj Empire Esports. Built with ❤️ using{' '}
+          <a
+            href={`https://caffeine.ai/?utm_source=Caffeine-footer&utm_medium=referral&utm_content=${encodeURIComponent(window.location.hostname)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-primary hover:underline"
+          >
+            caffeine.ai
+          </a>
+        </p>
+      </footer>
+    </div>
+  );
 }
