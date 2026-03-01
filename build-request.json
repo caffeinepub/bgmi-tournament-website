@@ -1,43 +1,76 @@
 {
   "kind": "build_request",
-  "title": "Fix Registration Flow: Details Form → Internet Identity Step",
-  "projectName": "Raj Empire Esports",
+  "title": "Fix Registration Step 2: Auto-trigger Internet Identity & Redirect to Home After Registration",
   "priority": "high",
   "requirements": [
     {
       "id": "REQ-1",
-      "text": "Fix the multi-step registration flow on RegisterPage so that: Step 1 collects Name, Phone Number, and BGMI Player ID; after the user submits Step 1, Step 2 renders the Internet Identity login/authentication button so the user can complete registration via Internet Identity. The Internet Identity step must be clearly visible and functional after Step 1 form submission.",
+      "text": "In RegisterPage.tsx, when the user reaches Step 2 (Authenticate), automatically trigger the Internet Identity login popup via `useInternetIdentity` hook without requiring any manual button click. Use a `useEffect` that fires when the step becomes 2 to call the login function immediately.",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-4",
           "msg-6",
           "msg-8"
         ],
         "quotes": [
-          "Pehle user name/phone/BGMI ID bhare, phir Internet Identity se login kare",
-          "user me rgister karne ke time name , phone no. ,bgmi id ye sab mang raha lekin esake baad Internet Identity option nhi aa raha h"
+          "AUTOMATICALLY TRIGGER HO JAYE MANUAALLY Internet Identity YE WALA OPTION ME"
         ]
       },
       "acceptanceCriteria": [
-        "Step 1 of registration shows Name, Phone Number, and BGMI Player ID fields",
-        "After submitting Step 1, the page transitions to Step 2 which displays the Internet Identity login button",
-        "Internet Identity button is fully visible and clickable in Step 2",
-        "After successful Internet Identity authentication, the player is registered and redirected to the player dashboard",
-        "The step indicator clearly shows progress (Step 1 → Step 2 → Success)"
+        "When user completes Step 1 and proceeds to Step 2, the Internet Identity popup opens automatically without any button click",
+        "No manual 'Connect with Internet Identity' button interaction is required to trigger the popup",
+        "The useEffect dependency correctly watches for step === 2 transition"
+      ]
+    },
+    {
+      "id": "REQ-2",
+      "text": "Fix the 'Connecting...' stuck loading state bug on Step 2 of RegisterPage.tsx. The button must not remain permanently in a loading/spinning state. Reset the connecting state if the Internet Identity login is cancelled, fails, or times out, and re-enable the button so the user can retry.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-2",
+          "msg-4"
+        ],
+        "quotes": [
+          "'Connecting...' button stuck in loading state on Step 2 of registration - Internet Identity popup not opening"
+        ]
+      },
+      "acceptanceCriteria": [
+        "The 'Connecting...' spinner does not remain stuck indefinitely",
+        "If Internet Identity login is cancelled or fails, the button resets to a clickable retry state",
+        "No permanent loading state is shown after a failed or cancelled authentication attempt"
+      ]
+    },
+    {
+      "id": "REQ-3",
+      "text": "After successful registration completion (Step 3 - Done) in RegisterPage.tsx, redirect the user to the Home Page ('/') using the router's navigate function instead of staying on the registration page or going to the dashboard.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-6",
+          "msg-8"
+        ],
+        "quotes": [
+          "Registration complete hone ke baad (Step 3 - Done) user ko kahan bheja jaaye — HOME PAGE ME BHEJA JAYE"
+        ]
+      },
+      "acceptanceCriteria": [
+        "After registration is fully completed (Step 3 reached and backend registration confirmed), the user is automatically redirected to '/' (Home Page)",
+        "The redirect happens without requiring any additional user interaction after Step 3"
       ]
     }
   ],
   "constraints": [
-    "Do not modify files under frontend/src/hooks/useInternetIdentity.ts or frontend/src/hooks/useActor.ts",
-    "Do not change the backend registration logic or data model",
-    "Preserve existing styling and brand theme of the RegisterPage"
+    "Do not modify frontend/src/hooks/useInternetIdentity.ts — use it as-is via the existing hook interface",
+    "Do not modify frontend/src/main.tsx",
+    "Do not modify any files under frontend/src/components/ui",
+    "All changes must be confined to frontend/src/pages/RegisterPage.tsx"
   ],
   "nonGoals": [
-    "Adding OTP or SMS phone number verification",
-    "Changing the login flow for existing users (LoginPage)",
-    "Adding new fields to the registration form",
-    "Implementing coin wallet or payment proof system"
+    "Do not change the Step 1 form fields (Name, Mobile, BGMI ID)",
+    "Do not change the backend registration logic",
+    "Do not redesign the registration page UI",
+    "Do not add email/OTP verification"
   ],
   "imageRequirements": {
     "required": [],

@@ -2,8 +2,8 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-fix-the-multi-step-registration-flow-on-registerpage-so-that-step-1-collects-name-phone-number-and-bgmi-player-id-after-the-user-submits-step-1-step-2-renders-the-internet-identity-login-authentication-button-so-the-user-can-complete-registration-via-internet-identity-the-internet-identity-step-must-be-clearly-visible-and-functional-after-step-1-form-submission",
-      "featureTitle": "Fix the multi-step registration flow on RegisterPage so that: Step 1 collects Name, Phone Number, and BGMI Player ID; after the user submits Step 1, Step 2 renders the Internet Identity login/authentication button so the user can complete registration via Internet Identity. The Internet Identity step must be clearly visible and functional after Step 1 form submission.",
+      "featureId": "feature-in-registerpage-tsx-when-the-user-reaches-step-2-authenticate-automatically-trigger-the-internet-identity-login-popup-via-useinternetidentity-hook-without-requiring-any-manual-button-click-use-a-useeffect-that-fires-when-the-step-becomes-2-to-call-the-login-function-immediately",
+      "featureTitle": "In RegisterPage.tsx, when the user reaches Step 2 (Authenticate), automatically trigger the Internet Identity login popup via `useInternetIdentity` hook without requiring any manual button click. Use a `useEffect` that fires when the step becomes 2 to call the login function immediately.",
       "files": [
         "frontend/src/pages/RegisterPage.tsx"
       ],
@@ -18,6 +18,46 @@
       ],
       "testIds": [
         "REQ-1"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-fix-the-connecting-stuck-loading-state-bug-on-step-2-of-registerpage-tsx-the-button-must-not-remain-permanently-in-a-loading-spinning-state-reset-the-connecting-state-if-the-internet-identity-login-is-cancelled-fails-or-times-out-and-re-enable-the-button-so-the-user-can-retry",
+      "featureTitle": "Fix the 'Connecting...' stuck loading state bug on Step 2 of RegisterPage.tsx. The button must not remain permanently in a loading/spinning state. Reset the connecting state if the Internet Identity login is cancelled, fails, or times out, and re-enable the button so the user can retry.",
+      "files": [
+        "frontend/src/pages/RegisterPage.tsx"
+      ],
+      "components": [
+        "blob-storage@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0",
+        "authorization@4.0.0"
+      ],
+      "testIds": [
+        "REQ-2"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-after-successful-registration-completion-step-3-done-in-registerpage-tsx-redirect-the-user-to-the-home-page-using-the-router-s-navigate-function-instead-of-staying-on-the-registration-page-or-going-to-the-dashboard",
+      "featureTitle": "After successful registration completion (Step 3 - Done) in RegisterPage.tsx, redirect the user to the Home Page ('/') using the router's navigate function instead of staying on the registration page or going to the dashboard.",
+      "files": [
+        "frontend/src/pages/RegisterPage.tsx"
+      ],
+      "components": [
+        "blob-storage@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0",
+        "authorization@4.0.0"
+      ],
+      "testIds": [
+        "REQ-3"
       ],
       "confidence": "high"
     }

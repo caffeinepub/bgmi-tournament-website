@@ -1,12 +1,11 @@
 # Specification
 
 ## Summary
-**Goal:** Fix the multi-step registration flow on the RegisterPage so that Step 1 collects player details and Step 2 presents the Internet Identity authentication button.
+**Goal:** Fix the registration flow in `RegisterPage.tsx` so that Step 2 auto-triggers the Internet Identity popup, handles cancelled/failed auth gracefully, and redirects the user to the Home Page after successful registration.
 
 **Planned changes:**
-- Update RegisterPage Step 1 to show Name, Phone Number, and BGMI Player ID fields
-- After Step 1 submission, transition to Step 2 which displays the Internet Identity login/authentication button clearly and functionally
-- Add a step indicator showing progress (Step 1 → Step 2 → Success)
-- On successful Internet Identity authentication, register the player and redirect to the player dashboard
+- Add a `useEffect` in `RegisterPage.tsx` that automatically calls the Internet Identity login function when the step transitions to Step 2, removing the need for a manual button click
+- Fix the stuck "Connecting..." loading state: reset the connecting state if Internet Identity login is cancelled, fails, or times out, so the user can retry
+- After successful registration (Step 3 - Done), automatically redirect the user to `/` (Home Page) using the router's navigate function
 
-**User-visible outcome:** Users filling out the registration form will first enter their name, phone number, and BGMI Player ID, then be taken to a clearly visible Step 2 where they can authenticate via Internet Identity to complete registration.
+**User-visible outcome:** When a user completes Step 1 and moves to Step 2, the Internet Identity popup opens automatically. If authentication fails or is cancelled, the button resets for retry. Once registration is fully complete, the user is automatically sent to the Home Page.

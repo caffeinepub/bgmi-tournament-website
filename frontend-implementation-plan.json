@@ -1,23 +1,52 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Fix Registration Flow: Details Form → Internet Identity Step",
+  "title": "Fix Registration Step 2: Auto-trigger Internet Identity & Redirect to Home After Registration",
   "requirements": [
     {
       "id": "REQ-1",
-      "summary": "Fix the multi-step registration flow so that Step 1 collects Name, Phone Number, and BGMI Player ID, then Step 2 renders the Internet Identity login/authentication button to complete registration.",
+      "summary": "Auto-trigger Internet Identity popup when user reaches Step 2 without requiring manual button click",
       "acceptanceCriteria": [
-        "Step 1 of registration shows Name, Phone Number, and BGMI Player ID fields",
-        "After submitting Step 1, the page transitions to Step 2 which displays the Internet Identity login button",
-        "Internet Identity button is fully visible and clickable in Step 2",
-        "After successful Internet Identity authentication, the player is registered and redirected to the player dashboard",
-        "The step indicator clearly shows progress (Step 1 → Step 2 → Success)"
+        "When user completes Step 1 and proceeds to Step 2, the Internet Identity popup opens automatically without any button click",
+        "No manual 'Connect with Internet Identity' button interaction is required to trigger the popup",
+        "The useEffect dependency correctly watches for step === 2 transition"
       ],
       "file_operations": [
         {
           "path": "frontend/src/pages/RegisterPage.tsx",
           "operation": "modify",
-          "description": "Refactor the registration page to properly implement a two-step flow: Step 1 collects displayName, mobile, and bgmiPlayerId via a form with validation; on Step 1 submit, store the form data in component state and advance to Step 2. Step 2 renders a prominent Internet Identity login button with clear instructions. Wire the Internet Identity authentication flow (using useInternetIdentity hook) to trigger after the user clicks the button in Step 2. After successful Internet Identity authentication, call the registerPlayer backend mutation with the stored form data from Step 1, then redirect to the player dashboard. Update the step indicator UI to clearly show Step 1 → Step 2 → Success transitions. Preserve existing styling and brand theme. Ensure the Internet Identity button is fully visible and clickable in Step 2."
+          "description": "Add a useEffect hook that automatically triggers the Internet Identity login flow when step transitions to 2. The effect should call the login function from useInternetIdentity hook immediately when step === 2. Verify the useInternetIdentity hook's usage instructions before implementing. Include proper dependency array [step, login] and ensure the effect only fires once per step transition by adding a guard to prevent multiple invocations."
+        }
+      ]
+    },
+    {
+      "id": "REQ-2",
+      "summary": "Fix stuck 'Connecting...' loading state on Step 2 by resetting button state on authentication failure or cancellation",
+      "acceptanceCriteria": [
+        "The 'Connecting...' spinner does not remain stuck indefinitely",
+        "If Internet Identity login is cancelled or fails, the button resets to a clickable retry state",
+        "No permanent loading state is shown after a failed or cancelled authentication attempt"
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/pages/RegisterPage.tsx",
+          "operation": "modify",
+          "description": "Wrap the Internet Identity login call in a try-catch block within the auto-trigger useEffect. On catch, reset any local connecting/loading state variables to allow retry. Ensure the loginStatus from useInternetIdentity is properly monitored, and if loginStatus indicates failure or the promise rejects, the UI reverts to an actionable state. Add error handling that clears connecting state and optionally displays an error message to the user, prompting them to retry authentication."
+        }
+      ]
+    },
+    {
+      "id": "REQ-3",
+      "summary": "Redirect user to Home Page ('/') after successful registration completion (Step 3 - Done)",
+      "acceptanceCriteria": [
+        "After registration is fully completed (Step 3 reached and backend registration confirmed), the user is automatically redirected to '/' (Home Page)",
+        "The redirect happens without requiring any additional user interaction after Step 3"
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/pages/RegisterPage.tsx",
+          "operation": "modify",
+          "description": "Add navigation logic using the useNavigate hook from react-router-dom. When step 3 is reached and the backend registration mutation is successful (after saveCallerUserProfile completes), immediately call navigate('/') to redirect the user to the Home Page. Ensure the redirect is conditional on successful completion of all registration steps and backend confirmation, preventing premature navigation. Optionally, add a short delay or success message display before redirecting to improve UX."
         }
       ]
     }

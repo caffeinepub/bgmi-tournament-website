@@ -1,18 +1,40 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-03-01T19:57:11.195Z",
+  "generatedAt": "2026-03-01T20:13:49.442Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
   },
   "requirements": {
-    "total": 1,
-    "implemented": 1,
+    "total": 3,
+    "implemented": 3,
     "items": [
       {
         "id": "REQ-1",
-        "summary": "Fix the multi-step registration flow on RegisterPage so that: Step 1 collects Name, Phone Number, and BGMI Player ID; after the user submits Step 1, Step 2 renders the Internet Identity login/authentication button so the user can complete registration via Internet Identity. The Internet Identity step must be clearly visible and functional after Step 1 form submission.",
+        "summary": "In RegisterPage.tsx, when the user reaches Step 2 (Authenticate), automatically trigger the Internet Identity login popup via `useInternetIdentity` hook without requiring any manual button click. Use a `useEffect` that fires when the step becomes 2 to call the login function immediately.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/pages/RegisterPage.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/pages/RegisterPage.tsx"
+        ]
+      },
+      {
+        "id": "REQ-2",
+        "summary": "Fix the 'Connecting...' stuck loading state bug on Step 2 of RegisterPage.tsx. The button must not remain permanently in a loading/spinning state. Reset the connecting state if the Internet Identity login is cancelled, fails, or times out, and re-enable the button so the user can retry.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/pages/RegisterPage.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/pages/RegisterPage.tsx"
+        ]
+      },
+      {
+        "id": "REQ-3",
+        "summary": "After successful registration completion (Step 3 - Done) in RegisterPage.tsx, redirect the user to the Home Page ('/') using the router's navigate function instead of staying on the registration page or going to the dashboard.",
         "status": "implemented",
         "plannedFiles": [
           "frontend/src/pages/RegisterPage.tsx"
